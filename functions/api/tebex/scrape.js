@@ -65,7 +65,7 @@ async function runScrape(db, limit, runType) {
   await db.prepare(
     `INSERT INTO tebex_runs (run_id, started_at, run_type, servers_attempted, scraper_version)
      VALUES (?, ?, ?, ?, ?)`
-  ).bind(runId, startedAt.toISOString(), runType, active.length, '2.2.0').run();
+  ).bind(runId, startedAt.toISOString(), runType, active.length, '2.3.0').run();
 
   const fxRate = await fetchFxRate();
   const stats = { attempted: 0, successful: 0, productsCollected: 0, errors: [] };
@@ -185,16 +185,22 @@ function discoverCategories(html) {
   return Array.from(paths);
 }
 
-// v2.2: this block splitter works — it got 23 products from District 10 in v2
+// v2.3: string-split on product card marker to guarantee block isolation
 function parseProducts(html, fxRate, baseUrl, categoryPath) {
   const products = [];
 
-  // Split HTML into product blocks using the "package card" boundary
-  const packageBlockPattern = /<div class="package card[^"]*"[\s\S]*?(?=<div class="package card|<\/section>|$)/g;
-  const blocks = html.match(packageBlockPattern) || [];
+  // Split on the literal start of each product card
+  // First segment is everything before first card (discard), rest are individual cards
+  const marker = '<div class="package card';
+  const segments = html.split(marker);
 
-  for (const block of blocks) {
-    const product = parseProductBlock(block, fxRate, baseUrl, categoryPath);
+  // Skip segment[0] (HTML before any product card)
+  for (let i = 1; i < segments.length; i++) {
+    // Reattach the marker so parseProductBlock sees a valid card start
+    const block = marker + segments[i];
+    // Truncate at the next card boundary or a reasonable limit
+    const block_trimmed = block.substring(0, 3000);
+    const product = parseProductBlock(block_trimmed, fxRate, baseUrl, categoryPath);
     if (product) products.push(product);
   }
 
