@@ -1,4 +1,6 @@
 // Cloudflare Pages Function: /api/tebex/scrape
+// v2 — targets Tebex classic template stores (UK RP server standard)
+//
 // POST to trigger a scrape run. Fetches all include_in_audit=1 servers,
 // parses their Tebex stores, writes products + summaries + flags to D1.
 //
@@ -12,19 +14,35 @@ const PLA_KEYWORDS = [
   'exclusive weapon', 'custom loadout', 'extra health',
   'faster respawn', 'starter pack', 'starter kit',
   'exclusive job', 'premium job', 'gold status',
-  'vip status', 'vip access'
+  'vip status', 'vip access', 'prio'
+];
+
+// ---- Browser User-Agent to get past Cloudflare bot protection ----
+const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+// ---- Common category paths to try when scraping a store ----
+const COMMON_PATHS = [
+  '/',
+  '/category/prio',
+  '/category/priority',
+  '/category/prio-1',
+  '/category/packages',
+  '/category/subscriptions',
+  '/category/vip',
+  '/category/misc',
+  '/category/cars',
+  '/category/vehicles',
+  '/category/donations'
 ];
 
 // ---- Main handler ----
 export async function onRequestPost({ request, env }) {
-  // Simple auth
   const url = new URL(request.url);
   const key = url.searchParams.get('key');
   if (!key || key !== env.ADMIN_PASSWORD) {
     return json({ error: 'Unauthorized' }, 401);
   }
 
-  // Optional: limit to N servers (for test runs)
   const limit = parseInt(url.searchParams.get('limit') || '0', 10);
   const runType = url.searchParams.get('type') || 'manual';
 
@@ -41,23 +59,18 @@ async function runScrape(db, limit, runType) {
   const startedAt = new Date();
   const runId = makeRunId(startedAt);
 
-  // Load targets
   const query = `SELECT * FROM tebex_targets WHERE include_in_audit = 1 AND tebex_url != '' ORDER BY server_name`;
   const { results: targets } = await db.prepare(query).all();
 
   let active = targets;
   if (limit > 0) active = active.slice(0, limit);
 
-  // Insert run record (incomplete initially, updated at end)
   await db.prepare(
     `INSERT INTO tebex_runs (run_id, started_at, run_type, servers_attempted, scraper_version)
      VALUES (?, ?, ?, ?, ?)`
-  ).bind(runId, startedAt.toISOString(), runType, active.length, '1.0.0').run();
+  ).bind(runId, startedAt.toISOString(), runType, active.length, '2.0.0').run();
 
-  // Fetch FX rate once
   const fxRate = await fetchFxRate();
-
-  // Process each target
   const stats = { attempted: 0, successful: 0, productsCollected: 0, errors: [] };
 
   for (const target of active) {
@@ -76,7 +89,7 @@ async function runScrape(db, limit, runType) {
         await writeSummary(db, {
           run_id: runId, server_name: target.server_name,
           total_products: 0, fetch_status: 'FETCH_FAILED',
-          notes: 'No products returned'
+          notes: 'No products found across attempted paths'
         });
         stats.errors.push(`${target.server_name}: 0 products`);
       }
@@ -88,8 +101,7 @@ async function runScrape(db, limit, runType) {
         notes: e.message.substring(0, 500)
       });
     }
-    // Polite 1s between servers
-    await sleep(1000);
+    await sleep(1500);
   }
 
   const completedAt = new Date();
@@ -117,120 +129,141 @@ async function runScrape(db, limit, runType) {
   };
 }
 
-// ---- Fetch one Tebex store and parse products ----
+// ---- Scrape one Tebex store ----
 async function scrapeServer(target, fxRate) {
   const baseUrl = cleanUrl(target.tebex_url);
+  const allProducts = new Map(); // dedupe by package ID
 
-  // Try JSON endpoints first
-  const jsonEndpoints = [
-    `${baseUrl}/api/packages`,
-    `${baseUrl}/api/storefront/packages`
-  ];
+  // First, fetch the homepage to discover all category links
+  const homepageHtml = await fetchPage(baseUrl);
+  if (!homepageHtml) return [];
 
-  for (const endpoint of jsonEndpoints) {
-    try {
-      const resp = await fetch(endpoint, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'ContentLore-TebexAudit/1.0 (+https://contentlore.com/the-platform/tebex-audit/)'
-        },
-        cf: { cacheEverything: false }
-      });
-      if (resp.ok) {
-        const body = await resp.text();
-        if (body && (body.startsWith('[') || body.startsWith('{'))) {
-          const products = parseJson(body, fxRate);
-          if (products.length > 0) return products;
-        }
-      }
-    } catch { /* try next */ }
+  const categoryPaths = discoverCategories(homepageHtml);
+
+  // Also include common paths we know about
+  for (const p of COMMON_PATHS) {
+    if (!categoryPaths.includes(p)) categoryPaths.push(p);
   }
 
-  // Fallback: HTML scrape
+  // Parse products from homepage first
+  for (const product of parseProducts(homepageHtml, fxRate, baseUrl, '')) {
+    allProducts.set(product.product_url, product);
+  }
+
+  // Then fetch each category page (limit to avoid runaway)
+  const toFetch = categoryPaths.slice(0, 15);
+  for (const path of toFetch) {
+    if (path === '/' || path === '') continue;
+    try {
+      const html = await fetchPage(baseUrl + path);
+      if (!html) continue;
+      for (const product of parseProducts(html, fxRate, baseUrl, path)) {
+        allProducts.set(product.product_url, product);
+      }
+    } catch { /* skip category */ }
+    await sleep(400); // polite between categories
+  }
+
+  return Array.from(allProducts.values());
+}
+
+// ---- Fetch a single page with browser UA ----
+async function fetchPage(url) {
   try {
-    const resp = await fetch(baseUrl, {
+    const resp = await fetch(url, {
       headers: {
-        'Accept': 'text/html',
-        'User-Agent': 'ContentLore-TebexAudit/1.0 (+https://contentlore.com/the-platform/tebex-audit/)'
+        'User-Agent': BROWSER_UA,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-GB,en;q=0.9'
       },
       redirect: 'follow'
     });
-    if (resp.ok) {
-      const body = await resp.text();
-      return parseHtml(body, fxRate);
-    }
-  } catch { /* give up */ }
-
-  return [];
+    if (!resp.ok) return null;
+    return await resp.text();
+  } catch {
+    return null;
+  }
 }
 
-// ---- Parse JSON product arrays ----
-function parseJson(body, fxRate) {
-  let data;
-  try { data = JSON.parse(body); } catch { return []; }
-
-  const packages = Array.isArray(data) ? data : (data.data || data.packages || []);
-  if (!Array.isArray(packages)) return [];
-
-  const products = [];
-  for (const pkg of packages.slice(0, 100)) {
-    const p = normalizePackage(pkg, fxRate);
-    if (p) products.push(p);
+// ---- Discover category paths from the homepage ----
+function discoverCategories(html) {
+  const paths = new Set();
+  const pattern = /href="(\/category\/[^"#?]+)"/gi;
+  let match;
+  while ((match = pattern.exec(html)) !== null) {
+    paths.add(match[1]);
   }
+  return Array.from(paths);
+}
+
+// ---- Parse products from Tebex classic template HTML ----
+function parseProducts(html, fxRate, baseUrl, categoryPath) {
+  const products = [];
+
+  // Tebex classic template: each product is a <div class="package card ...">
+  // Split the HTML on "package card" boundaries to isolate each product block
+  const packageBlockPattern = /<div class="package card[^"]*"[\s\S]*?(?=<div class="package card|<\/section>|$)/g;
+  const blocks = html.match(packageBlockPattern) || [];
+
+  for (const block of blocks) {
+    const product = parseProductBlock(block, fxRate, baseUrl, categoryPath);
+    if (product) products.push(product);
+  }
+
   return products;
 }
 
-function normalizePackage(pkg, fxRate) {
-  if (!pkg || typeof pkg !== 'object') return null;
-  const name = pkg.name || pkg.title || pkg.package_name;
+// ---- Parse a single product block ----
+function parseProductBlock(block, fxRate, baseUrl, categoryPath) {
+  // Extract package ID from href
+  const idMatch = block.match(/\/package\/(\d+)/);
+  if (!idMatch) return null;
+  const packageId = idMatch[1];
+
+  // Extract name from <h4>...<a>NAME</a></h4>
+  const nameMatch = block.match(/<h4[^>]*>.*?<a[^>]*>([^<]+)<\/a>/s);
+  if (!nameMatch) return null;
+  const name = decodeHtml(nameMatch[1]).trim();
   if (!name) return null;
 
-  const { amount, currency } = extractPrice(pkg);
-  const { priceGbp, priceUsd } = normalizeCurrency(amount, currency, fxRate);
-
-  let category = '';
-  if (pkg.category) {
-    category = typeof pkg.category === 'object'
-      ? (pkg.category.name || pkg.category.title || '')
-      : String(pkg.category);
+  // Extract price
+  const priceMatch = block.match(/>\s*([\d.,]+)\s+([A-Z]{3})\s*</);
+  let amount = 0;
+  let currency = 'GBP';
+  if (priceMatch) {
+    amount = parseFloat(priceMatch[1].replace(',', '.')) || 0;
+    currency = priceMatch[2];
   }
 
-  const description = stripHtml(String(pkg.description || pkg.content || '')).substring(0, 500);
-  const recurring = !!(pkg.type === 'subscription' || pkg.recurring || pkg.is_recurring ||
-    (pkg.price_type && String(pkg.price_type).toLowerCase() === 'subscription'));
+  // Detect subscription (recurring)
+  const recurring = /\/checkout\/packages\/add\/\d+\/subscribe/i.test(block);
+
+  // Normalise currency
+  const { priceGbp, priceUsd } = normalizeCurrency(amount, currency, fxRate);
+
+  // Category is the path we fetched from
+  const category = categoryPath.replace(/^\/category\//, '').replace(/-/g, ' ').substring(0, 100);
 
   return {
-    name: String(name).substring(0, 200),
+    name: name.substring(0, 200),
     price_native: amount,
     currency,
     price_gbp: priceGbp,
     price_usd: priceUsd,
-    category: category.substring(0, 100),
-    description,
-    product_url: String(pkg.url || pkg.link || '').substring(0, 400),
+    category,
+    description: '', // description not in category listing; detail page would need separate fetch
+    product_url: `${baseUrl}/package/${packageId}`,
     recurring
   };
 }
 
-function extractPrice(pkg) {
-  let amount = 0;
-  let currency = 'USD';
-
-  if (typeof pkg.price === 'number') amount = pkg.price;
-  else if (typeof pkg.price === 'string') amount = parseFloat(pkg.price) || 0;
-  else if (pkg.price && typeof pkg.price === 'object') {
-    amount = parseFloat(pkg.price.amount || pkg.price.value || 0) || 0;
-    if (pkg.price.currency) {
-      currency = typeof pkg.price.currency === 'object'
-        ? (pkg.price.currency.iso_4217 || pkg.price.currency.code || 'USD')
-        : String(pkg.price.currency);
-    }
-  }
-
-  if (amount === 0 && pkg.base_price !== undefined) amount = parseFloat(pkg.base_price) || 0;
-  if (pkg.currency && typeof pkg.currency === 'string') currency = pkg.currency;
-
-  return { amount, currency: currency.toUpperCase() };
+// ---- Decode HTML entities ----
+function decodeHtml(s) {
+  return s
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(parseInt(n, 10)));
 }
 
 function normalizeCurrency(amount, currency, fxRate) {
@@ -244,7 +277,7 @@ function normalizeCurrency(amount, currency, fxRate) {
       priceGbp = amount * 0.85;
       priceUsd = fxRate > 0 ? priceGbp / fxRate : 0;
       break;
-    default: // USD or unknown
+    default:
       priceUsd = amount;
       priceGbp = amount * fxRate;
   }
@@ -252,51 +285,6 @@ function normalizeCurrency(amount, currency, fxRate) {
     priceGbp: Math.round(priceGbp * 100) / 100,
     priceUsd: Math.round(priceUsd * 100) / 100
   };
-}
-
-// ---- HTML fallback — try embedded JSON hydration blobs ----
-function parseHtml(body, fxRate) {
-  const patterns = [
-    /window\.__INITIAL_STATE__\s*=\s*(\{[\s\S]*?\});/,
-    /window\.__TEBEX_STATE__\s*=\s*(\{[\s\S]*?\});/,
-    /<script[^>]*id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/
-  ];
-
-  for (const pattern of patterns) {
-    const match = body.match(pattern);
-    if (match && match[1]) {
-      try {
-        const obj = JSON.parse(match[1]);
-        const packages = findPackagesDeep(obj);
-        if (packages.length > 0) {
-          return packages.slice(0, 100).map(p => normalizePackage(p, fxRate)).filter(Boolean);
-        }
-      } catch { /* try next */ }
-    }
-  }
-  return [];
-}
-
-function findPackagesDeep(obj, depth = 0) {
-  if (depth > 5 || !obj || typeof obj !== 'object') return [];
-  if (Array.isArray(obj)) {
-    if (obj.length > 0 && obj[0] && typeof obj[0] === 'object' &&
-        (obj[0].name || obj[0].title) && (obj[0].price !== undefined || obj[0].base_price !== undefined)) {
-      return obj;
-    }
-    return [];
-  }
-  for (const key of ['packages', 'products', 'items', 'data']) {
-    if (obj[key]) {
-      const result = findPackagesDeep(obj[key], depth + 1);
-      if (result.length > 0) return result;
-    }
-  }
-  for (const key of Object.keys(obj)) {
-    const result = findPackagesDeep(obj[key], depth + 1);
-    if (result.length > 0) return result;
-  }
-  return [];
 }
 
 // ---- FX rate ----
@@ -308,10 +296,10 @@ async function fetchFxRate() {
       if (data?.rates?.GBP) return data.rates.GBP;
     }
   } catch {}
-  return 0.74; // fallback
+  return 0.79;
 }
 
-// ---- Summary + flag builders (editorial review gated) ----
+// ---- Summary builder ----
 function buildSummary(runId, serverName, products) {
   if (products.length === 0) {
     return {
@@ -344,6 +332,7 @@ function buildSummary(runId, serverName, products) {
   };
 }
 
+// ---- Flag detection ----
 function detectFlags(runId, server, products, summary) {
   const flags = [];
   let idx = 0;
@@ -359,16 +348,15 @@ function detectFlags(runId, server, products, summary) {
     });
   };
 
-  // Pricing flags
   if (summary.entry_tier_gbp != null) {
-    const entryUsd = summary.entry_tier_gbp / 0.74;
+    const entryUsd = summary.entry_tier_gbp / 0.79;
     if (entryUsd >= 30) {
       pushFlag('Pricing posture', 'High entry tier', 1,
         `Entry-tier subscription at £${summary.entry_tier_gbp.toFixed(2)} (approx $${entryUsd.toFixed(2)}).`);
     }
   }
   if (summary.top_tier_gbp != null) {
-    const topUsd = summary.top_tier_gbp / 0.74;
+    const topUsd = summary.top_tier_gbp / 0.79;
     if (topUsd >= 150) {
       pushFlag('Pricing posture', 'High top tier', 2,
         `Top-tier subscription at £${summary.top_tier_gbp.toFixed(2)} (approx $${topUsd.toFixed(2)}). Editorial review required.`);
@@ -379,7 +367,6 @@ function detectFlags(runId, server, products, summary) {
       `Top tier is ${(summary.top_tier_gbp / summary.entry_tier_gbp).toFixed(1)}x entry tier.`);
   }
 
-  // Catalogue flags
   if (summary.total_products >= 80) {
     pushFlag('Catalogue breadth', 'Large catalogue', 1,
       `${summary.total_products} products listed. Large catalogues suggest aggressive monetisation shape.`);
@@ -388,7 +375,6 @@ function detectFlags(runId, server, products, summary) {
       `Only ${summary.total_products} products found. Verify parse succeeded.`);
   }
 
-  // PLA keyword matches — one flag per matched product
   for (const p of products) {
     const text = `${p.name} ${p.description}`.toLowerCase();
     const matched = PLA_KEYWORDS.filter(kw => text.includes(kw));
@@ -400,7 +386,6 @@ function detectFlags(runId, server, products, summary) {
     }
   }
 
-  // Marketing honesty — "free"/"donation" label with non-zero price
   for (const p of products) {
     const name = p.name.toLowerCase();
     if (p.price_gbp > 0 && (name.includes('free') || name.includes('donation') || name.includes('donate'))) {
@@ -470,14 +455,6 @@ function cleanUrl(url) {
   while (url.endsWith('/')) url = url.slice(0, -1);
   if (!url.startsWith('http')) url = 'https://' + url;
   return url;
-}
-
-function stripHtml(s) {
-  return s.replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-    .replace(/\s+/g, ' ').trim();
 }
 
 function sleep(ms) {
