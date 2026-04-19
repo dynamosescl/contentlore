@@ -1,11 +1,11 @@
 // Cloudflare Pages Function: /api/tebex/scrape
-// v2 — targets Tebex classic template stores (UK RP server standard)
+// v2.1 — targets Tebex classic template stores with robust per-product parsing
 //
-// POST to trigger a scrape run. Fetches all include_in_audit=1 servers,
-// parses their Tebex stores, writes products + summaries + flags to D1.
-//
-// Simple admin auth: expects ?key=<ADMIN_KEY> query parameter.
-// ADMIN_KEY should match the existing admin panel password.
+// Fixes from v2.0:
+//  - Run ID now includes seconds (fixes UNIQUE constraint collisions)
+//  - Product block parser rewritten using split-on-boundary approach
+//  - Better resilience against regex backtracking on large HTML
+//  - Additional category paths covered
 
 // ---- PLA keywords for automated flag detection ----
 const PLA_KEYWORDS = [
@@ -17,10 +17,8 @@ const PLA_KEYWORDS = [
   'vip status', 'vip access', 'prio'
 ];
 
-// ---- Browser User-Agent to get past Cloudflare bot protection ----
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-// ---- Common category paths to try when scraping a store ----
 const COMMON_PATHS = [
   '/',
   '/category/prio',
@@ -32,7 +30,10 @@ const COMMON_PATHS = [
   '/category/misc',
   '/category/cars',
   '/category/vehicles',
-  '/category/donations'
+  '/category/donations',
+  '/category/tebex',
+  '/category/shop',
+  '/category/store'
 ];
 
 // ---- Main handler ----
@@ -68,7 +69,7 @@ async function runScrape(db, limit, runType) {
   await db.prepare(
     `INSERT INTO tebex_runs (run_id, started_at, run_type, servers_attempted, scraper_version)
      VALUES (?, ?, ?, ?, ?)`
-  ).bind(runId, startedAt.toISOString(), runType, active.length, '2.0.0').run();
+  ).bind(runId, startedAt.toISOString(), runType, active.length, '2.1.0').run();
 
   const fxRate = await fetchFxRate();
   const stats = { attempted: 0, successful: 0, productsCollected: 0, errors: [] };
@@ -132,15 +133,12 @@ async function runScrape(db, limit, runType) {
 // ---- Scrape one Tebex store ----
 async function scrapeServer(target, fxRate) {
   const baseUrl = cleanUrl(target.tebex_url);
-  const allProducts = new Map(); // dedupe by package ID
+  const allProducts = new Map();
 
-  // First, fetch the homepage to discover all category links
   const homepageHtml = await fetchPage(baseUrl);
   if (!homepageHtml) return [];
 
   const categoryPaths = discoverCategories(homepageHtml);
-
-  // Also include common paths we know about
   for (const p of COMMON_PATHS) {
     if (!categoryPaths.includes(p)) categoryPaths.push(p);
   }
@@ -150,7 +148,7 @@ async function scrapeServer(target, fxRate) {
     allProducts.set(product.product_url, product);
   }
 
-  // Then fetch each category page (limit to avoid runaway)
+  // Fetch each discovered category page
   const toFetch = categoryPaths.slice(0, 15);
   for (const path of toFetch) {
     if (path === '/' || path === '') continue;
@@ -160,14 +158,14 @@ async function scrapeServer(target, fxRate) {
       for (const product of parseProducts(html, fxRate, baseUrl, path)) {
         allProducts.set(product.product_url, product);
       }
-    } catch { /* skip category */ }
-    await sleep(400); // polite between categories
+    } catch { /* skip */ }
+    await sleep(400);
   }
 
   return Array.from(allProducts.values());
 }
 
-// ---- Fetch a single page with browser UA ----
+// ---- Fetch a single page ----
 async function fetchPage(url) {
   try {
     const resp = await fetch(url, {
@@ -185,7 +183,7 @@ async function fetchPage(url) {
   }
 }
 
-// ---- Discover category paths from the homepage ----
+// ---- Discover category paths ----
 function discoverCategories(html) {
   const paths = new Set();
   const pattern = /href="(\/category\/[^"#?]+)"/gi;
@@ -197,51 +195,73 @@ function discoverCategories(html) {
 }
 
 // ---- Parse products from Tebex classic template HTML ----
+// v2.1: rewrote to use package ID as the anchor, then find associated name + price
 function parseProducts(html, fxRate, baseUrl, categoryPath) {
   const products = [];
+  const seenIds = new Set();
 
-  // Tebex classic template: each product is a <div class="package card ...">
-  // Split the HTML on "package card" boundaries to isolate each product block
-  const packageBlockPattern = /<div class="package card[^"]*"[\s\S]*?(?=<div class="package card|<\/section>|$)/g;
-  const blocks = html.match(packageBlockPattern) || [];
+  // Find all unique package IDs referenced in this HTML
+  const idPattern = /\/package\/(\d+)/g;
+  let idMatch;
+  const positions = [];
+  while ((idMatch = idPattern.exec(html)) !== null) {
+    const id = idMatch[1];
+    if (!seenIds.has(id)) {
+      seenIds.add(id);
+      positions.push({ id, pos: idMatch.index });
+    }
+  }
 
-  for (const block of blocks) {
-    const product = parseProductBlock(block, fxRate, baseUrl, categoryPath);
+  // For each package ID, extract a window of HTML around its first occurrence
+  // and parse the product data from that window
+  for (const { id, pos } of positions) {
+    // Window: 200 chars before to 800 chars after the ID position
+    // This covers the surrounding <div class="package card"> ... </div> block
+    const windowStart = Math.max(0, pos - 200);
+    const windowEnd = Math.min(html.length, pos + 800);
+    const window = html.substring(windowStart, windowEnd);
+
+    const product = parseFromWindow(id, window, fxRate, baseUrl, categoryPath);
     if (product) products.push(product);
   }
 
   return products;
 }
 
-// ---- Parse a single product block ----
-function parseProductBlock(block, fxRate, baseUrl, categoryPath) {
-  // Extract package ID from href
-  const idMatch = block.match(/\/package\/(\d+)/);
-  if (!idMatch) return null;
-  const packageId = idMatch[1];
-
-  // Extract name from <h4>...<a>NAME</a></h4>
-  const nameMatch = block.match(/<h4[^>]*>.*?<a[^>]*>([^<]+)<\/a>/s);
+// ---- Parse a product from its window of HTML ----
+function parseFromWindow(packageId, window, fxRate, baseUrl, categoryPath) {
+  // Find name — inside an <h4>...<a>...NAME</a></h4> pattern
+  // Allow <h4> with any attributes, any whitespace/newlines
+  const nameMatch = window.match(/<h4[^>]*>[\s\S]{0,200}?<a[^>]*href="\/package\/\d+"[^>]*>([^<]+)<\/a>/);
   if (!nameMatch) return null;
   const name = decodeHtml(nameMatch[1]).trim();
-  if (!name) return null;
+  if (!name || name.length < 2) return null;
 
-  // Extract price
-  const priceMatch = block.match(/>\s*([\d.,]+)\s+([A-Z]{3})\s*</);
+  // Find price — looking for NUMBER CCC pattern (e.g. "15.00 GBP")
+  // Must be close to the name and package link
+  // Use a more specific pattern: inside a span with class containing "text-primary" or "font-weight"
+  const priceMatch = window.match(/<span[^>]*(?:text-primary|font-weight-bold|price)[^>]*>\s*([\d.,]+)\s+([A-Z]{3})\s*<\/span>/i);
+
   let amount = 0;
   let currency = 'GBP';
   if (priceMatch) {
     amount = parseFloat(priceMatch[1].replace(',', '.')) || 0;
     currency = priceMatch[2];
+  } else {
+    // Fallback: any number + 3-letter currency code in window
+    const fallbackMatch = window.match(/>\s*([\d]+(?:\.[\d]{2})?)\s+([A-Z]{3})\s*</);
+    if (fallbackMatch) {
+      amount = parseFloat(fallbackMatch[1]) || 0;
+      currency = fallbackMatch[2];
+    }
   }
 
-  // Detect subscription (recurring)
-  const recurring = /\/checkout\/packages\/add\/\d+\/subscribe/i.test(block);
+  // Detect subscription: look for /subscribe suffix near this package ID
+  const subscribePattern = new RegExp(`/checkout/packages/add/${packageId}/subscribe`, 'i');
+  const recurring = subscribePattern.test(window);
 
-  // Normalise currency
   const { priceGbp, priceUsd } = normalizeCurrency(amount, currency, fxRate);
 
-  // Category is the path we fetched from
   const category = categoryPath.replace(/^\/category\//, '').replace(/-/g, ' ').substring(0, 100);
 
   return {
@@ -251,13 +271,12 @@ function parseProductBlock(block, fxRate, baseUrl, categoryPath) {
     price_gbp: priceGbp,
     price_usd: priceUsd,
     category,
-    description: '', // description not in category listing; detail page would need separate fetch
+    description: '',
     product_url: `${baseUrl}/package/${packageId}`,
     recurring
   };
 }
 
-// ---- Decode HTML entities ----
 function decodeHtml(s) {
   return s
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
@@ -287,7 +306,6 @@ function normalizeCurrency(amount, currency, fxRate) {
   };
 }
 
-// ---- FX rate ----
 async function fetchFxRate() {
   try {
     const resp = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -299,7 +317,6 @@ async function fetchFxRate() {
   return 0.79;
 }
 
-// ---- Summary builder ----
 function buildSummary(runId, serverName, products) {
   if (products.length === 0) {
     return {
@@ -332,7 +349,6 @@ function buildSummary(runId, serverName, products) {
   };
 }
 
-// ---- Flag detection ----
 function detectFlags(runId, server, products, summary) {
   const flags = [];
   let idx = 0;
@@ -398,7 +414,6 @@ function detectFlags(runId, server, products, summary) {
   return flags;
 }
 
-// ---- DB writers ----
 async function writeProducts(db, runId, server, products) {
   const now = new Date().toISOString();
   const stmt = db.prepare(
@@ -444,10 +459,10 @@ async function writeFlags(db, flags) {
   if (batch.length > 0) await db.batch(batch);
 }
 
-// ---- Utilities ----
+// v2.1: run ID now includes seconds to prevent UNIQUE constraint collisions
 function makeRunId(d) {
   const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}-${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}`;
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}-${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`;
 }
 
 function cleanUrl(url) {
