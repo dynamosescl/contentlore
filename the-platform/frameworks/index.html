@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UK FiveM Frameworks · Reference · The Platform · ContentLore</title>
+<meta name="description" content="The three frameworks UK FiveM servers actually run on — ESX, QBCore, QBox. What each does, what it costs in performance, who built it, and what choosing one in 2026 reveals about when a server was conceived." />
+<meta name="theme-color" content="#0A0A0B" />
+
+<meta property="og:title" content="UK FiveM Frameworks reference · The Platform" />
+<meta property="og:description" content="ESX, QBCore, QBox. What each does, what it costs in performance, and what choosing one in 2026 reveals about when a server was conceived." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://contentlore.com/the-platform/frameworks/" />
+<meta property="og:site_name" content="ContentLore" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../styles.css">
+
+<style>
+  .cl-reference-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--container-pad) var(--space-7);
+    position: relative;
+    z-index: 2;
+  }
+  @media (max-width: 820px) {
+    .cl-reference-container { padding: var(--space-4) var(--container-pad) var(--space-5); }
+  }
+  .cl-breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-4);
+  }
+  .cl-breadcrumb a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px dotted var(--text-dim); }
+  .cl-breadcrumb a:hover { color: var(--signal); border-bottom-color: var(--signal); }
+  .cl-breadcrumb .sep { margin: 0 8px; color: var(--text-dim); }
+  .cl-reference-header { margin-bottom: var(--space-5); padding-bottom: var(--space-4); border-bottom: 1px solid var(--border); }
+  .cl-reference-header .kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin-bottom: var(--space-3);
+  }
+  .cl-reference-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 6vw, 76px);
+    line-height: 1.02;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+  }
+  .cl-reference-header .dek {
+    font-family: var(--font-body);
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1.5;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: var(--space-3);
+    max-width: 820px;
+  }
+  .cl-reference-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+  .cl-reference-meta .updated { color: var(--signal); }
+  .cl-reference-body h2 {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 3vw, 34px);
+    letter-spacing: 0.5px;
+    line-height: 1.15;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin: var(--space-5) 0 var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+  }
+  .cl-reference-body h3 {
+    font-family: var(--font-body);
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--signal);
+    margin: var(--space-4) 0 var(--space-2);
+  }
+  .cl-reference-body p {
+    font-family: var(--font-body);
+    font-size: 19px;
+    line-height: 1.65;
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+  }
+  .cl-reference-body strong { font-weight: 600; color: var(--text-primary); }
+  .cl-reference-body em { font-style: italic; color: var(--text-secondary); }
+  .cl-framework-table {
+    width: 100%;
+    margin: var(--space-4) 0;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+  .cl-framework-table th {
+    background: var(--bg-deep);
+    color: var(--signal);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 14px 18px;
+    border-bottom: 2px solid var(--signal);
+    font-weight: 500;
+  }
+  .cl-framework-table td {
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.5;
+    vertical-align: top;
+  }
+  .cl-framework-table tr:last-child td { border-bottom: none; }
+  .cl-framework-table .fw-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+  .cl-framework-table .fw-name.esx { color: #5D8FB8; }
+  .cl-framework-table .fw-name.qbcore { color: #C46A57; }
+  .cl-framework-table .fw-name.qbox { color: #D4A574; }
+  .cl-framework-table .data { font-family: var(--font-mono); font-size: 14px; color: var(--text-secondary); }
+  @media (max-width: 820px) {
+    .cl-framework-table { font-size: 13px; }
+    .cl-framework-table th, .cl-framework-table td { padding: 10px 12px; }
+    .cl-framework-table .fw-name { font-size: 18px; }
+  }
+  .cl-kv-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--signal);
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-4) 0;
+  }
+  .cl-kv-box .kv-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin-bottom: 8px;
+  }
+  .cl-kv-box p { margin-bottom: 0; font-size: 17px; }
+  .cl-list { list-style: none; margin: var(--space-3) 0 var(--space-4); padding: 0; }
+  .cl-list li {
+    position: relative;
+    padding: 16px 0 16px 36px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+  .cl-list li:first-child { border-top: 1px solid var(--border); }
+  .cl-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 28px;
+    width: 16px;
+    height: 1px;
+    background: var(--signal);
+  }
+  .cl-list li strong { color: var(--signal); font-weight: 600; }
+  .cl-sources {
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--signal);
+  }
+  .cl-sources-heading {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin-bottom: var(--space-3);
+  }
+  .cl-sources-list { list-style: none; padding: 0; margin: 0; }
+  .cl-sources-list li {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cl-sources-list li:last-child { border-bottom: none; }
+  .cl-sources-list em { color: var(--text-primary); font-style: italic; }
+  .cl-sources-list a { color: var(--signal); text-decoration: none; border-bottom: 1px dotted var(--signal-dim); }
+  .cl-sources-list a:hover { color: var(--text-primary); }
+  .cl-reference-footer { margin-top: var(--space-5); padding-top: var(--space-3); border-top: 1px solid var(--border); text-align: center; }
+  .cl-reference-footer p {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+  .cl-reference-footer a { color: var(--signal); text-decoration: none; border-bottom: 1px dotted var(--signal-dim); }
+</style>
+</head>
+<body>
+
+<nav class="cl-nav">
+  <a href="../../" class="cl-nav-brand">
+    <span class="cl-wordmark">ContentLore<span class="dot">.</span></span>
+    <span class="cl-nav-tagline">THE UK STREAMING DESK</span>
+  </a>
+  <ul class="cl-nav-links">
+    <li><a href="../../gta-rp/">GTA RP</a></li>
+    <li><a href="../" class="active">The Platform</a></li>
+    <li><a href="../../rising/">Rising</a></li>
+    <li><a href="../../signals/">Signals</a></li>
+    <li><a href="../../ledger/">Ledger</a></li>
+  </ul>
+  <div class="cl-nav-right">
+    <span class="cl-live-pill">Reference</span>
+  </div>
+</nav>
+
+<main>
+  <div class="cl-reference-container">
+
+    <div class="cl-breadcrumb">
+      <a href="../../">Home</a>
+      <span class="sep">/</span>
+      <a href="../">The Platform</a>
+      <span class="sep">/</span>
+      <span>Frameworks</span>
+    </div>
+
+    <header class="cl-reference-header">
+      <div class="kicker">The Platform · Reference page · Maintained</div>
+      <h1>UK FiveM Frameworks.</h1>
+      <p class="dek">
+        The three frameworks UK FiveM servers actually run on — ESX,
+        QBCore, QBox. What each does, what it costs in performance,
+        and what choosing one in 2026 reveals about when a server was
+        conceived. Maintained as a permanent reference.
+      </p>
+      <div class="cl-reference-meta">
+        <span class="updated">Last updated · 19 April 2026</span>
+        <span>Review cadence · Quarterly</span>
+        <span>Scope · ESX / QBCore / QBox</span>
+      </div>
+    </header>
+
+    <section class="cl-reference-body">
+
+      <h2>What a framework is</h2>
+
+      <p>
+        A FiveM framework is the software layer that sits between
+        FiveM's platform and a server's game logic. It handles player
+        data, inventory, jobs, vehicles, money, permissions, and the
+        other primitives every roleplay server needs. A server operator
+        does not write these systems from scratch; they pick a
+        framework and build on top of it. The framework choice is,
+        for that reason, one of the most consequential technical
+        decisions made about a server.
+      </p>
+
+      <p>
+        Three frameworks dominate the UK and global FiveM roleplay
+        scene in 2026. ESX is the oldest and most-used by raw server
+        count. QBCore is the historical standard for roleplay
+        servers, with an enormous script ecosystem. QBox is a modern
+        fork of QBCore, built by former QBCore contributors, that is
+        growing quickly. Each framework represents a different
+        philosophical and technical approach to the same problem
+        space.
+      </p>
+
+      <h2>At a glance</h2>
+
+      <table class="cl-framework-table">
+        <thead>
+          <tr>
+            <th>Framework</th>
+            <th>First released</th>
+            <th>Usage rank</th>
+            <th>Performance</th>
+            <th>Active development</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="fw-name esx">ESX</span></td>
+            <td class="data">~2018</td>
+            <td class="data">#1 (by server count)</td>
+            <td class="data">Best CPU efficiency of the three</td>
+            <td class="data">Yes</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name qbcore">QBCore</span></td>
+            <td class="data">~2020</td>
+            <td class="data">#2</td>
+            <td class="data">Highest CPU usage of the three</td>
+            <td class="data">Slowed noticeably from 2023</td>
+          </tr>
+          <tr>
+            <td><span class="fw-name qbox">QBox</span></td>
+            <td class="data">Sep 2022 (as QBCore fork)</td>
+            <td class="data">#3, fastest-growing</td>
+            <td class="data">Between ESX and QBCore</td>
+            <td class="data">Yes, active</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Usage ranking is as of late 2025, sourced from community
+        metrics tracked at 5Metrics and reported by Lation Scripts.
+        The exact numerical share between the three has fluctuated
+        through 2026 and is not public in audited form. The ordering,
+        however, is stable: ESX first, QBCore second, QBox third
+        but closing.
+      </p>
+
+      <h2>ESX</h2>
+
+      <p>
+        ESX — full name <em>EssentialMode Extended</em> — is the
+        longest-established FiveM roleplay framework in active wide
+        use. It emerged as a community successor to the original
+        EssentialMode and quickly became the default choice for
+        economy-based roleplay servers. Its mature ecosystem covers
+        virtually every possible RP script requirement; its
+        multi-language community support is strong; its performance
+        characteristics are measurably better than either QBCore or
+        QBox.
+      </p>
+
+      <p>
+        Where ESX is weaker is in modern coding conventions. The
+        framework predates many patterns that newer FiveM resources
+        assume, which can create friction when integrating recent
+        scripts written against QBCore or QBox conventions. For
+        servers with mature custom codebases built on ESX, this
+        rarely matters. For new servers being built in 2026, ESX is
+        a choice that trades modern ergonomics for battle-tested
+        stability and performance.
+      </p>
+
+      <div class="cl-kv-box">
+        <div class="kv-label">Editorial observation</div>
+        <p>
+          ESX is the framework of the server that has been running
+          for five years, has its own script library, and is not
+          rewriting its foundation for anybody. It is quietly the
+          best choice for servers with professional engineering
+          discipline, and quietly the worst choice for servers
+          trying to keep up with the Cfx forum's monthly releases.
+        </p>
+      </div>
+
+      <h3>When to pick ESX</h3>
+
+      <ul class="cl-list">
+        <li>The server prioritises performance and scales to high player counts.</li>
+        <li>The operator has existing ESX codebase or experience with the conventions.</li>
+        <li>The server operates as a mature, economy-heavy roleplay environment.</li>
+        <li>Script stability matters more than access to the latest community releases.</li>
+      </ul>
+
+      <h2>QBCore</h2>
+
+      <p>
+        QBCore rose to prominence from around 2020 as a more
+        beginner-friendly alternative to ESX. Its explicit
+        philosophy was accessibility: clear documentation,
+        structured starting points, a collection of bundled scripts
+        that gave new server operators a complete working RP server
+        out of the box. That accessibility built the largest script
+        ecosystem in FiveM — more community-contributed resources
+        target QBCore than any other framework.
+      </p>
+
+      <p>
+        That ecosystem is also QBCore's central problem in 2026.
+        The framework's codebase is several years old; its
+        performance costs are the highest of the three frameworks
+        covered here; and its active development has slowed since
+        around 2023. Many experienced server operators who built
+        on QBCore in its heyday have either migrated to QBox or
+        are considering doing so. The community sentiment has
+        shifted from "QBCore is the obvious starting point" to
+        "QBCore is the framework you are inheriting, not the
+        framework you are choosing."
+      </p>
+
+      <div class="cl-kv-box">
+        <div class="kv-label">Editorial observation</div>
+        <p>
+          QBCore is the framework of the server that was built in
+          2021 or 2022 and has grown faster than its foundations
+          can comfortably support. The framework is not broken;
+          it is ageing. What that means for an operator depends
+          on whether the server's growth trajectory is exposing
+          QBCore's limits, or whether stability within those
+          limits is acceptable. Both positions are defensible.
+        </p>
+      </div>
+
+      <h3>When to pick QBCore</h3>
+
+      <ul class="cl-list">
+        <li>The server has an established QBCore codebase and no compelling reason to migrate.</li>
+        <li>The operator is prioritising the largest possible library of community scripts.</li>
+        <li>Performance headroom is adequate for the server's current and projected player count.</li>
+        <li>The operator prefers QBCore's conventions to QBox's stricter modern patterns.</li>
+      </ul>
+
+      <h2>QBox</h2>
+
+      <p>
+        QBox was created on 27 September 2022 as a fork of QBCore by
+        a team of former QBCore contributors. Its explicit philosophy
+        is modernisation — performance, security, clean code, and
+        deep integration with the <em>ox</em> resource ecosystem
+        (ox_lib, ox_inventory, oxmysql) that has become the
+        highest-quality tooling layer in FiveM. QBox ships with
+        ox_inventory by default, which eliminates one of the most
+        common and damaging mistakes new server operators make:
+        starting with a poor inventory system that is expensive to
+        replace later.
+      </p>
+
+      <p>
+        The strategic move QBox made, and the reason it is growing
+        faster than either alternative, is <strong>backwards
+        compatibility with QBCore</strong>. QBox can run most QBCore
+        scripts with minimal or no modification. That means a
+        QBCore server owner facing performance problems can migrate
+        to QBox without giving up the script ecosystem they spent
+        years building. Community research in late 2025 suggested a
+        meaningful share of QBCore server owners were either in the
+        process of switching to QBox or wished they had started on
+        it. The direction of travel is clear.
+      </p>
+
+      <div class="cl-kv-box">
+        <div class="kv-label">Editorial observation</div>
+        <p>
+          QBox is the framework of the server that is being built or
+          rebuilt in 2025 or 2026. If a UK server announces a
+          framework migration over the next twelve months, the
+          destination is QBox more often than not. The combination
+          of modern architecture, backwards compatibility, and
+          active development makes QBox the lowest-friction
+          choice for operators who want to modernise without
+          starting over.
+        </p>
+      </div>
+
+      <h3>When to pick QBox</h3>
+
+      <ul class="cl-list">
+        <li>The server is being built fresh in 2025 or 2026.</li>
+        <li>The operator is migrating from QBCore because of performance or security concerns.</li>
+        <li>Access to the ox ecosystem of modern resources is a priority.</li>
+        <li>The operator wants active development and modern conventions over legacy stability.</li>
+      </ul>
+
+      <h2>What framework choice reveals</h2>
+
+      <p>
+        For the scene-watching reader rather than the server
+        operator, framework choice is also a signal about when and
+        how a server was conceived. A UK server running ESX in 2026
+        is telling you its core architecture probably predates 2021
+        and its engineering team values stability over novelty. A
+        server on QBCore is most likely a 2021-to-2023 build that
+        has not migrated. A server on QBox is either a 2023+ build
+        or a QBCore server that has made the modernisation jump.
+      </p>
+
+      <p>
+        This reading is not definitive — operators choose frameworks
+        for reasons that are not always visible from outside — but
+        it is consistently useful. When this desk's Scoreboard
+        coverage describes a server, the framework running
+        underneath is one of the quieter data points about its
+        technical maturity. Servers that have kept their framework
+        choice under review and migrated when appropriate tend to
+        be the ones that scale cleanly. Servers that have stayed on
+        the same framework for five years without revisiting the
+        choice tend to be the ones whose technical debt shows.
+      </p>
+
+      <h2>What Enhanced does to framework choice</h2>
+
+      <p>
+        Cfx has stated that existing FiveM scripts — written in Lua,
+        JavaScript, or C# — remain backwards-compatible on FiveM for
+        GTAV Enhanced. That means, in principle, ESX, QBCore, and
+        QBox servers can all migrate to Enhanced without framework
+        replacement. The migration work is at the platform layer,
+        not the framework layer.
+      </p>
+
+      <p>
+        In practice, the Enhanced migration creates a natural
+        inflection point where operators reconsider framework
+        choice anyway. A server doing the work to move to Enhanced
+        is already rebuilding parts of its stack; adding a
+        framework migration to that work is less costly than doing
+        it separately. This desk's expectation is that Enhanced
+        migration will accelerate framework churn — specifically, a
+        wave of QBCore-to-QBox migrations bundled with the
+        Legacy-to-Enhanced move. Whether that expectation holds up
+        will be reviewable in this desk's Q3 and Q4 coverage.
+      </p>
+
+      <h2>What this page does not cover</h2>
+
+      <p>
+        Three scope exclusions worth stating explicitly.
+      </p>
+
+      <p>
+        <strong>Custom forks and private frameworks.</strong> Some
+        of the largest UK servers run custom frameworks — either
+        forks of ESX, QBCore, or QBox with substantial private
+        modifications, or fully bespoke systems. This reference
+        covers the public, widely-adopted frameworks; private
+        systems are out of scope because they are, by definition,
+        not community-available.
+      </p>
+
+      <p>
+        <strong>Non-RP frameworks.</strong> This page focuses on
+        roleplay frameworks because UK FiveM is overwhelmingly a
+        roleplay scene. FiveM supports deathmatch, racing, and
+        other non-RP game modes, which have different framework
+        ecosystems. Those are out of scope here.
+      </p>
+
+      <p>
+        <strong>Framework configuration details.</strong> This
+        page describes what each framework is and when to choose
+        it. It does not cover installation, configuration, or
+        script development. The official docs for each framework
+        do that work and are linked in the sources block.
+      </p>
+
+    </section>
+
+    <aside class="cl-sources">
+      <h3 class="cl-sources-heading">Sources</h3>
+      <ul class="cl-sources-list">
+        <li>
+          QBox Project official documentation. Primary source for QBox architecture, founding date, and backwards-compatibility claims.
+          <a href="https://docs.qbox.re/" target="_blank" rel="noopener">docs.qbox.re</a>
+        </li>
+        <li>
+          QBox Project GitHub organisation. Reference for active development status and ox ecosystem integration.
+          <a href="https://github.com/Qbox-project" target="_blank" rel="noopener">github.com/Qbox-project</a>
+        </li>
+        <li>
+          Lation Scripts, <em>Best FiveM Framework in 2026: ESX vs QBCore vs Qbox</em>, September 2025. Primary source for performance comparison data, usage ranking, and community survey results.
+          <a href="https://lationscripts.com/blog/what-is-the-best-fivem-framework" target="_blank" rel="noopener">lationscripts.com</a>
+        </li>
+        <li>
+          Community Ox documentation. Reference for QBox's relationship to the Overextended tooling ecosystem.
+          <a href="https://coxdocs.dev/ox_inventory/Frameworks/qbx" target="_blank" rel="noopener">coxdocs.dev</a>
+        </li>
+        <li>
+          5Metrics framework usage tracker (community-maintained). Usage ranking source.
+        </li>
+        <li>
+          <em>Editorial policy: usage rankings (ESX first, QBCore second, QBox third) are sourced to community metrics and are stable in their ordering but not publicly audited. Performance characterisations are derived from Lation Scripts' CPU utilisation testing. Observations about server-age-vs-framework-choice patterns are ContentLore's analytical reading and labelled as such. First-release dates for ESX and QBCore are approximate; QBox's founding date of 27 September 2022 is sourced directly from the QBox Project's own documentation.</em>
+        </li>
+      </ul>
+    </aside>
+
+    <footer class="cl-reference-footer">
+      <p>The Platform · Reference · Maintained by ContentLore · Read the section at <a href="../">/the-platform/</a></p>
+    </footer>
+
+  </div>
+</main>
+
+</body>
+</html>
