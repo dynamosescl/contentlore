@@ -65,7 +65,7 @@ async function runScrape(db, limit, runType) {
   await db.prepare(
     `INSERT INTO tebex_runs (run_id, started_at, run_type, servers_attempted, scraper_version)
      VALUES (?, ?, ?, ?, ?)`
-  ).bind(runId, startedAt.toISOString(), runType, active.length, '2.3.0').run();
+  ).bind(runId, startedAt.toISOString(), runType, active.length, '2.4.0').run();
 
   const fxRate = await fetchFxRate();
   const stats = { attempted: 0, successful: 0, productsCollected: 0, errors: [] };
@@ -207,44 +207,52 @@ function parseProducts(html, fxRate, baseUrl, categoryPath) {
   return products;
 }
 
-// v2.2: fixed — find the LAST price before the first /checkout/ link,
-// which is the actual product price (not the currency dropdown)
+// v2.4: dual-template parser — handles BOTH Orbit-style (classic) and District-10-style (modern)
+// Classic template: <h4><a>NAME</a></h4> ... <span class="text-primary ...">PRICE CCC</span>
+// Modern template: <h4><strong class="h4 mb-0">NAME</strong></h4> ... PRICE <small>CCC</small>
 function parseProductBlock(block, fxRate, baseUrl, categoryPath) {
   const idMatch = block.match(/\/package\/(\d+)/);
   if (!idMatch) return null;
   const packageId = idMatch[1];
 
-  const nameMatch = block.match(/<h4[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/);
-  if (!nameMatch) return null;
-  const name = decodeHtml(nameMatch[1]).trim();
-  if (!name) return null;
+  // --- Name extraction ---
+  // Try modern template first: <strong class="h4 mb-0">NAME</strong>
+  let name = null;
+  const modernNameMatch = block.match(/<strong[^>]*class="[^"]*h4[^"]*"[^>]*>([^<]+)<\/strong>/);
+  if (modernNameMatch) {
+    name = decodeHtml(modernNameMatch[1]).trim();
+  }
+  // Fall back to classic: <h4>...<a>NAME</a>
+  if (!name || name.length < 2) {
+    const classicNameMatch = block.match(/<h4[^>]*>[\s\S]{0,300}?<a[^>]*>([^<]+)<\/a>/);
+    if (classicNameMatch) {
+      name = decodeHtml(classicNameMatch[1]).trim();
+    }
+  }
+  if (!name || name.length < 2) return null;
 
-  // Find ALL price matches in the block and pick the most specific one
-  // Tebex classic: <span class="text-primary lead font-weight-bold">15.00 GBP</span>
-  // Find all <span> containing a price pattern
+  // --- Price extraction ---
   let amount = 0;
   let currency = 'GBP';
 
-  const priceSpanPattern = /<span[^>]*>\s*([\d]+(?:[.,][\d]+)?)\s+([A-Z]{3})\s*<\/span>/g;
-  const priceMatches = [];
-  let pm;
-  while ((pm = priceSpanPattern.exec(block)) !== null) {
-    priceMatches.push({
-      amount: parseFloat(pm[1].replace(',', '.')) || 0,
-      currency: pm[2]
-    });
-  }
-
-  // Pick the first price match in the block (the product price, not text)
-  if (priceMatches.length > 0) {
-    amount = priceMatches[0].amount;
-    currency = priceMatches[0].currency;
+  // Modern template: PRICE <small>CCC</small>  (most specific pattern first)
+  const modernPriceMatch = block.match(/([\d]+(?:[.,][\d]+)?)\s*<small>\s*([A-Z]{3})\s*<\/small>/);
+  if (modernPriceMatch) {
+    amount = parseFloat(modernPriceMatch[1].replace(',', '.')) || 0;
+    currency = modernPriceMatch[2];
   } else {
-    // Fallback: any price-like pattern in the block
-    const fbMatch = block.match(/([\d]+\.[\d]{2})\s+([A-Z]{3})/);
-    if (fbMatch) {
-      amount = parseFloat(fbMatch[1]) || 0;
-      currency = fbMatch[2];
+    // Classic template: <span class="text-primary ...">PRICE CCC</span>
+    const classicPriceMatch = block.match(/<span[^>]*class="[^"]*(?:text-primary|font-weight-bold|price)[^"]*"[^>]*>\s*([\d]+(?:[.,][\d]+)?)\s+([A-Z]{3})\s*<\/span>/);
+    if (classicPriceMatch) {
+      amount = parseFloat(classicPriceMatch[1].replace(',', '.')) || 0;
+      currency = classicPriceMatch[2];
+    } else {
+      // Final fallback: any NUMBER<ws>CURRENCY pattern
+      const fallbackMatch = block.match(/([\d]+\.[\d]{2})\s+([A-Z]{3})/);
+      if (fallbackMatch) {
+        amount = parseFloat(fallbackMatch[1]) || 0;
+        currency = fallbackMatch[2];
+      }
     }
   }
 
