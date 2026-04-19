@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Editorial standards · ContentLore</title>
+<meta name="description" content="ContentLore's editorial standards — sources, attribution, right-of-reply, independence, corrections, AI disclosure, harm reduction. The standards that apply to every piece of coverage." />
+<meta name="theme-color" content="#0A0A0B" />
+
+<meta property="og:title" content="Editorial standards · ContentLore" />
+<meta property="og:description" content="The standards that govern every piece of coverage. Sources, right-of-reply, independence, corrections, harm reduction." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://contentlore.com/ethics/" />
+<meta property="og:site_name" content="ContentLore" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../styles.css">
+
+<style>
+  .cl-page-container { max-width: 920px; margin: 0 auto; padding: var(--space-6) var(--container-pad) var(--space-7); position: relative; z-index: 2; }
+  @media (min-width: 1400px) { .cl-page-container { max-width: 1000px; } }
+  @media (max-width: 820px) { .cl-page-container { padding: var(--space-4) var(--container-pad) var(--space-5); } }
+  .cl-breadcrumb { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: var(--space-4); }
+  .cl-breadcrumb a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px dotted var(--text-dim); }
+  .cl-breadcrumb a:hover { color: var(--signal); border-bottom-color: var(--signal); }
+  .cl-breadcrumb .sep { margin: 0 8px; color: var(--text-dim); }
+  .cl-page-header { margin-bottom: var(--space-6); padding-bottom: var(--space-4); border-bottom: 1px solid var(--border); }
+  .cl-page-header .kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--signal); margin-bottom: var(--space-3); }
+  .cl-page-header h1 { font-family: var(--font-display); font-size: clamp(48px, 7vw, 88px); line-height: 0.98; letter-spacing: -1px; text-transform: uppercase; color: var(--text-primary); margin-bottom: var(--space-4); }
+  .cl-page-header .dek { font-family: var(--font-body); font-size: clamp(20px, 2vw, 26px); line-height: 1.5; color: var(--text-secondary); font-style: italic; max-width: 820px; }
+  .cl-page-meta { display: flex; flex-wrap: wrap; gap: var(--space-3); font-family: var(--font-mono); font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--text-tertiary); margin-top: var(--space-3); }
+  .cl-page-meta .updated { color: var(--signal); }
+  .cl-page-body h2 { font-family: var(--font-display); font-size: clamp(28px, 3.2vw, 38px); letter-spacing: 0.5px; line-height: 1.15; text-transform: uppercase; color: var(--text-primary); margin: var(--space-6) 0 var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); }
+  .cl-page-body h3 { font-family: var(--font-body); font-size: 24px; font-weight: 500; letter-spacing: -0.2px; line-height: 1.25; color: var(--signal); margin: var(--space-4) 0 var(--space-2); }
+  .cl-page-body p { font-family: var(--font-body); font-size: 21px; line-height: 1.65; color: var(--text-primary); margin-bottom: var(--space-3); }
+  .cl-page-body p.cl-body-lg { font-size: 24px; line-height: 1.55; }
+  .cl-page-body p.cl-dropcap::first-letter { font-family: var(--font-display); font-size: 76px; float: left; line-height: 0.9; padding: 8px 14px 0 0; color: var(--signal); }
+  .cl-page-body em { font-style: italic; color: var(--text-secondary); }
+  .cl-page-body strong { font-weight: 600; color: var(--text-primary); }
+  .cl-standard-box { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); padding: var(--space-3) var(--space-4); margin: var(--space-4) 0; }
+  .cl-standard-box .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--signal); margin-bottom: 8px; }
+  .cl-standard-box p { margin-bottom: 0; font-size: 18px; line-height: 1.55; }
+  .cl-related { margin-top: var(--space-6); padding: var(--space-4); background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); }
+  .cl-related h3 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--signal); margin-bottom: var(--space-3); margin-top: 0; }
+  .cl-related ul { list-style: none; padding: 0; margin: 0; }
+  .cl-related li { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .cl-related li:last-child { border-bottom: none; }
+  .cl-related a { color: var(--text-primary); text-decoration: none; font-family: var(--font-body); font-size: 18px; display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
+  .cl-related a:hover { color: var(--signal); }
+  .cl-related a .label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--text-tertiary); text-transform: uppercase; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<nav class="cl-nav">
+  <a href="../" class="cl-nav-brand">
+    <span class="cl-wordmark">ContentLore<span class="dot">.</span></span>
+    <span class="cl-nav-tagline">THE UK STREAMING DESK</span>
+  </a>
+  <ul class="cl-nav-links">
+    <li><a href="../gta-rp/">GTA RP</a></li>
+    <li><a href="../the-platform/">The Platform</a></li>
+    <li><a href="../rising/">Rising</a></li>
+    <li><a href="../signals/">Signals</a></li>
+    <li><a href="../ledger/">Ledger</a></li>
+  </ul>
+  <div class="cl-nav-right"><span class="cl-live-pill">Standards</span></div>
+</nav>
+
+<main>
+  <div class="cl-page-container">
+
+    <div class="cl-breadcrumb">
+      <a href="../">Home</a><span class="sep">/</span><span>Editorial standards</span>
+    </div>
+
+    <header class="cl-page-header">
+      <div class="kicker">Editorial code · Standing document · Enforced</div>
+      <h1>Editorial standards.</h1>
+      <p class="dek">
+        The standards that govern every piece of coverage on
+        ContentLore. Sources and attribution. Right-of-reply.
+        Independence. Corrections. Conflicts of interest. AI
+        disclosure. Harm reduction. Published in full so readers,
+        subjects of coverage, and this desk itself can reference a
+        single standing document rather than improvised judgement.
+      </p>
+      <div class="cl-page-meta">
+        <span class="updated">Last updated · 19 April 2026</span>
+        <span>Version · 1.0</span>
+        <span>Review cadence · Quarterly</span>
+      </div>
+    </header>
+
+    <section class="cl-page-body">
+
+      <p class="cl-body-lg cl-dropcap">
+        These standards are not aspirational. They are enforced. Every
+        piece published on ContentLore is written and edited against
+        this document, and any piece where the desk fails to meet the
+        standards set out here is subject to correction through the
+        <a href="../ledger/" style="color: var(--signal); border-bottom: 1px dotted var(--signal-dim); text-decoration: none;">Ledger</a>.
+        The standards exist because accountability journalism — the
+        Tebex Audit, scene coverage that names individuals or servers,
+        financial and commercial reporting — is only credible when
+        the standards governing it are public, specific, and
+        consistent. Vague commitments to "integrity" or "accuracy"
+        without specific rules behind them are not standards; they
+        are marketing copy.
+      </p>
+
+      <h2>Sources and attribution</h2>
+
+      <p>
+        Every factual claim in a ContentLore piece is sourced. Where
+        the source is a publicly available document, link, or public
+        statement, it is cited in the sources block at the foot of
+        the piece. Where the source is scene knowledge — something
+        known to this desk but not publicly documented — that
+        attribution is explicit in the piece itself, usually with
+        the phrase <em>scene-knowledge override</em> or <em>this desk
+        understands</em>, so readers can distinguish between
+        publicly-verifiable fact and scene-verified claim.
+      </p>
+
+      <p>
+        Where a source speaks to this desk on condition of anonymity,
+        that anonymity is honoured. Where relevant, the piece notes
+        that a given claim is based on anonymous sourcing and
+        characterises the source category — <em>a server operator</em>,
+        <em>a creator close to the situation</em> — without
+        identifying the individual. Anonymous sourcing is used
+        sparingly and only where the claim could not be reported
+        without it.
+      </p>
+
+      <h3>The paraphrasing rule</h3>
+
+      <p>
+        ContentLore paraphrases rather than quoting. Direct quotes
+        are reserved for statements where the specific wording is
+        material — for example, legal statements, public policy
+        announcements, or contested claims where the exact phrasing
+        is itself the subject of reporting. Where quotes are used,
+        they are brief, attributed, and sourced to the original
+        publication or statement.
+      </p>
+
+      <p>
+        This is both an editorial and a copyright posture. Editorially,
+        paraphrasing forces clearer thinking: a claim restated in a
+        piece's own language has been understood, whereas a claim
+        quoted verbatim has only been copied. From a copyright
+        perspective, extensive quotation of sources — even with
+        citation — is a weaker legal position than substantive
+        paraphrase with attribution.
+      </p>
+
+      <h2>Right-of-reply</h2>
+
+      <p>
+        Any piece of ContentLore coverage that names a person, server,
+        or organisation and makes a claim about their behaviour
+        carries right-of-reply obligations. In practice this means:
+      </p>
+
+      <div class="cl-standard-box">
+        <div class="label">The right-of-reply commitment</div>
+        <p>
+          If a ContentLore piece makes a specific factual claim about
+          an identifiable person, server, or organisation — beyond
+          observation of public facts — that subject is contacted in
+          advance of publication, shown the specific claim being
+          made, given access to the evidence supporting it, and
+          offered the opportunity to respond. The response, where
+          substantive, is published alongside the piece. Where the
+          response changes the editorial reading, the piece is
+          revised or withheld.
+        </p>
+      </div>
+
+      <p>
+        Right-of-reply is not a courtesy; it is a professional
+        obligation, both ethically and legally. Under the UK
+        Defamation Act 2013, the <em>serious harm</em> threshold for
+        defamation claims applies to published statements that
+        damage a subject's reputation, and meeting the threshold for
+        responsible journalism requires, among other things,
+        offering subjects reasonable opportunity to respond before
+        publication. Every accountability piece on this publication
+        is built to survive that test.
+      </p>
+
+      <p>
+        The window for right-of-reply varies with the urgency of the
+        piece. For time-sensitive breaking coverage, it may be as
+        short as twenty-four hours. For audit series like the Tebex
+        Audit, it is a minimum of ten days before publication.
+        Subjects who do not respond within the window are recorded
+        as <em>offered reply, no response</em> on the published
+        piece.
+      </p>
+
+      <h2>Independence and conflicts of interest</h2>
+
+      <p>
+        ContentLore is independent from every entity it covers. This
+        is a structural commitment, not a discretionary one, and
+        it is operationalised through specific rules.
+      </p>
+
+      <p>
+        <strong>No payment from covered entities.</strong>
+        ContentLore does not accept payment, sponsorship, advertising
+        revenue, affiliate commissions, free products, paid access,
+        or any other financial relationship from any person, server,
+        or organisation that is a subject of coverage. This applies
+        to creators featured in Rising, servers tracked in the
+        Scoreboard, brands mentioned in Signals, and every other
+        category of covered entity.
+      </p>
+
+      <p>
+        <strong>No access relationships that shape coverage.</strong>
+        Where this desk has working access to a scene source — a
+        server operator who shares context, a creator who trusts
+        the desk with inside information — that access does not
+        convert to editorial protection. A source who provides
+        context for one piece is still subject to factual coverage
+        in a subsequent piece, on the same terms as any other
+        subject.
+      </p>
+
+      <p>
+        <strong>Personal conflicts are disclosed.</strong> Where this
+        desk has a personal relationship, historical or current, with
+        a subject of coverage — friendship, prior professional
+        collaboration, shared ownership of a project, family
+        connection, or any other material tie — that relationship is
+        disclosed on pieces where it is relevant. Where the
+        relationship is material enough that coverage cannot be
+        handled on standard editorial terms, the piece is either
+        handled by a separate contributor (where one exists) or
+        deferred until an independent editorial process can be
+        arranged.
+      </p>
+
+      <h3>The Unique RP disclosure</h3>
+
+      <p>
+        One specific conflict is worth stating explicitly here as a
+        template for how this publication handles material COIs.
+        This desk's editor is part of the inner circle of Unique RP,
+        a UK FiveM server. That relationship is material to any
+        coverage of Unique RP, of its ownership, of its creator
+        figures, or of adjacent scene dynamics.
+      </p>
+
+      <p>
+        Until an independent external moderator is in place for
+        Unique-RP-adjacent coverage, this publication's default
+        posture is <em>light-touch public coverage</em> of those
+        subjects. In practice this means: individuals within the
+        Unique RP inner circle are not profiled in public editorial
+        while the COI is unresolved; Unique RP's Scoreboard entry
+        is maintained with standard factual observations only,
+        without qualitative commentary that would normally
+        accompany Scoreboard entries; and any piece requiring
+        substantive coverage of Unique RP or its ownership is
+        held until the independent review process is in place.
+        This disclosure is logged in the Ledger and will be
+        updated when the moderator arrangement is established.
+      </p>
+
+      <h2>Corrections and updates</h2>
+
+      <p>
+        Every factual error in a published piece is corrected. The
+        correction appears both on the piece itself — at the top,
+        clearly marked as a correction — and in the permanent log
+        on the Ledger. The distinction between a <em>correction</em>
+        (a factual error being fixed) and an <em>update</em> (new
+        information being added to an evolving story) is maintained
+        carefully; corrections imply the piece was wrong,
+        updates imply the situation has changed.
+      </p>
+
+      <p>
+        A correction is triggered when a reader, a subject of
+        coverage, or this desk itself identifies a factual claim in
+        a published piece that is demonstrably incorrect. The
+        standard for <em>demonstrably</em> is evidence — a source
+        document, a screenshot, a public statement — not argument.
+        A reader who disagrees with a ContentLore interpretation
+        has not identified a correction; a reader who identifies a
+        factual error has.
+      </p>
+
+      <p>
+        Corrections are made promptly. The target is within
+        twenty-four hours of confirmed identification, allowing for
+        the time needed to verify the correction itself. Once the
+        correction is made, the Ledger entry is created permanently
+        and is not removed even if the underlying piece is later
+        unpublished.
+      </p>
+
+      <h2>The scene-judgement override</h2>
+
+      <p>
+        A specific provision worth flagging because it is unusual
+        among editorial publications. ContentLore maintains an
+        explicit provision for <em>scene-judgement overrides</em> —
+        situations where this desk's scene knowledge indicates that
+        a publicly available source is incorrect.
+      </p>
+
+      <p>
+        For example: a public streaming metrics site may report that
+        a particular creator is on a given server, when this desk
+        knows through scene contact that the public source is
+        out-of-date. In such cases, this desk's policy is to
+        override the public source with the scene-verified
+        information and flag the override in the piece itself.
+        Readers see the override attribution (<em>scene-knowledge
+        override</em>) so they can assess for themselves whether to
+        trust the scene-verified claim over the public-record one.
+      </p>
+
+      <p>
+        Scene-judgement overrides are used only where the
+        contradicting public source would mislead readers if
+        reported without correction. They are not a vehicle for
+        unsupported claims; every override is based on
+        scene-verified fact that this desk is willing to stand
+        behind under right-of-reply and correction procedures.
+      </p>
+
+      <h2>Harm reduction</h2>
+
+      <p>
+        ContentLore's coverage is designed not to cause avoidable
+        harm to its subjects or to its readers. Three categories
+        of harm are particularly attended to.
+      </p>
+
+      <p>
+        <strong>Harm to minors.</strong> This publication does not
+        profile creators under eighteen. Where coverage of a UK
+        scene development involves minors — for example, a younger
+        creator's growth trajectory, or a server's handling of
+        young community members — the coverage is framed to avoid
+        amplifying content or dynamics that could harm young
+        people. This applies regardless of whether the minor
+        themselves is the subject of coverage or a peripheral
+        figure.
+      </p>
+
+      <p>
+        <strong>Harm to wellbeing.</strong> Where coverage touches
+        on creator mental health, scene-internal conflicts, or
+        developments that a reader might find personally
+        distressing, the framing is handled with restraint. This
+        publication does not publish dramatised accounts of
+        creator burnout, mental health crises, or personal
+        struggles. Where a creator has been public about such
+        matters, coverage respects that publicness without
+        amplifying or sensationalising it.
+      </p>
+
+      <p>
+        <strong>Harm through inaccuracy.</strong> The corrections
+        policy above is itself a harm-reduction mechanism.
+        Inaccurate public claims about a person, server, or
+        organisation damage the subject; the corrections mechanism
+        exists to repair that damage promptly and visibly when it
+        occurs.
+      </p>
+
+      <h2>AI disclosure</h2>
+
+      <p>
+        ContentLore uses AI tools in editorial workflow. Specifically,
+        this publication uses large language models (including
+        Claude, made by Anthropic) for drafting assistance,
+        structural editing, and prose refinement. AI tools are not
+        used for fact-finding, source verification, or decisions
+        about what to publish; those remain human editorial
+        judgements.
+      </p>
+
+      <p>
+        Every piece published on ContentLore is reviewed, verified,
+        and approved by a human editor — Fats — before publication.
+        Where AI-assisted drafts are used, they are subject to the
+        same factual, ethical, and standards review as any other
+        draft. AI does not change what this publication covers or
+        how it covers it; it is a drafting tool applied within the
+        editorial process, not a substitute for it.
+      </p>
+
+      <p>
+        AI is not used to generate fake quotes, invent sources,
+        fabricate claims, or produce coverage that a human editor
+        has not verified. Where AI has contributed substantively
+        to a piece's structure or prose, that contribution is a
+        routine part of the editorial process and does not
+        require per-piece disclosure. Where AI has been used in an
+        unusual way that might affect how a reader interprets the
+        piece — for example, AI-generated imagery, AI-produced
+        analysis of data, or AI-written sections that are
+        meaningfully different in voice from the rest of the
+        piece — that use is disclosed explicitly on the piece
+        concerned.
+      </p>
+
+      <h2>What this document is not</h2>
+
+      <p>
+        Three clarifications to prevent this page from being
+        misread.
+      </p>
+
+      <p>
+        <strong>It is not a legal policy.</strong> Terms and
+        conditions, privacy policy, cookie policy, and similar
+        legal pages sit separately from this editorial standards
+        document. This page is about editorial practice; legal
+        pages are about user contract.
+      </p>
+
+      <p>
+        <strong>It is not static.</strong> Editorial standards
+        evolve as the publication grows and as the scene itself
+        changes. Updates to this document are versioned (this is
+        version 1.0, as of 19 April 2026) and logged in the
+        Ledger. Historical versions remain accessible on request.
+      </p>
+
+      <p>
+        <strong>It is not a disclaimer.</strong> Publishing
+        editorial standards is not a legal shield. A piece of
+        coverage that fails to meet these standards is subject to
+        correction and, where the failure is material, to
+        retraction. Publishing this document increases this
+        publication's obligations rather than reducing them.
+      </p>
+
+    </section>
+
+    <aside class="cl-related">
+      <h3>Related pages</h3>
+      <ul>
+        <li><a href="../about/"><span>About ContentLore — who runs it, what it is</span><span class="label">About →</span></a></li>
+        <li><a href="../ledger/"><span>The Ledger — corrections log and disclosure record</span><span class="label">Ledger →</span></a></li>
+        <li><a href="../contact/"><span>Contact — tips, right-of-reply, corrections submission</span><span class="label">Contact →</span></a></li>
+        <li><a href="../the-platform/tebex-audit/"><span>The Tebex Audit — methodology for audit coverage</span><span class="label">Methodology →</span></a></li>
+      </ul>
+    </aside>
+
+  </div>
+</main>
+
+</body>
+</html>

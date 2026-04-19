@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>About ContentLore · The UK streaming desk</title>
+<meta name="description" content="ContentLore is the UK streaming desk — weekly intelligence and editorial on the British streaming scene across Twitch, Kick, YouTube and TikTok, and the servers that matter. Written from inside the scene, by Fats." />
+<meta name="theme-color" content="#0A0A0B" />
+
+<meta property="og:title" content="About ContentLore · The UK streaming desk" />
+<meta property="og:description" content="The UK streaming desk. Weekly intelligence and editorial on the British streaming scene and the servers that matter. Written from inside the scene." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://contentlore.com/about/" />
+<meta property="og:site_name" content="ContentLore" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../styles.css">
+
+<style>
+  .cl-page-container { max-width: 920px; margin: 0 auto; padding: var(--space-6) var(--container-pad) var(--space-7); position: relative; z-index: 2; }
+  @media (min-width: 1400px) { .cl-page-container { max-width: 1000px; } }
+  @media (max-width: 820px) { .cl-page-container { padding: var(--space-4) var(--container-pad) var(--space-5); } }
+  .cl-breadcrumb { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: var(--space-4); }
+  .cl-breadcrumb a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px dotted var(--text-dim); }
+  .cl-breadcrumb a:hover { color: var(--signal); border-bottom-color: var(--signal); }
+  .cl-breadcrumb .sep { margin: 0 8px; color: var(--text-dim); }
+  .cl-page-header { margin-bottom: var(--space-6); padding-bottom: var(--space-4); border-bottom: 1px solid var(--border); }
+  .cl-page-header .kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--signal); margin-bottom: var(--space-3); }
+  .cl-page-header h1 { font-family: var(--font-display); font-size: clamp(48px, 7vw, 88px); line-height: 0.98; letter-spacing: -1px; text-transform: uppercase; color: var(--text-primary); margin-bottom: var(--space-4); }
+  .cl-page-header .dek { font-family: var(--font-body); font-size: clamp(20px, 2vw, 26px); line-height: 1.5; color: var(--text-secondary); font-style: italic; max-width: 820px; }
+  .cl-page-body h2 { font-family: var(--font-display); font-size: clamp(28px, 3.2vw, 38px); letter-spacing: 0.5px; line-height: 1.15; text-transform: uppercase; color: var(--text-primary); margin: var(--space-6) 0 var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); }
+  .cl-page-body h3 { font-family: var(--font-body); font-size: 24px; font-weight: 500; letter-spacing: -0.2px; line-height: 1.25; color: var(--signal); margin: var(--space-4) 0 var(--space-2); }
+  .cl-page-body p { font-family: var(--font-body); font-size: 21px; line-height: 1.65; color: var(--text-primary); margin-bottom: var(--space-3); }
+  .cl-page-body p.cl-body-lg { font-size: 24px; line-height: 1.55; }
+  .cl-page-body p.cl-dropcap::first-letter { font-family: var(--font-display); font-size: 76px; float: left; line-height: 0.9; padding: 8px 14px 0 0; color: var(--signal); }
+  .cl-page-body em { font-style: italic; color: var(--text-secondary); }
+  .cl-page-body strong { font-weight: 600; color: var(--text-primary); }
+  .cl-pullquote { font-family: var(--font-display); font-size: clamp(26px, 3vw, 36px); line-height: 1.2; letter-spacing: -0.3px; text-transform: uppercase; color: var(--signal); margin: var(--space-5) 0; padding: var(--space-3) 0 var(--space-3) var(--space-4); border-left: 4px solid var(--signal); max-width: 820px; }
+  .cl-related {
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--signal);
+  }
+  .cl-related h3 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin-bottom: var(--space-3);
+    margin-top: 0;
+  }
+  .cl-related ul { list-style: none; padding: 0; margin: 0; }
+  .cl-related li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cl-related li:last-child { border-bottom: none; }
+  .cl-related a {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-family: var(--font-body);
+    font-size: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+  .cl-related a:hover { color: var(--signal); }
+  .cl-related a .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<nav class="cl-nav">
+  <a href="../" class="cl-nav-brand">
+    <span class="cl-wordmark">ContentLore<span class="dot">.</span></span>
+    <span class="cl-nav-tagline">THE UK STREAMING DESK</span>
+  </a>
+  <ul class="cl-nav-links">
+    <li><a href="../gta-rp/">GTA RP</a></li>
+    <li><a href="../the-platform/">The Platform</a></li>
+    <li><a href="../rising/">Rising</a></li>
+    <li><a href="../signals/">Signals</a></li>
+    <li><a href="../ledger/">Ledger</a></li>
+  </ul>
+  <div class="cl-nav-right"><span class="cl-live-pill">About</span></div>
+</nav>
+
+<main>
+  <div class="cl-page-container">
+
+    <div class="cl-breadcrumb">
+      <a href="../">Home</a><span class="sep">/</span><span>About</span>
+    </div>
+
+    <header class="cl-page-header">
+      <div class="kicker">About the publication · Positioning document</div>
+      <h1>The UK streaming desk.</h1>
+      <p class="dek">
+        ContentLore is a publication about the UK streaming scene —
+        the creators, the communities, the platforms they stream on,
+        and the servers that matter. This page explains what that
+        means, who runs it, and why it exists as a standalone
+        publication rather than one more voice in the scene's
+        existing channels.
+      </p>
+    </header>
+
+    <section class="cl-page-body">
+
+      <p class="cl-body-lg cl-dropcap">
+        British streaming is one of the fastest-moving creative
+        industries in the country and one of the least systematically
+        covered. Thousands of creators work full-time or substantially
+        so across Twitch, Kick, YouTube and TikTok. Millions of
+        viewers watch them. Hundreds of millions of pounds move
+        through the ecosystem — subscription revenue, brand deals,
+        platform payouts, roleplay server monetisation, merchandise,
+        live events. None of this has a serious dedicated publication
+        covering it from a UK perspective. Mainstream gaming and
+        streaming press is overwhelmingly US-centric. UK scene
+        coverage happens mostly inside the scene — Discord channels,
+        Twitter threads, creator podcasts — which is valuable but
+        incomplete. There is no equivalent to what <em>The Athletic</em>
+        did for football, or <em>The Information</em> did for tech.
+        ContentLore exists to fill that gap.
+      </p>
+
+      <h2>What this publication is</h2>
+
+      <p>
+        ContentLore is an editorial publication covering the UK
+        streaming scene across four platforms — Twitch, Kick, YouTube
+        and TikTok — and the ecosystem infrastructure around them,
+        most significantly the FiveM roleplay server scene that has
+        become central to British streaming. It publishes
+        intelligence, analysis, and commentary at several cadences:
+        daily signals on the homepage ticker, weekly coverage across
+        the beats, deep dives on the pieces that warrant longer
+        treatment, and quarterly set pieces like the Tebex Audit.
+      </p>
+
+      <p>
+        The publication is structured around five beats, each
+        covering a distinct part of the scene:
+      </p>
+
+      <p>
+        <strong>GTA&nbsp;RP</strong> covers the British roleplay
+        server scene. The Scoreboard, the long-term server
+        leaderboard, sits at the centre of this beat. Expect detailed
+        tracking of server-level movements, player-base shifts,
+        scene-wide narrative arcs, and the individual creators who
+        shape RP culture in the UK.
+      </p>
+
+      <p>
+        <strong>The Platform</strong> covers FiveM and the
+        infrastructure that sits underneath every UK RP server —
+        Cfx.re, the Element Club tiers, the frameworks, the Tebex
+        monetisation layer, the Platform License Agreement, and
+        Rockstar's evolving relationship with the modding scene. The
+        audit series and long-form Platform pieces sit here.
+      </p>
+
+      <p>
+        <strong>Rising</strong> covers creators on their way up — the
+        names the scene will be talking about in twelve months,
+        documented while their trajectory is still ascending. This is
+        discovery-oriented coverage: who is worth watching, what they
+        are doing differently, and what their growth curve looks
+        like.
+      </p>
+
+      <p>
+        <strong>Signals</strong> is the weekly and monthly
+        intelligence brief. Rolled-up coverage of scene-wide
+        patterns — platform moves, creator migrations, commercial
+        developments, scene sentiment shifts — published on a
+        regular schedule so readers can see the shape of the week
+        without having to track every individual event.
+      </p>
+
+      <p>
+        <strong>The Ledger</strong> is the transparency and
+        corrections log. Every correction, every updated fact, every
+        editorial decision worth disclosing is logged there
+        permanently. This exists as a public accountability
+        mechanism and is documented further in this publication's
+        <a href="../ethics/" style="color: var(--signal); border-bottom: 1px dotted var(--signal-dim); text-decoration: none;">editorial standards</a>.
+      </p>
+
+      <h2>Positioning</h2>
+
+      <p>
+        Three things make ContentLore distinct from existing UK
+        streaming coverage.
+      </p>
+
+      <p>
+        <strong>It is UK-first.</strong> Every piece is written for a
+        UK reader, with UK context, UK pricing in sterling, UK
+        regulatory frameworks where relevant, and UK servers and
+        creators as the primary subjects. When coverage touches US
+        or European developments — as the Cfx Marketplace and alt:V
+        shutdown coverage does — those are covered from a UK
+        perspective and connected back to UK implications. This is
+        not a UK section of a global publication; it is a UK
+        publication that occasionally looks outward.
+      </p>
+
+      <p>
+        <strong>It is written from inside the scene.</strong>
+        ContentLore is not written by distant journalists covering
+        streaming as one of many beats. It is written by someone who
+        streams, who knows the operators, who has been in the
+        Discord channels for years, and who understands why a given
+        server rivalry matters even when it does not make sense from
+        outside. The cost of that proximity is careful
+        conflict-of-interest management, documented in the
+        editorial standards. The benefit is coverage that actually
+        understands the things it is writing about.
+      </p>
+
+      <p>
+        <strong>It is systematic, not reactive.</strong> Most scene
+        coverage reacts to events as they happen — drama, news,
+        controversy. ContentLore covers those where they matter, but
+        the central commitment is to systematic documentation: the
+        Scoreboard updates on a permanent cadence, the Tebex Audit
+        runs quarterly, the reference pages are maintained
+        indefinitely. The point is to build an archive of scene
+        intelligence that survives past whatever is trending this
+        week, so readers have a permanent reference point for what
+        the UK scene actually looks like over time.
+      </p>
+
+      <p class="cl-pullquote">
+        ContentLore is a UK publication that occasionally looks
+        outward. Not a UK section of a global one.
+      </p>
+
+      <h2>Who runs it</h2>
+
+      <p>
+        ContentLore is founded and edited by <strong>Fats</strong>,
+        who streams on Kick under the handle Dynamoses. Fats is a UK
+        streamer and content creator with longstanding presence in
+        British streaming communities, with a professional
+        background in data and insights work that directly shapes
+        how this publication approaches its coverage — systematic,
+        quantitative where the data supports it, evidenced, and
+        focused on what patterns reveal over time rather than what
+        a single event means in isolation.
+      </p>
+
+      <p>
+        Editorial decisions — what gets covered, how it gets framed,
+        which sources are used, what corrections are made — are
+        Fats' responsibility. Where contributors, researchers, or
+        scene sources inform specific pieces, they are credited by
+        name or acknowledged anonymously where they have requested
+        confidentiality. The Ledger records when this happens.
+      </p>
+
+      <p>
+        A public masthead listing any contributors or advisory
+        relationships will be maintained on this page as the
+        publication grows. Where any named individual has an
+        editorial relationship with ContentLore, that relationship
+        will be disclosed here and on pieces where it is relevant.
+      </p>
+
+      <h2>What this publication does not cover</h2>
+
+      <p>
+        Four scope exclusions worth stating explicitly because each
+        of them is a regular reader question.
+      </p>
+
+      <p>
+        <strong>Non-UK creators, unless the coverage has UK
+        implications.</strong> American, European, Australian and
+        other non-UK streaming scenes exist and have excellent
+        dedicated coverage elsewhere. ContentLore covers them only
+        where a development — a platform policy change, a major
+        creator move, a commercial shift — has direct consequences
+        for UK creators or UK viewers. The alt:V shutdown is
+        covered because it affects UK FiveM servers. NoPixel's
+        internal dynamics are covered where they shape the UK RP
+        landscape. A routine American creator drama, by contrast,
+        is not in scope.
+      </p>
+
+      <p>
+        <strong>Breaking drama as the primary story.</strong> Scene
+        drama exists; it is often genuinely newsworthy. But
+        ContentLore's editorial position is that drama is usually
+        only interesting as a symptom of deeper structural things —
+        commercial pressures, platform incentives, scene
+        hierarchies — and the deeper story is what this
+        publication tries to cover. When a specific piece of drama
+        genuinely reveals something structural, it gets covered.
+        When it is just drama, it does not.
+      </p>
+
+      <p>
+        <strong>Minors or child-adjacent content.</strong>
+        ContentLore does not cover creators under eighteen, does
+        not profile child audiences, and is particularly careful
+        about coverage of any scene dynamics involving minors. This
+        is documented in more detail in the editorial standards.
+      </p>
+
+      <p>
+        <strong>Paid promotion of any kind.</strong> ContentLore
+        does not accept sponsored coverage, advertising on the
+        site, affiliate commissions from covered entities,
+        paid-for features, or any other arrangement where money
+        flows from covered subjects to this publication. This is
+        not a discretionary editorial decision; it is a structural
+        commitment. Further detail is in the editorial standards.
+      </p>
+
+      <h2>Why "ContentLore"</h2>
+
+      <p>
+        The name reflects what this publication is trying to do:
+        document the lore of the scene over time. In streaming
+        culture, <em>lore</em> is a term for the accumulated
+        narrative history of a character, a server, a rivalry, or a
+        community — the backstory that makes a given moment
+        meaningful. ContentLore is an attempt to document the lore
+        of the wider UK streaming scene with the seriousness that
+        lore-level coverage deserves: systematic, evidenced, and
+        built to survive past the moment.
+      </p>
+
+      <h2>How to get in touch</h2>
+
+      <p>
+        Full contact channels, including how to send scene tips, how
+        to request right-of-reply on coverage, and how to submit
+        corrections, are documented on the <a href="../contact/" style="color: var(--signal); border-bottom: 1px dotted var(--signal-dim); text-decoration: none;">Contact page</a>.
+        For general enquiries, the same contact routes apply.
+      </p>
+
+      <p>
+        If you are the subject of coverage and want to exercise
+        right-of-reply, the relevant channel is documented on the
+        Contact page. Every piece of accountability coverage
+        ContentLore publishes — including the Tebex Audit — comes
+        with right-of-reply offered in advance of publication.
+      </p>
+
+    </section>
+
+    <aside class="cl-related">
+      <h3>Related pages</h3>
+      <ul>
+        <li>
+          <a href="../ethics/">
+            <span>Editorial standards and ethics</span>
+            <span class="label">Standards →</span>
+          </a>
+        </li>
+        <li>
+          <a href="../ledger/">
+            <span>The Ledger — corrections and transparency log</span>
+            <span class="label">Ledger →</span>
+          </a>
+        </li>
+        <li>
+          <a href="../contact/">
+            <span>Contact — tips, right-of-reply, corrections</span>
+            <span class="label">Contact →</span>
+          </a>
+        </li>
+        <li>
+          <a href="../the-platform/">
+            <span>The Platform — the FiveM infrastructure beat</span>
+            <span class="label">Beat →</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+  </div>
+</main>
+
+</body>
+</html>
