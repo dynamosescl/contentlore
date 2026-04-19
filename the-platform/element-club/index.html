@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cfx Element Club · Reference · The Platform · ContentLore</title>
+<meta name="description" content="The four Cfx Element Club tiers — Free, Argentum, Aurum, Platinum — explained. What each tier unlocks, current pricing, and what UK FiveM servers actually use. Maintained as a permanent reference." />
+<meta name="theme-color" content="#0A0A0B" />
+
+<meta property="og:title" content="Cfx Element Club reference · The Platform" />
+<meta property="og:description" content="The four Cfx Element Club tiers explained. What each unlocks, current pricing, and what UK FiveM servers actually use." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://contentlore.com/the-platform/element-club/" />
+<meta property="og:site_name" content="ContentLore" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../styles.css">
+
+<style>
+  /* Reference page styling — /the-platform/element-club/ */
+
+  .cl-reference-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--container-pad) var(--space-7);
+    position: relative;
+    z-index: 2;
+  }
+  @media (max-width: 820px) {
+    .cl-reference-container { padding: var(--space-4) var(--container-pad) var(--space-5); }
+  }
+
+  .cl-breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-4);
+  }
+  .cl-breadcrumb a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--text-dim);
+  }
+  .cl-breadcrumb a:hover { color: var(--signal); border-bottom-color: var(--signal); }
+  .cl-breadcrumb .sep { margin: 0 8px; color: var(--text-dim); }
+
+  /* Reference header */
+  .cl-reference-header {
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+  .cl-reference-header .kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin-bottom: var(--space-3);
+  }
+  .cl-reference-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 6vw, 76px);
+    line-height: 1.02;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+  }
+  .cl-reference-header .dek {
+    font-family: var(--font-body);
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1.5;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: var(--space-3);
+    max-width: 820px;
+  }
+  .cl-reference-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+  .cl-reference-meta .updated {
+    color: var(--signal);
+  }
+
+  /* Reference body */
+  .cl-reference-body h2 {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 3vw, 34px);
+    letter-spacing: 0.5px;
+    line-height: 1.15;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin: var(--space-5) 0 var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+  }
+  .cl-reference-body h3 {
+    font-family: var(--font-body);
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--signal);
+    margin: var(--space-4) 0 var(--space-2);
+  }
+  .cl-reference-body p {
+    font-family: var(--font-body);
+    font-size: 19px;
+    line-height: 1.65;
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+  }
+  .cl-reference-body strong {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .cl-reference-body em {
+    font-style: italic;
+    color: var(--text-secondary);
+  }
+
+  /* Tier comparison table */
+  .cl-tier-table {
+    width: 100%;
+    margin: var(--space-4) 0;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    font-family: var(--font-body);
+  }
+  .cl-tier-table th {
+    background: var(--bg-deep);
+    color: var(--signal);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 14px 18px;
+    border-bottom: 2px solid var(--signal);
+    font-weight: 500;
+  }
+  .cl-tier-table td {
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.5;
+    vertical-align: top;
+  }
+  .cl-tier-table tr:last-child td {
+    border-bottom: none;
+  }
+  .cl-tier-table .tier-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+  .cl-tier-table .tier-name.free { color: var(--chrome); }
+  .cl-tier-table .tier-name.argentum { color: #C0C0B8; }
+  .cl-tier-table .tier-name.aurum { color: #D4A574; }
+  .cl-tier-table .tier-name.platinum { color: #E8E8E0; }
+  .cl-tier-table .price {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--signal);
+    font-weight: 500;
+  }
+  .cl-tier-table .slots {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  @media (max-width: 820px) {
+    .cl-tier-table { font-size: 14px; }
+    .cl-tier-table th,
+    .cl-tier-table td { padding: 10px 12px; }
+    .cl-tier-table .tier-name { font-size: 18px; }
+  }
+
+  /* Key-value box */
+  .cl-kv-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--signal);
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-4) 0;
+  }
+  .cl-kv-box .kv-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin-bottom: 8px;
+  }
+  .cl-kv-box p {
+    margin-bottom: 0;
+    font-size: 17px;
+  }
+
+  /* Editorial list */
+  .cl-list {
+    list-style: none;
+    margin: var(--space-3) 0 var(--space-4);
+    padding: 0;
+  }
+  .cl-list li {
+    position: relative;
+    padding: 16px 0 16px 36px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+  .cl-list li:first-child { border-top: 1px solid var(--border); }
+  .cl-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 28px;
+    width: 16px;
+    height: 1px;
+    background: var(--signal);
+  }
+  .cl-list li strong {
+    color: var(--signal);
+    font-weight: 600;
+  }
+
+  /* Sources block */
+  .cl-sources {
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--signal);
+  }
+  .cl-sources-heading {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin-bottom: var(--space-3);
+  }
+  .cl-sources-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .cl-sources-list li {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cl-sources-list li:last-child { border-bottom: none; }
+  .cl-sources-list em { color: var(--text-primary); font-style: italic; }
+  .cl-sources-list a {
+    color: var(--signal);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--signal-dim);
+    padding-bottom: 1px;
+  }
+  .cl-sources-list a:hover { color: var(--text-primary); }
+
+  .cl-reference-footer {
+    margin-top: var(--space-5);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .cl-reference-footer p {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+  .cl-reference-footer a {
+    color: var(--signal);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--signal-dim);
+  }
+</style>
+</head>
+<body>
+
+<nav class="cl-nav">
+  <a href="../../" class="cl-nav-brand">
+    <span class="cl-wordmark">ContentLore<span class="dot">.</span></span>
+    <span class="cl-nav-tagline">THE UK STREAMING DESK</span>
+  </a>
+  <ul class="cl-nav-links">
+    <li><a href="../../gta-rp/">GTA RP</a></li>
+    <li><a href="../" class="active">The Platform</a></li>
+    <li><a href="../../rising/">Rising</a></li>
+    <li><a href="../../signals/">Signals</a></li>
+    <li><a href="../../ledger/">Ledger</a></li>
+  </ul>
+  <div class="cl-nav-right">
+    <span class="cl-live-pill">Reference</span>
+  </div>
+</nav>
+
+<main>
+
+  <div class="cl-reference-container">
+
+    <div class="cl-breadcrumb">
+      <a href="../../">Home</a>
+      <span class="sep">/</span>
+      <a href="../">The Platform</a>
+      <span class="sep">/</span>
+      <span>Element Club</span>
+    </div>
+
+    <header class="cl-reference-header">
+      <div class="kicker">The Platform · Reference page · Maintained</div>
+      <h1>Cfx Element Club.</h1>
+      <p class="dek">
+        The four subscription tiers that determine what a FiveM server can do.
+        What each tier costs, what it unlocks, and what UK servers actually
+        use in practice. Maintained as a permanent reference and updated
+        whenever Cfx changes the tiers or their pricing.
+      </p>
+      <div class="cl-reference-meta">
+        <span class="updated">Last updated · 19 April 2026</span>
+        <span>Review cadence · Quarterly</span>
+        <span>Source · fivem.net/server-hosting</span>
+      </div>
+    </header>
+
+    <section class="cl-reference-body">
+
+      <h2>What Element Club is</h2>
+
+      <p>
+        Element Club is Cfx.re's paid subscription system for FiveM servers.
+        In practical terms it is the mechanism by which Cfx funds platform
+        development and server operators access capabilities that the base,
+        free FiveM cannot deliver — principally, player slot counts above
+        the default 48, plus a handful of cosmetic and streaming features.
+      </p>
+
+      <p>
+        Subscriptions are managed through the Cfx.re Portal at
+        <em>portal.cfx.re</em>, which replaced the historic Patreon-based
+        subscription path. A subscription is attached to a Cfx account and
+        applies to all FiveM server licence keys registered under that
+        account — operators running multiple servers on one account get the
+        tier's benefits applied across all of them.
+      </p>
+
+      <h2>The four tiers</h2>
+
+      <p>
+        As of April 2026, Element Club offers a free baseline and three paid
+        tiers. Pricing is in US dollars and excludes VAT; VAT is added at
+        checkout for UK and EU subscribers. All figures sourced directly
+        from <em>fivem.net/server-hosting</em>.
+      </p>
+
+      <table class="cl-tier-table">
+        <thead>
+          <tr>
+            <th>Tier</th>
+            <th>Price</th>
+            <th>Player slots</th>
+            <th>What it unlocks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tier-name free">Free</span></td>
+            <td class="price">$0</td>
+            <td class="slots">Up to 48 (OneSync Infinity)</td>
+            <td>Baseline FiveM server. OneSync Infinity is available free for all servers — has been since late 2020.</td>
+          </tr>
+          <tr>
+            <td><span class="tier-name argentum">Argentum</span></td>
+            <td class="price">$15/mo + VAT</td>
+            <td class="slots">Up to 64 slots</td>
+            <td>OneSync Infinity at higher slot count. Custom clothing streaming (EUP). Exclusive Element Club access tier.</td>
+          </tr>
+          <tr>
+            <td><span class="tier-name aurum">Aurum</span></td>
+            <td class="price">$25/mo + VAT</td>
+            <td class="slots">Up to 128 slots (Infinity)</td>
+            <td>Argentum benefits plus doubled slot ceiling with OneSync Infinity. 64 slots with standard OneSync.</td>
+          </tr>
+          <tr>
+            <td><span class="tier-name platinum">Platinum</span></td>
+            <td class="price">$50/mo + VAT</td>
+            <td class="slots">Up to 2,048 slots (Infinity)</td>
+            <td>Aurum benefits plus the full 2,048-player ceiling. Custom animated server icon. Magenta highlight for the server in public listings.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="cl-kv-box">
+        <div class="kv-label">Contributor programme</div>
+        <p>
+          Cfx gives free Platinum access to active contributors — developers
+          writing platform code, fixing bugs, improving documentation, or
+          conducting game research. Application-based through the Cfx.re
+          contributor programme. This is how some UK-scene developers run
+          Platinum-tier servers without paying Platinum prices, and is
+          worth knowing about for anyone publishing community work.
+        </p>
+      </div>
+
+      <h2>Why the tiers are really about OneSync</h2>
+
+      <p>
+        The headline differentiator between tiers is player slot count, but
+        the underlying technology that makes those slot counts possible is
+        called <strong>OneSync</strong> — Cfx's networking engine. Without
+        OneSync, FiveM servers are limited to the base GTA Online player cap
+        of 32.
+      </p>
+
+      <p>
+        OneSync has two modes. <em>Standard OneSync</em> provides moderate
+        slot counts and is free at the baseline. <em>OneSync Infinity</em>
+        is the high-performance mode required for meaningful scale, and is
+        also free at the baseline tier since late 2020. What the paid tiers
+        buy is the permission to raise the slot ceiling under OneSync
+        Infinity — from 48 on the free tier up to 64, 128, or 2,048
+        depending on which tier is paid.
+      </p>
+
+      <p>
+        With the forthcoming FiveM for GTAV Enhanced release, OneSync is
+        being overhauled. Cfx has stated that all Enhanced servers will run
+        exclusively on the high-performance sync mode, and older
+        lower-capacity modes are being dropped. Platinum remains required
+        for 2,048-player servers under Enhanced. The full implications of
+        the Enhanced migration are covered in
+        <a href="../2026/04/fivem-enhanced-translated/" style="color: var(--signal); border-bottom: 1px dotted var(--signal-dim); text-decoration: none;">this desk's Enhanced explainer</a>.
+      </p>
+
+      <h2>What UK servers actually run</h2>
+
+      <p>
+        Systematic public data on what Element Club tier each UK server runs
+        does not exist — Cfx does not publish it, and servers are under no
+        obligation to disclose. What can be inferred from observable slot
+        counts, however, tells a consistent story.
+      </p>
+
+      <p>
+        Any UK server running more than 48 concurrent players is paying for
+        Element Club at Argentum or above. Any server with a reported
+        capacity above 128 is running Platinum. Serious UK RP servers with
+        250, 500, or 1,000+ player populations on their most active nights
+        are, by definition, running Platinum at $50/month. A year of
+        Platinum is $600. A server with three years of operational history
+        on Platinum has spent upwards of $1,800 on Element Club alone —
+        before hosting costs, framework licences, or the commercial scripts
+        increasingly sold through the Cfx Marketplace.
+      </p>
+
+      <p>
+        The editorial observation worth making here, and one this desk
+        returns to frequently, is that the framing of "community-owned" or
+        "community-run" that many UK servers use in their public
+        presentation sits uneasily with Platinum subscription costs of
+        this scale. Community labour runs the servers; community donations
+        often fund the subscriptions. But the commercial infrastructure is
+        unmistakably commercial. It is worth the scene being honest about
+        this — the best servers are better described as small businesses
+        with community participation than as community projects with
+        incidental costs.
+      </p>
+
+      <h2>How to subscribe</h2>
+
+      <ul class="cl-list">
+        <li>
+          <strong>Step one.</strong> Visit the Element Club page on the
+          Cfx.re Portal at <em>portal.cfx.re/subscriptions/element-club</em>.
+        </li>
+        <li>
+          <strong>Step two.</strong> Sign in with the same Cfx account
+          that holds the FiveM server licence keys. If subscriptions and
+          keys are on different accounts, the benefits will not link.
+        </li>
+        <li>
+          <strong>Step three.</strong> Select the tier, enter payment
+          details (Tebex-processed), and complete the purchase.
+        </li>
+        <li>
+          <strong>Step four.</strong> Benefits are typically active within
+          two to six hours. If keys still show the prior tier after six
+          hours, contact Cfx support through the Portal.
+        </li>
+      </ul>
+
+      <h2>Tier upgrades and downgrades</h2>
+
+      <p>
+        <strong>Upgrades</strong> (e.g. Argentum to Aurum) take effect
+        immediately. The operator pays the pro-rated difference between
+        the old and new tiers and benefits update within hours.
+      </p>
+
+      <p>
+        <strong>Downgrades</strong> (e.g. Platinum to Argentum) take effect
+        only at the next renewal date. The operator retains the higher
+        tier's benefits until the current billing period ends, then drops
+        to the new tier. A cancelled subscription must be allowed to
+        expire fully before a new one can be started.
+      </p>
+
+      <p>
+        This asymmetry — instant upgrades, renewal-delayed downgrades —
+        is a standard commercial pattern designed to capture upgrade
+        revenue while preventing mid-month credit losses. Operators
+        budgeting around Element Club should plan accordingly.
+      </p>
+
+      <h2>What Element Club does not include</h2>
+
+      <p>
+        Three clarifications worth stating explicitly because each is
+        regularly confused in community discussion.
+      </p>
+
+      <p>
+        <strong>Element Club is not server hosting.</strong> It does not
+        provide the physical server, bandwidth, or administrative tooling
+        that actually runs a FiveM server. Those come from an authorised
+        hosting provider (Zap-Hosting, EUGameHost, and others are
+        commonly used in the UK) or from the operator's own
+        infrastructure. Element Club is a software licence tier; hosting
+        is a separate cost.
+      </p>
+
+      <p>
+        <strong>Element Club is not Tebex.</strong> Tebex is FiveM's
+        exclusive monetisation partner and handles server stores for
+        paying communities. Tebex revenue is entirely separate from
+        Element Club subscription spend. Servers that monetise through
+        Tebex pay Tebex's fees on community sales, on top of whatever
+        Element Club tier they run.
+      </p>
+
+      <p>
+        <strong>Element Club is not the Cfx Marketplace.</strong> The
+        Marketplace, launched in January 2026, is a Rockstar-Cfx
+        storefront selling paid mods to server operators. Element Club
+        is the underlying server subscription. They are distinct
+        commercial products on the same commercial platform (both run
+        on Tebex as merchant of record).
+      </p>
+
+      <h2>Changes expected with FiveM Enhanced</h2>
+
+      <p>
+        Cfx has not published any tier or pricing changes tied to the
+        forthcoming FiveM for GTAV Enhanced release. The March 2026
+        development update confirmed that Platinum remains required for
+        2,048-player servers under Enhanced. Whether sub-Platinum tiers
+        unlock the same features on Enhanced as on Legacy — particularly
+        the exact slot counts associated with Argentum and Aurum — has
+        not been explicitly addressed by Cfx and is one of the
+        outstanding questions this desk is tracking ahead of the
+        Enhanced early-access rollout.
+      </p>
+
+      <p>
+        This reference page will be updated when Cfx publishes explicit
+        Enhanced-tier guidance. Until then, operators planning migrations
+        should assume tier benefits carry over and budget accordingly,
+        but treat the assumption as provisional.
+      </p>
+
+    </section>
+
+    <aside class="cl-sources">
+      <h3 class="cl-sources-heading">Sources</h3>
+      <ul class="cl-sources-list">
+        <li>
+          FiveM, <em>Server hosting</em> page. Primary source for
+          tier pricing, slot counts, and feature descriptions.
+          <a href="https://fivem.net/server-hosting" target="_blank" rel="noopener">fivem.net/server-hosting</a>
+        </li>
+        <li>
+          Cfx.re Support, <em>How to subscribe to Element Club through Portal</em>.
+          Primary source for subscription workflow.
+          <a href="https://support.cfx.re/hc/en-us/articles/16928537300892" target="_blank" rel="noopener">support.cfx.re</a>
+        </li>
+        <li>
+          Cfx.re Support, <em>How to update my subscription tier for Portal</em>.
+          Primary source for upgrade and downgrade mechanics.
+          <a href="https://support.cfx.re/hc/en-us/articles/16928284424092" target="_blank" rel="noopener">support.cfx.re</a>
+        </li>
+        <li>
+          Cfx.re Portal, Element Club subscription page. Live pricing and
+          tier availability.
+          <a href="https://portal.cfx.re/subscriptions/element-club" target="_blank" rel="noopener">portal.cfx.re</a>
+        </li>
+        <li>
+          Cfx.re Contributor programme. Reference for the free Platinum
+          access route.
+          <a href="https://fivem.net/server-hosting" target="_blank" rel="noopener">fivem.net</a>
+        </li>
+        <li>
+          Cfx.re Community, <em>Development Update: FiveM for GTAV Enhanced</em>,
+          18 March 2026. Reference for Platinum-on-Enhanced slot confirmation.
+          <a href="https://forum.cfx.re/t/development-update-fivem-for-gtav-enhanced/5391635" target="_blank" rel="noopener">forum.cfx.re</a>
+        </li>
+        <li>
+          <em>Editorial policy: all pricing and tier specifications in this
+          page are sourced directly from Cfx.re's own published pricing
+          (fivem.net/server-hosting) and subscription support documentation.
+          No pricing is estimated or inferred. Observations about UK server
+          tier usage patterns are ContentLore's analytical reading of
+          publicly-observable server slot counts and are labelled as such.
+          This page is maintained; date at the top reflects most recent
+          review against source material.</em>
+        </li>
+      </ul>
+    </aside>
+
+    <footer class="cl-reference-footer">
+      <p>
+        The Platform · Reference · Maintained by ContentLore ·
+        Read the section at <a href="../">/the-platform/</a>
+      </p>
+    </footer>
+
+  </div>
+
+</main>
+
+</body>
+</html>
