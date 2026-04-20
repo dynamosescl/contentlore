@@ -4,6 +4,8 @@
   "include": [
     "/api/*",
     "/creator/*",
+    "/people",
+    "/people/*",
     "/claim",
     "/admin"
   ],

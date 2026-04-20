@@ -1,346 +1,226 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ContentLore · The UK Streaming Desk</title>
-<meta name="description" content="Weekly intelligence and editorial on the British streaming scene — across Twitch, Kick, YouTube and TikTok — and the servers that matter. A UK GTA RP vertical written from inside the scene." />
-<meta name="theme-color" content="#0A0A0B" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContentLore · The home of UK streaming culture.</title>
+<meta name="description" content="Editorial intelligence on the British streaming scene. People, places, platforms and community — written from inside the scene. 189 UK creators tracked across Twitch and Kick.">
+<meta name="theme-color" content="#0A0A0B">
 
 <!-- Open Graph -->
-<meta property="og:title" content="ContentLore · The UK Streaming Desk" />
-<meta property="og:description" content="Weekly intelligence and editorial on the British streaming scene — across Twitch, Kick, YouTube and TikTok. A UK GTA RP vertical written from inside the scene." />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://contentlore.com/" />
-<meta property="og:site_name" content="ContentLore" />
+<meta property="og:title" content="ContentLore · The home of UK streaming culture.">
+<meta property="og:description" content="Editorial intelligence on the British streaming scene. 189 UK creators tracked live across Twitch and Kick.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://contentlore.com/">
+<meta property="og:site_name" content="ContentLore">
+<meta property="og:image" content="https://contentlore.com/api/og/home">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ContentLore · The home of UK streaming culture.">
+<meta name="twitter:description" content="Editorial intelligence on the British streaming scene. 189 UK creators tracked live.">
+<meta name="twitter:image" content="https://contentlore.com/api/og/home">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
 
-<link rel="stylesheet" href="styles.css">
+<script>
+// Today's date for the topbar
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('today-date');
+  if (el) {
+    const d = new Date();
+    const opts = { day: 'numeric', month: 'long', year: 'numeric' };
+    el.textContent = d.toLocaleDateString('en-GB', opts);
+    const dow = document.getElementById('today-dow');
+    if (dow) {
+      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      dow.textContent = days[d.getDay()] + ' Edition';
+    }
+  }
+});
+</script>
 </head>
 <body>
 
-<!-- ============================================================
-     NAV
-     ============================================================ -->
-<nav class="cl-nav">
-  <a href="./" class="cl-nav-brand">
-    <span class="cl-wordmark">ContentLore<span class="dot">.</span></span>
-    <span class="cl-nav-tagline">THE UK STREAMING DESK</span>
-  </a>
-  <ul class="cl-nav-links">
-    <li><a href="gta-rp/" class="active">GTA RP</a></li>
-    <li><a href="the-platform/">The Platform</a></li>
-    <li><a href="rising/">Rising</a></li>
-    <li><a href="signals/">Signals</a></li>
-    <li><a href="ledger/">Ledger</a></li>
-  </ul>
-  <div class="cl-nav-right">
-    <span class="cl-live-pill">Issue 03</span>
-  </div>
-</nav>
+<div class="cl-app">
 
-<!-- ============================================================
-     TICKER
-     ============================================================ -->
-<div class="cl-ticker">
-  <div class="cl-ticker-item"><span class="label">Tyrone</span><span class="val">191.1k · The EndZ</span></div>
-  <div class="cl-ticker-item"><span class="label">GTA 6</span><span class="val">19 Nov 2026</span><span class="up">Rockstar confirmed</span></div>
-  <div class="cl-ticker-item"><span class="label">FiveM Enhanced</span><span class="val">Coming months · early access</span><span class="up">Now explained</span></div>
-  <div class="cl-ticker-item"><span class="label">LBMM</span><span class="val">The EndZ</span></div>
-  <div class="cl-ticker-item"><span class="label">alt:V</span><span class="val">Shutdown · 6 Jul 2026</span><span class="up">Three-phase wind-down</span></div>
-  <div class="cl-ticker-item"><span class="label">ReeClare</span><span class="val">35.5k · Unmatched RP</span></div>
-  <div class="cl-ticker-item"><span class="label">NoPixel V</span><span class="val">Rockstar launcher · coming</span><span class="up">Co-production</span></div>
-  <div class="cl-ticker-item"><span class="label">FiveM peak CCV</span><span class="val">202,756</span><span class="up">1 Mar 2026</span></div>
+  <!-- ================================================================
+       SIDEBAR (shared component, same on every page)
+       ================================================================ -->
+  <aside class="cl-sidebar">
+    <a href="/" class="cl-masthead">Content<em>Lore</em><span class="cl-mark"></span></a>
+    <div class="cl-masthead-sub">The UK Streaming Desk · Est. 2026</div>
+
+    <div class="cl-nav-section">
+      <div class="cl-nav-section-label">Sections</div>
+      <ul class="cl-nav-list">
+        <li><a href="/people/" class="active">People <span class="cl-count">189</span></a></li>
+        <li><a href="/places/">Places <span class="cl-count">soon</span></a></li>
+        <li><a href="/platforms/">Platforms <span class="cl-count">04</span></a></li>
+        <li><a href="/community/">Community <span class="cl-count">soon</span></a></li>
+      </ul>
+    </div>
+
+    <div class="cl-nav-section">
+      <div class="cl-nav-section-label">Read</div>
+      <ul class="cl-nav-list">
+        <li><a href="/the-platform/" class="small">The Platform</a></li>
+        <li><a href="/ledger/" class="small">The Ledger</a></li>
+        <li><a href="/gta-rp/" class="small">GTA RP</a></li>
+      </ul>
+    </div>
+
+    <div class="cl-live-stat" id="live-stat">
+      <div class="cl-live-stat-head">
+        <span class="cl-live-dot"></span>
+        Live signal
+      </div>
+      <div class="cl-live-stat-body">
+        <strong id="live-count">—</strong> creators live right now<br>
+        across Twitch and Kick.
+      </div>
+      <div class="cl-live-stat-breakdown">
+        <span><i class="platform-square twitch"></i> <span id="live-twitch">—</span></span>
+        <span><i class="platform-square kick"></i> <span id="live-kick">—</span></span>
+      </div>
+    </div>
+
+    <div class="cl-signoff">
+      <a href="/about/">About</a> · <a href="/ethics/">Ethics</a><br>
+      <a href="/contact/">Contact</a> · <a href="/claim">Claim profile</a><br><br>
+      © ContentLore 2026<br>
+      Independent UK publication
+    </div>
+  </aside>
+
+  <!-- ================================================================
+       MAIN
+       ================================================================ -->
+  <main class="cl-main">
+
+    <!-- TOPBAR -->
+    <div class="cl-topbar">
+      <div class="cl-topbar-left">
+        <span><strong>Issue 04</strong></span>
+        <span id="today-date">20 April 2026</span>
+        <span>GBP · BST</span>
+      </div>
+      <div id="today-dow">Monday Edition</div>
+    </div>
+
+    <!-- HERO -->
+    <section class="cl-hero">
+      <div class="cl-hero-main">
+        <div class="cl-hero-kicker">The Desk · Restoration complete</div>
+        <h1>The home of <em>UK</em> streaming culture.</h1>
+        <p class="cl-hero-dek">Editorial intelligence on the British streaming scene. People, places, platforms and community — written from <em>inside</em> the scene, not inferred from a dashboard.</p>
+        <div class="cl-hero-byline">By <strong>Fats</strong> · Editor · Weekly, since April 2026</div>
+      </div>
+
+      <div class="cl-hero-aside">
+        <a href="/the-platform/" class="cl-side-teaser accent">
+          <div class="cl-tag">◆ The Platform</div>
+          <h3>alt:V · three-phase shutdown, final lights out 6 July 2026.</h3>
+          <div class="cl-meta">Ledger · 6 min</div>
+        </a>
+        <a href="/people/" class="cl-side-teaser">
+          <div class="cl-tag">◆ The Vault</div>
+          <h3>189 UK creators tracked. 24,740 snapshots logged.</h3>
+          <div class="cl-meta">Editorial index</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- SCENE PULSE -->
+    <section class="cl-pulse">
+      <div class="cl-pulse-inner">
+        <div class="cl-pulse-header">
+          <div>
+            <div class="cl-section-label"><span class="cl-num">02</span> Scene Pulse</div>
+            <h2>Who's <em>rising</em> right now.</h2>
+          </div>
+          <div class="cl-pulse-meta">
+            <span class="cl-refresh-live" id="pulse-refresh">Live · refreshes hourly</span><br>
+            7-day follower momentum<br>
+            <span id="pulse-count">189</span> creators tracked
+          </div>
+        </div>
+
+        <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+          <defs>
+            <linearGradient id="clSparkGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#E8B04A" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#E8B04A" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <div class="cl-pulse-scroll" id="pulse-scroll">
+          <!-- Populated by /assets/pulse.js from /api/momentum -->
+          <div class="cl-tile" style="opacity: 0.4;">
+            <div class="cl-tile-top">
+              <div class="cl-tile-rank">—</div>
+            </div>
+            <div class="cl-tile-name">Loading…</div>
+            <div class="cl-tile-handle">fetching live data</div>
+            <div class="cl-tile-stats">
+              <div class="cl-tile-delta">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAPER SECTION — light contrast, stats -->
+    <section class="cl-paper">
+      <div class="cl-paper-inner">
+        <div class="cl-section-label"><span class="cl-num">03</span> The Index</div>
+        <h2>A publication <em>of record</em> for the British streaming scene.</h2>
+
+        <div class="cl-paper-grid">
+          <div class="cl-paper-card">
+            <span class="cl-stat-big">189</span>
+            <h3>UK creators tracked</h3>
+            <p>Verified individual creators on Twitch and Kick, discovered through live-stream sampling and self-claim. Growing weekly.</p>
+          </div>
+          <div class="cl-paper-card">
+            <span class="cl-stat-big">24,740</span>
+            <h3>Snapshots logged</h3>
+            <p>Hourly follower and viewer captures across every tracked creator. Historical record for momentum, decline and the moments in between.</p>
+          </div>
+          <div class="cl-paper-card">
+            <span class="cl-stat-big">2</span>
+            <h3>Platforms covered</h3>
+            <p>Twitch and Kick live today. YouTube and TikTok next. Editorial scope follows where UK streamers actually are.</p>
+          </div>
+          <div class="cl-paper-card">
+            <span class="cl-stat-big">01</span>
+            <h3>Point of view</h3>
+            <p>Written from inside the scene. Independent. No platform partnerships. No algorithmic ranking — editorial judgement.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="cl-footer-v2">
+      <div>ContentLore · Independent UK streaming publication</div>
+      <div>
+        <a href="/about/">About</a> ·
+        <a href="/ethics/">Ethics</a> ·
+        <a href="/contact/">Contact</a> ·
+        <a href="/claim">Claim profile</a>
+      </div>
+    </footer>
+
+  </main>
 </div>
-</div>
 
-<main>
-
-  <!-- ============================================================
-       HERO
-       ============================================================ -->
-  <article class="cl-hero cl-atmos cl-atmos-gta cl-specular cl-bar-gta">
-    <div class="cl-hero-main">
-      <div class="kicker">The Scoreboard · GTA RP · Issue 03</div>
-      <h1>The most popular UK server is <em>not</em> the best UK server. Six servers, scored.</h1>
-      <p class="dek">The Popularity-Quality Map places six active UK FiveM RP servers across two axes no existing publication has bothered to measure. The EndZ and VeraRP lead the popularity axis. Only one of them leads the quality axis. The rest is editorial.</p>
-      <div class="byline">By <strong>Fats</strong> · 18 Apr 2026 · 14 min read</div>
-    </div>
-    <aside class="cl-hero-aside">
-      <a href="rising/issue-03/" class="cl-teaser-sidebar cl-stripe-rising">
-        <div class="tag" style="color: var(--pillar-rising);">Rising · This week</div>
-        <h3>NoPixel V is a Rockstar co-production. The UK scene hasn't priced that in yet.</h3>
-        <div class="meta">This week · 7 min</div>
-      </a>
-      <a href="ledger/altv-shutdown/" class="cl-teaser-sidebar cl-stripe-ledger">
-        <div class="tag" style="color: var(--pillar-ledger);">The Ledger</div>
-        <h3>alt:V · three-phase shutdown, final lights out 6 July 2026.</h3>
-        <div class="meta">Ledger · 6 min</div>
-      </a>
-      <a href="desk/gta-6-head-start/" class="cl-teaser-sidebar cl-stripe-desk">
-        <div class="tag" style="color: var(--pillar-desk);">The Desk</div>
-        <h3>19 November 2026. The window isn't eighteen months — it's one.</h3>
-        <div class="meta">Long read · 21 min</div>
-      </a>
-    </aside>
-  </article>
-
-  <!-- ============================================================
-       SECTION · THE SCOREBOARD
-       ============================================================ -->
-  <section class="cl-section cl-atmos cl-atmos-gta">
-    <div class="cl-container">
-      <header class="cl-section-head">
-        <span class="label">The Scoreboard</span>
-        <div>
-          <h2>Every UK server, <em>scored</em> against Rockstar's PLA.</h2>
-          <p class="sub">The flagship editorial asset. Quarterly ratings of UK GTA RP servers on Platform License Agreement compliance, marketing-vs-reality, and transition readiness for GTA 6. Right of reply offered before publication. Full methodology published alongside. This is what separates ContentLore from a fan site.</p>
-        </div>
-      </header>
-
-      <div class="cl-grid-2" style="margin-bottom: 48px;">
-        <div style="padding: 32px; background: var(--bg-card); border: 1px solid var(--border); border-top: 3px solid var(--pillar-gta);">
-          <div class="cl-eyebrow" style="color: var(--pillar-gta); margin-bottom: 18px;">Q2 2026 · Published 18 April</div>
-          <h3 class="cl-display-sm" style="margin-bottom: 16px;">Six servers, three tiers, one table.</h3>
-          <p class="cl-body-sm" style="color: var(--text-secondary); margin-bottom: 24px;">VeraRP and Roleplay UK hold the Serious tier. The EndZ leads on production polish and popularity, with marketing-vs-reality claims under review. Let's RP, Drill UK RP, and British Life RP sit across the Growing and Themed tiers. Tier A remains empty.</p>
-          <a href="gta-rp/servers/" class="cl-btn cl-btn-primary">Read the scoreboard</a>
-        </div>
-        <div style="padding: 32px; background: var(--bg-card); border: 1px solid var(--border); border-top: 3px solid var(--pillar-ledger);">
-          <div class="cl-eyebrow" style="color: var(--pillar-ledger); margin-bottom: 18px;">The editorial tension</div>
-          <h3 class="cl-display-sm" style="margin-bottom: 16px;">Serious RP versus content RP. Named, with receipts.</h3>
-          <p class="cl-body-sm" style="color: var(--text-secondary); margin-bottom: 24px; font-style: italic;">"The server was trying to be a content server and I was ready to find my love for serious police RP again." <span style="font-style: normal; color: var(--chrome-dim);">— DeggyUK, on his own website, explaining why he stepped down as head of police at Unique RP in June 2025.</span></p>
-          <a href="gta-rp/scoreboard/methodology/" class="cl-btn cl-btn-ghost">Read methodology</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       SECTION · RISING THIS WEEK
-       ============================================================ -->
-  <section class="cl-section cl-atmos cl-atmos-rising">
-    <div class="cl-container">
-      <header class="cl-section-head">
-        <span class="label" style="color: var(--pillar-rising); border-top-color: var(--pillar-rising);">Rising</span>
-        <div>
-          <h2>This week, <em>Issue 03.</em></h2>
-          <p class="sub">The weekly newsletter. Who rose, who cooled, what broke. Every Friday, 09:00 BST. Not an algorithm — editorial.</p>
-        </div>
-      </header>
-
-      <div style="padding: 40px; border: 1px solid var(--border); border-left: 3px solid var(--pillar-rising); background: var(--bg-card);">
-        <div class="cl-eyebrow" style="color: var(--pillar-rising); margin-bottom: 20px;">Issue 03 · 18 April 2026</div>
-        <h3 class="cl-display-md" style="margin-bottom: 24px;">NoPixel V is a Rockstar co-production. The UK scene hasn't priced that in yet.</h3>
-        <p class="cl-body" style="color: var(--text-secondary); margin-bottom: 28px; max-width: 720px;">The September 2025 announcement put NoPixel onto the Rockstar Games Launcher with Rockstar's direct involvement. The trailer features xQc, Pokimane, and Valkyrae. For UK servers, the question isn't whether they can compete on production. It's whether they can matter when the top of the RP pyramid now carries Rockstar's badge.</p>
-
-        <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border);">
-          <div style="flex: 1; min-width: 200px;">
-            <div class="cl-meta" style="color: var(--chrome-dim); margin-bottom: 6px;">Tier-1 UK RP</div>
-            <div class="cl-body-sm" style="color: var(--text-primary);">Tyrone sits at 191k followers, still on The EndZ — the only top-20 English GTA V creator based in the UK.</div>
-          </div>
-          <div style="flex: 1; min-width: 200px;">
-            <div class="cl-meta" style="color: var(--chrome-dim); margin-bottom: 6px;">Context</div>
-            <div class="cl-body-sm" style="color: var(--text-primary);">The Bov Boys era of UK GTA RP is over. AngryGinge, NYKchazza, Jakey Davies — none currently play.</div>
-          </div>
-          <div style="flex: 1; min-width: 200px;">
-            <div class="cl-meta" style="color: var(--chrome-dim); margin-bottom: 6px;">Watch next</div>
-            <div class="cl-body-sm" style="color: var(--text-primary);">Kick's Partner Program economics — $16–$32/hr with a 95/5 subscription split. Where UK streamers end up matters.</div>
-          </div>
-        </div>
-
-        <div style="margin-top: 32px; display: flex; gap: 16px; flex-wrap: wrap;">
-          <a href="rising/issue-03/" class="cl-btn cl-btn-primary">Read Issue 03</a>
-          <a href="rising/subscribe/" class="cl-btn cl-btn-ghost">Subscribe · Free</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       SECTION · FEATURED SERVERS
-       ============================================================ -->
-  <section class="cl-section">
-    <div class="cl-container">
-      <header class="cl-section-head">
-        <span class="label">UK FiveM RP</span>
-        <div>
-          <h2>The servers that matter, <em>right now.</em></h2>
-          <p class="sub">Three of six from the current Scoreboard. Each card carries tier, quality pips, editorial verdict, and three live metrics. Click for the full profile and compliance breakdown.</p>
-        </div>
-      </header>
-
-      <div class="cl-grid-3">
-
-        <a href="gta-rp/servers/verarp/" class="cl-server-card">
-          <div class="cl-server-card__head">
-            <div class="cl-server-card__tier">Tier B · Serious</div>
-            <div class="cl-pips">
-              <span class="cl-pip on"></span>
-              <span class="cl-pip on"></span>
-              <span class="cl-pip signal"></span>
-            </div>
-          </div>
-          <div>
-            <div class="cl-server-card__name">VeraRP</div>
-            <div class="cl-server-card__url">verarp.co.uk</div>
-          </div>
-          <p class="cl-server-card__blurb">The closest any UK server comes to NoPixel-tier serious RP. Whitelisted, 18+, custom frameworks, real community governance. The one to join if you came to actually play.</p>
-          <div class="cl-server-card__stats">
-            <div class="cl-server-stat"><div class="label">Tier</div><div class="value">B</div></div>
-            <div class="cl-server-stat"><div class="label">Approach</div><div class="value chrome">Serious</div></div>
-            <div class="cl-server-stat"><div class="label">Whitelist</div><div class="value signal">Yes</div></div>
-          </div>
-        </a>
-
-        <a href="gta-rp/servers/the-endz/" class="cl-server-card">
-          <div class="cl-server-card__head">
-            <div class="cl-server-card__tier">Tier B · Content</div>
-            <div class="cl-pips">
-              <span class="cl-pip warn"></span>
-              <span class="cl-pip on"></span>
-              <span class="cl-pip on"></span>
-            </div>
-          </div>
-          <div>
-            <div class="cl-server-card__name">The EndZ</div>
-            <div class="cl-server-card__url">theendz.co.uk</div>
-          </div>
-          <p class="cl-server-card__blurb">The most production-polished UK server, London-remapped with hundreds of custom scripts. Home to Tyrone and the most-watched UK RP streams of 2026. Its "No Pay to Win" homepage claim is under review.</p>
-          <div class="cl-server-card__stats">
-            <div class="cl-server-stat"><div class="label">Tier</div><div class="value">B</div></div>
-            <div class="cl-server-stat"><div class="label">Approach</div><div class="value warn">Content</div></div>
-            <div class="cl-server-stat"><div class="label">Marquee</div><div class="value signal">Tyrone</div></div>
-          </div>
-        </a>
-
-        <a href="gta-rp/servers/roleplay-uk/" class="cl-server-card">
-          <div class="cl-server-card__head">
-            <div class="cl-server-card__tier">Tier B · Serious</div>
-            <div class="cl-pips">
-              <span class="cl-pip on"></span>
-              <span class="cl-pip on"></span>
-              <span class="cl-pip on"></span>
-            </div>
-          </div>
-          <div>
-            <div class="cl-server-card__name">Roleplay UK</div>
-            <div class="cl-server-card__url">wiki.roleplay.co.uk</div>
-          </div>
-          <p class="cl-server-card__blurb">Long-running multi-game community with a mature, well-documented FiveM venture. Wiki-driven, institutional, predictable — the opposite of content-server energy. The UK RP option for players who want structure over spectacle.</p>
-          <div class="cl-server-card__stats">
-            <div class="cl-server-stat"><div class="label">Tier</div><div class="value">B</div></div>
-            <div class="cl-server-stat"><div class="label">Approach</div><div class="value chrome">Serious</div></div>
-            <div class="cl-server-stat"><div class="label">Age</div><div class="value">Multi-year</div></div>
-          </div>
-        </a>
-
-      </div>
-
-      <div style="margin-top: 32px; text-align: center;">
-        <a href="gta-rp/servers/" class="cl-btn cl-btn-ghost">See all six servers →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       SECTION · THE CREATOR
-       ============================================================ -->
-  <section class="cl-section cl-atmos cl-atmos-creators">
-    <div class="cl-container">
-      <header class="cl-section-head">
-        <span class="label" style="color: var(--pillar-creators); border-top-color: var(--pillar-creators);">Creators</span>
-        <div>
-          <h2>One UK creator sits <em>above</em> the scene.</h2>
-          <p class="sub">Tier-1 UK streamers have largely left GTA RP. The Bov Boys moved to football. Yungfilly, Wolfabelle, and others stayed with US servers. One British top-10-English-GTA-V creator is actively playing UK servers. It's worth naming him.</p>
-        </div>
-      </header>
-
-      <a href="creators/tyrone/" class="cl-teaser-feature cl-glow-creators" style="display: block;">
-        <div class="tag" style="color: var(--pillar-creators);">Creator Profile · Tyrone</div>
-        <h3 style="font-size: clamp(30px, 4.2vw, 52px); max-width: 22ch;">191,133 followers. 803 average viewers. <em>The only tier-1 UK creator playing UK RP.</em></h3>
-        <p class="dek">Ranked #17 of all English GTA V creators on Twitch for April 2026 — and the only one in the top 20 based in the UK, playing UK servers. Stream titles from 13, 14, and 15 April confirm active sessions on The EndZ. He also runs District 10 on the US side. Everything else the mainstream UK streaming press wrote about UK GTA RP in 2024 has moved on. Tyrone hasn't.</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary);">
-          <div><span style="color: var(--chrome-dim); display: block; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">Followers</span>191,133</div>
-          <div><span style="color: var(--chrome-dim); display: block; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">30d avg</span>803</div>
-          <div><span style="color: var(--chrome-dim); display: block; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">30d peak</span>2,679</div>
-          <div><span style="color: var(--chrome-dim); display: block; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">30d airtime</span>158h</div>
-          <div><span style="color: var(--chrome-dim); display: block; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">Current server</span>The EndZ · D10</div>
-        </div>
-        <div class="meta" style="margin-top: 24px;">By Fats · Data as of 18 Apr 2026 · Source: Streams Charts</div>
-      </a>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       SECTION · THE DESK
-       ============================================================ -->
-  <section class="cl-section cl-atmos cl-atmos-ledger">
-    <div class="cl-container">
-      <header class="cl-section-head">
-        <span class="label" style="color: var(--pillar-desk); border-top-color: var(--pillar-desk);">The Desk</span>
-        <div>
-          <h2>Long essays on where the scene <em>is going.</em></h2>
-          <p class="sub">Not weekly. Published when a story justifies 5,000 words. Research-backed, opinionated, with citations.</p>
-        </div>
-      </header>
-
-      <a href="desk/gta-6-head-start/" class="cl-teaser-feature cl-glow-desk" style="display: block;">
-        <div class="tag" style="color: var(--pillar-desk);">The Desk · Long essay</div>
-        <h3 style="font-size: clamp(32px, 4.5vw, 56px);">19 November 2026. GTA 6 has a date. The UK scene has <em>seven months</em> — not eighteen.</h3>
-        <p class="dek">Rockstar confirmed the launch window in November 2025 and reconfirmed in February 2026. Take-Two has already shut down alt:V. NoPixel V will launch on the Rockstar Games Launcher. Datamined evidence points to ROME — the Rockstar Online Modding Engine — eventually replacing FiveM. Anyone covering UK streaming has until this November to build authority that the next scene cannot replicate. The runway is shorter than anyone's acting like.</p>
-        <div class="meta">By Fats · 18 Apr · 21 min read</div>
-      </a>
-    </div>
-  </section>
-
-</main>
-
-<!-- ============================================================
-     FOOTER
-     ============================================================ -->
-<footer class="cl-footer">
-  <div class="cl-footer-top">
-    <div class="cl-footer-brand">
-      <h3>ContentLore<span class="dot">.</span></h3>
-      <p>The UK streaming desk. Weekly intelligence and editorial on Twitch, Kick, YouTube and TikTok — and the servers that matter. Written from inside the scene.</p>
-    </div>
-    <div class="cl-footer-col">
-      <h4>Sections</h4>
-      <ul>
-        <li><a href="gta-rp/">GTA RP</a></li>
-        <li><a href="the-platform/">The Platform</a></li>
-        <li><a href="rising/">Rising</a></li>
-        <li><a href="signals/">Signals</a></li>
-        <li><a href="ledger/">The Ledger</a></li>
-      </ul>
-    </div>
-    <div class="cl-footer-col">
-      <h4>Info</h4>
-      <ul>
-        <li><a href="about/">About</a></li>
-        <li><a href="gta-rp/scoreboard/methodology/">Methodology</a></li>
-        <li><a href="ethics/">Editorial code</a></li>
-        <li><a href="contact/">Contact</a></li>
-      </ul>
-    </div>
-    <div class="cl-footer-col">
-      <h4>Connect</h4>
-      <ul>
-        <li><a href="https://tiktok.com/@contentlore" rel="noopener">TikTok</a></li>
-        <li><a href="https://x.com/contentlore" rel="noopener">X</a></li>
-        <li><a href="rss.xml">RSS</a></li>
-        <li><a href="rising/subscribe/">Newsletter</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="cl-footer-bottom">
-    <div>© ContentLore 2026 · Independent UK streaming publication</div>
-    <div>v1.2 · The Platform live · 19 Apr 2026</div>
-  </div>
-</footer>
-
+<script src="/assets/pulse.js" defer></script>
+<script src="/assets/livecount.js" defer></script>
 </body>
 </html>
