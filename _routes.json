@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "description": "Route dynamic paths through Functions; everything else served as static.",
+  "include": [
+    "/api/*",
+    "/creator/*",
+    "/claim",
+    "/admin"
+  ],
+  "exclude": []
+}

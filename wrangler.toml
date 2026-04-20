@@ -1,0 +1,30 @@
+# ================================================================
+# wrangler.toml
+# Cloudflare Pages project configuration for ContentLore.
+# Bindings exposed to Functions as env.DB and env.KV.
+# ================================================================
+
+name = "contentlore"
+compatibility_date = "2026-04-20"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "."
+
+# --- D1 database binding (accessible as env.DB) ---
+[[d1_databases]]
+binding = "DB"
+database_name = "contentlore-db"
+database_id = "fda318fa-b2d2-46d3-a9ba-eb522e516763"
+
+# --- KV namespace binding (accessible as env.KV) ---
+# Used for Twitch/Kick OAuth token caching and claim rate-limits
+[[kv_namespaces]]
+binding = "KV"
+id = "f6c05b65a4e84c5baba997122ebcc8c6"
+
+# --- Secrets, set in dashboard only, NOT here ---
+#   ADMIN_PASSWORD
+#   ANTHROPIC_API_KEY
+#   TWITCH_CLIENT_ID
+#   TWITCH_CLIENT_SECRET
+#   KICK_CLIENT_ID
+#   KICK_CLIENT_SECRET
