@@ -1,0 +1,21 @@
+# Wrangler local state
+.wrangler/
+**/.wrangler/
+node_modules/
+.env
+.env.local
+.dev.vars
+
+# Editor crap
+.DS_Store
+*.swp
+*~
+
+# Stray work-in-progress files
+*-prio.html
+*-prio.html'
+*-anchors.txt
+*-productbox-lines.txt
+*-lines.txt
+matches.txt
+preview.html
