@@ -96,7 +96,10 @@
       <article class="cl-hcard ${platformClass}">
         <a class="cl-hcard-body" href="${c.profile_url}">
           <header class="cl-hcard-head">
-            <div class="cl-hcard-name">${escapeHtml(c.display_name)}</div>
+            <div class="cl-hcard-identity">
+              ${avatarHtml(c, 'lg')}
+              <div class="cl-hcard-name">${escapeHtml(c.display_name)}</div>
+            </div>
             <div class="cl-hcard-viewers">
               <span class="cl-hcard-vnum">${formatCount(c.viewers)}</span>
               <span class="cl-hcard-vlabel">watching</span>
@@ -119,6 +122,29 @@
     `;
   }
 
+  // Avatar with graceful fallback to platform-coloured initial.
+  // size: 'sm' (default) = 20px, 'lg' = 44px
+  function avatarHtml(c, size) {
+    const sz = size === 'lg' ? 'cl-avatar--lg' : 'cl-avatar--sm';
+    const platformClass = c.platform ? 'platform-' + c.platform : '';
+    const name = c.display_name || c.id || '?';
+    const initial = name.charAt(0).toUpperCase();
+    if (c.avatar_url) {
+      return `<span class="cl-avatar ${sz} ${platformClass}">
+        <img src="${escapeAttr(c.avatar_url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <span class="cl-avatar-fallback" style="display:none;">${escapeHtml(initial)}</span>
+      </span>`;
+    }
+    return `<span class="cl-avatar ${sz} ${platformClass} cl-avatar--initial">
+      <span class="cl-avatar-fallback">${escapeHtml(initial)}</span>
+    </span>`;
+  }
+
+  function escapeAttr(s) {
+    if (s == null) return '';
+    return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+
   // Compact row — live creators beyond the top 3
   function compactRow(c) {
     const watchUrl = c.platform === 'twitch'
@@ -129,7 +155,7 @@
 
     return `
       <a class="cl-drow" href="${c.profile_url}">
-        <i class="platform-square ${c.platform}"></i>
+        ${avatarHtml(c)}
         <span class="cl-drow-name">${escapeHtml(c.display_name)}</span>
         <span class="cl-drow-game">${c.game_name ? escapeHtml(c.game_name) : ''}</span>
         <span class="cl-drow-title">${c.stream_title ? escapeHtml(truncate(c.stream_title, 60)) : ''}</span>
@@ -188,7 +214,7 @@
 
     return `
       <a class="cl-drow cl-drow-recent" href="${c.profile_url}">
-        <i class="platform-square ${c.platform}"></i>
+        ${avatarHtml(c)}
         <span class="cl-drow-name">${escapeHtml(c.display_name)}</span>
         <span class="cl-drow-game">${c.game_name ? escapeHtml(c.game_name) : ''}</span>
         <span class="cl-drow-title">${c.stream_title ? escapeHtml(truncate(c.stream_title, 55)) : ''}</span>

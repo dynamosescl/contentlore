@@ -4508,3 +4508,83 @@ body::before {
   }
   .cl-drow-game, .cl-drow-title, .cl-drow-when { display: none; }
 }
+
+/* ============================================================
+   DESK AVATARS + POLISH
+   ============================================================ */
+.cl-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+.cl-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cl-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  line-height: 1;
+}
+.cl-avatar--sm { width: 24px; height: 24px; font-size: 11px; }
+.cl-avatar--lg { width: 44px; height: 44px; font-size: 18px; border-width: 2px; }
+
+/* Platform-coloured edges on initial-only avatars to tie them to the scheme */
+.cl-avatar--initial.platform-twitch { border-color: var(--twitch); }
+.cl-avatar--initial.platform-kick   { border-color: var(--kick); }
+.cl-avatar.platform-twitch { border-color: rgba(145,70,255,0.35); }
+.cl-avatar.platform-kick   { border-color: rgba(83,252,24,0.35); }
+
+/* Update compact row grid to leave room for avatar + looser spacing */
+.cl-drow {
+  grid-template-columns: 24px 200px 140px 1fr 80px;
+  gap: 16px;
+  padding: 11px 8px;
+}
+.cl-drow-recent {
+  grid-template-columns: 24px 200px 140px 1fr 80px 80px;
+}
+
+/* Stream titles slightly more readable in the rows */
+.cl-drow-title {
+  color: var(--text-primary);
+  opacity: 0.88;
+}
+.cl-drow-recent .cl-drow-title { opacity: 0.78; }
+
+/* Hero card identity — avatar + name grouped */
+.cl-hcard-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Breathing room between the empty-state copy and the recent table */
+.cl-desk-empty { padding-top: 20px; }
+.cl-desk-empty-recent { margin-top: 32px; }
+.cl-desk-empty-recent .cl-desk-rows-label {
+  padding-top: 0;
+  margin-bottom: 8px;
+}
+
+/* Responsive — hide avatars below very narrow screens to save horizontal space */
+@media (max-width: 520px) {
+  .cl-drow, .cl-drow-recent { grid-template-columns: 1fr auto; }
+  .cl-avatar--sm, .cl-drow-game, .cl-drow-title, .cl-drow-when { display: none; }
+}
