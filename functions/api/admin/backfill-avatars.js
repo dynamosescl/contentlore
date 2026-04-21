@@ -26,8 +26,47 @@ export async function onRequestPost({ env, request }) {
   let body = {};
   try { body = await request.json(); } catch { /* fine */ }
   const limit = Math.min(parseInt(body?.limit || 50, 10), 100);
+  const debug = body?.debug === true;
 
   try {
+    // DEBUG MODE — return raw API response for one Twitch and one Kick creator
+    if (debug) {
+      const twitchSample = await env.DB.prepare(`
+        SELECT c.id, c.display_name, cp.handle
+        FROM creators c
+        LEFT JOIN creator_platforms cp ON cp.creator_id = c.id AND cp.is_primary = 1
+        WHERE cp.platform = 'twitch' AND cp.handle IS NOT NULL
+        LIMIT 1
+      `).first();
+
+      const kickSample = await env.DB.prepare(`
+        SELECT c.id, c.display_name, cp.handle
+        FROM creators c
+        LEFT JOIN creator_platforms cp ON cp.creator_id = c.id AND cp.is_primary = 1
+        WHERE cp.platform = 'kick' AND cp.handle IS NOT NULL
+        LIMIT 1
+      `).first();
+
+      const result = {};
+      if (twitchSample) {
+        try {
+          const tw = await fetchTwitchUser(env, twitchSample.handle);
+          result.twitch = { handle: twitchSample.handle, response: tw, response_keys: tw ? Object.keys(tw) : null };
+        } catch (e) {
+          result.twitch = { handle: twitchSample.handle, error: String(e?.message || e) };
+        }
+      }
+      if (kickSample) {
+        try {
+          const kk = await fetchKickChannel(env, kickSample.handle);
+          result.kick = { handle: kickSample.handle, response: kk, response_keys: kk ? Object.keys(kk) : null };
+        } catch (e) {
+          result.kick = { handle: kickSample.handle, error: String(e?.message || e) };
+        }
+      }
+      return jsonResponse({ ok: true, debug: true, samples: result });
+    }
+
     // Pull creators without an avatar, joined with primary platform
     const targetsRes = await env.DB.prepare(`
       SELECT c.id, c.display_name, cp.platform, cp.handle
