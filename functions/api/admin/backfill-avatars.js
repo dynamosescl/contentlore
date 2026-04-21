@@ -1,23 +1,54 @@
 // ================================================================
 // functions/api/admin/backfill-avatars.js
 // POST /api/admin/backfill-avatars
-// Fetches profile image URLs from Twitch and Kick for creators who
-// don't have an avatar_url yet. Writes them straight to the creators
-// table. Idempotent — skips creators who already have an avatar.
+// Fetches profile image URLs directly from Twitch and Kick for creators
+// missing an avatar_url. Idempotent.
 //
 // Auth: X-Admin-Password required.
-// Body: { limit?: number (default 50, cap 100) }
+// Body: { limit?: number (default 50, cap 100), debug?: bool }
 //
-// Uses the same Twitch/Kick helpers as the rest of the site. Caches
-// per-handle API results in memory for this run to avoid duplicate calls.
+// Bypasses _lib.js helpers (they return null on error, swallowing failures).
+// Calls APIs inline and throws real errors so we can see what's going wrong.
 // ================================================================
 
-import {
-  jsonResponse,
-  requireAdminAuth,
-  fetchTwitchUser,
-  fetchKickChannel,
-} from '../../_lib.js';
+import { jsonResponse, requireAdminAuth } from '../../_lib.js';
+
+// Twitch app token, cached in KV for 55 min
+async function getTwitchAppToken(env) {
+  const cached = await env.KV.get('twitch:app_token');
+  if (cached) return cached;
+  const res = await fetch('https://id.twitch.tv/oauth2/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: `client_id=${env.TWITCH_CLIENT_ID}&client_secret=${env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`,
+  });
+  if (!res.ok) throw new Error('twitch_token_' + res.status);
+  const data = await res.json();
+  await env.KV.put('twitch:app_token', data.access_token, { expirationTtl: 3300 });
+  return data.access_token;
+}
+
+async function twitchAvatar(env, login) {
+  const token = await getTwitchAppToken(env);
+  const res = await fetch(
+    `https://api.twitch.tv/helix/users?login=${encodeURIComponent(login)}`,
+    { headers: { 'client-id': env.TWITCH_CLIENT_ID, authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) throw new Error('twitch_user_' + res.status);
+  const data = await res.json();
+  const user = data?.data?.[0];
+  return user?.profile_image_url || null;
+}
+
+// Kick public v2 channel endpoint — no auth
+async function kickAvatar(env, slug) {
+  const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`, {
+    headers: { 'User-Agent': 'Mozilla/5.0 ContentLore/1.0' },
+  });
+  if (!res.ok) throw new Error('kick_channel_' + res.status);
+  const data = await res.json();
+  return data?.user?.profile_pic || null;
+}
 
 export async function onRequestPost({ env, request }) {
   const authError = requireAdminAuth(request, env);
@@ -29,7 +60,7 @@ export async function onRequestPost({ env, request }) {
   const debug = body?.debug === true;
 
   try {
-    // DEBUG MODE — hit Twitch and Kick APIs directly, return raw status + body
+    // DEBUG — show extraction result for one of each platform
     if (debug) {
       const twitchSample = await env.DB.prepare(`
         SELECT c.id, c.display_name, cp.handle
@@ -38,7 +69,6 @@ export async function onRequestPost({ env, request }) {
         WHERE cp.platform = 'twitch' AND cp.handle IS NOT NULL
         LIMIT 1
       `).first();
-
       const kickSample = await env.DB.prepare(`
         SELECT c.id, c.display_name, cp.handle
         FROM creators c
@@ -47,64 +77,30 @@ export async function onRequestPost({ env, request }) {
         LIMIT 1
       `).first();
 
-      const result = {
-        env_check: {
-          has_twitch_client_id: !!env.TWITCH_CLIENT_ID,
-          has_twitch_client_secret: !!env.TWITCH_CLIENT_SECRET,
-          has_kick_client_id: !!env.KICK_CLIENT_ID,
-          has_kick_client_secret: !!env.KICK_CLIENT_SECRET,
-        },
-      };
-
-      // Twitch direct
+      const result = {};
       if (twitchSample) {
         try {
-          const tokenRes = await fetch('https://id.twitch.tv/oauth2/token', {
-            method: 'POST',
-            headers: { 'content-type': 'application/x-www-form-urlencoded' },
-            body: `client_id=${env.TWITCH_CLIENT_ID}&client_secret=${env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`,
-          });
-          const tokenBody = await tokenRes.text();
-          result.twitch_token = { status: tokenRes.status, body: tokenBody.substring(0, 300) };
-          if (tokenRes.ok) {
-            const tokenData = JSON.parse(tokenBody);
-            const userRes = await fetch(
-              `https://api.twitch.tv/helix/users?login=${encodeURIComponent(twitchSample.handle)}`,
-              { headers: { 'client-id': env.TWITCH_CLIENT_ID, authorization: `Bearer ${tokenData.access_token}` } }
-            );
-            const userBody = await userRes.text();
-            result.twitch_user = {
-              handle: twitchSample.handle,
-              status: userRes.status,
-              body: userBody.substring(0, 800),
-            };
-          }
-        } catch (e) {
-          result.twitch_error = String(e?.message || e);
-        }
+          result.twitch = { handle: twitchSample.handle, url: await twitchAvatar(env, twitchSample.handle) };
+        } catch (e) { result.twitch_error = String(e?.message || e); }
       }
-
-      // Kick direct — public v2 endpoint, no auth needed
       if (kickSample) {
         try {
           const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(kickSample.handle)}`, {
             headers: { 'User-Agent': 'Mozilla/5.0 ContentLore/1.0' },
           });
-          const body = await res.text();
-          result.kick_v2 = {
+          const data = await res.json();
+          result.kick = {
             handle: kickSample.handle,
-            status: res.status,
-            body: body.substring(0, 800),
+            url: data?.user?.profile_pic || null,
+            user_keys: data?.user ? Object.keys(data.user) : null,
+            top_keys: Object.keys(data || {}),
           };
-        } catch (e) {
-          result.kick_error = String(e?.message || e);
-        }
+        } catch (e) { result.kick_error = String(e?.message || e); }
       }
-
       return jsonResponse({ ok: true, debug: true, samples: result });
     }
 
-    // Pull creators without an avatar, joined with primary platform
+    // Pull creators without an avatar
     const targetsRes = await env.DB.prepare(`
       SELECT c.id, c.display_name, cp.platform, cp.handle
       FROM creators c
@@ -118,51 +114,27 @@ export async function onRequestPost({ env, request }) {
 
     const targets = targetsRes.results || [];
     if (targets.length === 0) {
-      return jsonResponse({
-        ok: true,
-        done: true,
-        processed: 0,
-        updated: 0,
-        message: 'No creators missing avatars',
-      });
+      return jsonResponse({ ok: true, done: true, processed: 0, updated: 0, message: 'No creators missing avatars' });
     }
 
     let updated = 0;
     const errors = [];
-    const errorCounts = {
-      fetch_failed: 0,
-      no_avatar_in_response: 0,
-      db_update_failed: 0,
-      unknown_platform: 0,
-    };
+    const errorCounts = { fetch_failed: 0, no_avatar_in_response: 0, db_update_failed: 0, unknown_platform: 0 };
     const samples = [];
-
-    console.log(`[backfill-avatars] starting batch of ${targets.length} creators`);
 
     for (const t of targets) {
       let avatarUrl = null;
-
       try {
-        if (t.platform === 'twitch') {
-          const user = await fetchTwitchUser(env, t.handle);
-          // Twitch user object has profile_image_url
-          avatarUrl = user?.profile_image_url || null;
-        } else if (t.platform === 'kick') {
-          const chan = await fetchKickChannel(env, t.handle);
-          // Kick: profile_picture on v1, user.profile_pic on v2 fallback
-          avatarUrl = chan?.profile_picture
-            || chan?.user?.profile_pic
-            || chan?.banner_image?.url
-            || null;
-        } else {
+        if (t.platform === 'twitch')      avatarUrl = await twitchAvatar(env, t.handle);
+        else if (t.platform === 'kick')   avatarUrl = await kickAvatar(env, t.handle);
+        else {
           errorCounts.unknown_platform++;
           errors.push({ id: t.id, category: 'unknown_platform', platform: t.platform });
           continue;
         }
       } catch (e) {
-        console.log(`[backfill-avatars] fetch error for ${t.id}: ${e?.message || e}`);
         errorCounts.fetch_failed++;
-        errors.push({ id: t.id, category: 'fetch_failed', error: String(e?.message || e) });
+        errors.push({ id: t.id, category: 'fetch_failed', platform: t.platform, handle: t.handle, error: String(e?.message || e) });
         continue;
       }
 
@@ -182,19 +154,15 @@ export async function onRequestPost({ env, request }) {
           samples.push({ id: t.id, display_name: t.display_name, avatar_url: avatarUrl });
         }
       } catch (dbErr) {
-        console.log(`[backfill-avatars] db update failed for ${t.id}: ${dbErr?.message || dbErr}`);
         errorCounts.db_update_failed++;
         errors.push({ id: t.id, category: 'db_update_failed', error: String(dbErr?.message || dbErr) });
       }
     }
 
-    console.log(`[backfill-avatars] complete: updated=${updated}, errors=${errors.length}`);
-
     return jsonResponse({
       ok: true,
       processed: targets.length,
       updated,
-      remaining_unknown: Math.max(0, targets.length - updated),
       error_counts: errorCounts,
       error_sample: errors.slice(0, 5),
       samples,
