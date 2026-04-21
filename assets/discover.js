@@ -122,6 +122,10 @@
       ? `<span class="cl-card-live"><span class="cl-live-dot"></span>Live \u00b7 ${formatCount(c.current_viewers)}</span>`
       : '';
 
+    const liveContext = c.is_live && (c.game_name || c.stream_title)
+      ? `<div class="cl-card-live-ctx">${c.game_name ? `<span class="cl-card-game">${escapeHtml(c.game_name)}</span>` : ''}${c.stream_title ? `<span class="cl-card-title">${escapeHtml(truncate(c.stream_title, 90))}</span>` : ''}</div>`
+      : '';
+
     const momentumHtml = renderMomentum(c.momentum_pct);
     const followersHtml = c.followers
       ? `<span class="cl-card-stat">${formatCount(c.followers)} followers</span>`
@@ -131,20 +135,24 @@
       ? `<div class="cl-card-cats">${c.categories.slice(0, 3).map(cat => `<span class="cl-card-cat">${escapeHtml(cat)}</span>`).join('')}</div>`
       : '';
 
-    const bioHtml = c.bio
+    const bioHtml = !c.is_live && c.bio
       ? `<p class="cl-card-bio">${escapeHtml(truncate(c.bio, 120))}</p>`
       : '';
 
     return `
-      <a class="cl-card ${platformClass}" href="${c.profile_url}">
+      <a class="cl-card ${platformClass} ${c.is_live ? 'is-live' : ''}" href="${c.profile_url}">
         <div class="cl-card-head">
-          <div class="cl-card-name">${escapeHtml(c.display_name)}</div>
+          <div class="cl-card-identity">
+            ${avatarHtml(c)}
+            <div class="cl-card-name">${escapeHtml(c.display_name)}</div>
+          </div>
           ${liveBadge}
         </div>
         <div class="cl-card-handle">
           ${c.platform ? `<i class="platform-square ${c.platform}"></i>` : ''}
           ${c.handle ? escapeHtml(c.handle) : ''}
         </div>
+        ${liveContext}
         ${bioHtml}
         ${categoriesHtml}
         <div class="cl-card-footer">
@@ -186,5 +194,26 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  function escapeAttr(s) {
+    if (s == null) return '';
+    return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+
+  // Card avatar — uses real avatar_url or falls back to a platform-coloured initial.
+  function avatarHtml(c) {
+    const platformClass = c.platform ? 'platform-' + c.platform : '';
+    const name = c.display_name || c.id || '?';
+    const initial = name.charAt(0).toUpperCase();
+    if (c.avatar_url) {
+      return `<span class="cl-card-avatar ${platformClass}">
+        <img src="${escapeAttr(c.avatar_url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <span class="cl-card-avatar-fallback" style="display:none;">${escapeHtml(initial)}</span>
+      </span>`;
+    }
+    return `<span class="cl-card-avatar ${platformClass} cl-card-avatar--initial">
+      <span class="cl-card-avatar-fallback">${escapeHtml(initial)}</span>
+    </span>`;
   }
 })();

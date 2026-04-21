@@ -18,6 +18,7 @@ export async function onRequestGet({ env, request }) {
         c.display_name,
         c.bio,
         c.categories,
+        c.avatar_url,
         cp.platform AS primary_platform,
         cp.handle AS primary_handle,
         cp.verified,
@@ -172,9 +173,19 @@ export async function onRequestGet({ env, request }) {
           return `
           <a href="/creator/${escapeHtml(c.id)}" class="cl-person-card">
             <div class="cl-person-card-head">
-              <div>
-                <div class="cl-person-name">${escapeHtml(c.display_name || c.id)}</div>
-                <div class="cl-person-handle">@${escapeHtml(c.primary_handle || c.id)}</div>
+              <div class="cl-person-identity">
+                ${c.avatar_url
+                  ? `<span class="cl-card-avatar ${platformClass}">
+                       <img src="${escapeHtml(c.avatar_url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                       <span class="cl-card-avatar-fallback" style="display:none;">${escapeHtml((c.display_name || c.id || '?').charAt(0).toUpperCase())}</span>
+                     </span>`
+                  : `<span class="cl-card-avatar ${platformClass} cl-card-avatar--initial">
+                       <span class="cl-card-avatar-fallback">${escapeHtml((c.display_name || c.id || '?').charAt(0).toUpperCase())}</span>
+                     </span>`}
+                <div>
+                  <div class="cl-person-name">${escapeHtml(c.display_name || c.id)}</div>
+                  <div class="cl-person-handle">@${escapeHtml(c.primary_handle || c.id)}</div>
+                </div>
               </div>
               ${platformClass ? `<span class="cl-platform-chip ${platformClass}">${escapeHtml(platform.toUpperCase())}</span>` : ''}
             </div>
