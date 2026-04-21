@@ -48,10 +48,14 @@ export async function onRequestPost({ env, request }) {
     const snapshots = snapsRes.results || [];
 
     let titlesScanned = 0;
-    let mentionsFound = 0;
+    let totalMatches = 0;           // raw regex hits (before handle filtering)
+    let matchedUnknownHandle = 0;   // matched a handle but not in our map
+    let matchedSelf = 0;             // matched creator's own handle
+    let mentionsFound = 0;           // passed all filters
     let edgesWritten = 0;
     const errorsByCategory = {};
     const sampleMatches = [];
+    const sampleUnknownHandles = new Set();  // unique @handles we saw that aren't tracked
 
     for (const snap of snapshots) {
       titlesScanned++;
@@ -59,11 +63,21 @@ export async function onRequestPost({ env, request }) {
       const matches = [...title.matchAll(MENTION_PATTERN)];
 
       for (const m of matches) {
+        totalMatches++;
         // Either group 1 (prefixed: w/ @x, ft. @x, raided by x) or group 2 (plain @x)
         const mentionedHandle = ((m[1] || m[2]) || '').toLowerCase();
         if (!mentionedHandle || mentionedHandle.length < 3) continue;
         const targetCreatorId = handleMap.get(mentionedHandle);
-        if (!targetCreatorId || targetCreatorId === snap.creator_id) continue;
+
+        if (!targetCreatorId) {
+          matchedUnknownHandle++;
+          if (sampleUnknownHandles.size < 30) sampleUnknownHandles.add(mentionedHandle);
+          continue;
+        }
+        if (targetCreatorId === snap.creator_id) {
+          matchedSelf++;
+          continue;
+        }
 
         mentionsFound++;
         const phrase = m[0].toLowerCase();
@@ -114,16 +128,21 @@ export async function onRequestPost({ env, request }) {
       }
     }
 
-    console.log(`[backfill] scanned=${titlesScanned} mentions=${mentionsFound} edges_written=${edgesWritten}`);
+    console.log(`[backfill] scanned=${titlesScanned} total_matches=${totalMatches} unknown_handles=${matchedUnknownHandle} mentions=${mentionsFound} edges_written=${edgesWritten}`);
 
     return jsonResponse({
       ok: true,
       dry_run: dryRun,
       titles_scanned: titlesScanned,
+      total_regex_matches: totalMatches,
+      matched_unknown_handle: matchedUnknownHandle,
+      matched_self: matchedSelf,
       mentions_found: mentionsFound,
       edges_written: edgesWritten,
+      handle_map_size: handleMap.size,
       errors: errorsByCategory,
       sample_matches: sampleMatches,
+      sample_unknown_handles: Array.from(sampleUnknownHandles),
       note: dryRun
         ? 'Dry run — no writes. Set dry_run: false to commit.'
         : 'Edges written. Run again to pick up any new snapshots since.',
