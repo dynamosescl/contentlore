@@ -4682,29 +4682,36 @@ body::before {
    PROFILE PAGE HERO AVATAR
    ============================================================ */
 .cl-creator-hero {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 160px 1fr;
   gap: 32px;
+  align-items: start;
   margin-bottom: 32px;
 }
 .cl-creator-hero-text {
-  flex: 1;
-  min-width: 0;
+  min-width: 0;   /* allow text column to shrink properly */
 }
 .cl-creator-hero-text h1 {
-  margin: 0 0 16px;
+  margin: 0 0 20px;
+  font-size: clamp(56px, 8vw, 104px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  word-break: break-word;   /* prevent long display names blowing out width */
+}
+.cl-creator-hero-text .cl-creator-bio {
+  margin: 0;
+  max-width: 620px;
 }
 .cl-creator-avatar {
-  width: 128px;
-  height: 128px;
-  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
   border: 2px solid var(--border);
   background: var(--bg-elev);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 10px; /* align with headline cap height */
+  margin-top: 6px;
 }
 .cl-creator-avatar img {
   width: 100%;
@@ -4720,7 +4727,7 @@ body::before {
 .cl-creator-avatar--fallback span {
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 56px;
+  font-size: 72px;
   color: var(--text-primary);
   line-height: 1;
 }
@@ -4728,15 +4735,74 @@ body::before {
 /* Responsive — stack vertically on narrow screens */
 @media (max-width: 720px) {
   .cl-creator-hero {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: 20px;
   }
   .cl-creator-avatar {
-    width: 96px;
-    height: 96px;
+    width: 112px;
+    height: 112px;
     margin-top: 0;
   }
   .cl-creator-avatar--fallback span {
-    font-size: 42px;
+    font-size: 48px;
+  }
+  .cl-creator-hero-text h1 {
+    font-size: clamp(44px, 10vw, 72px);
   }
 }
+
+/* ============================================================
+   SCENE PULSE TILE AVATARS
+   ============================================================ */
+.cl-tile-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.cl-tile-names {
+  flex: 1;
+  min-width: 0;
+}
+.cl-tile-names .cl-tile-name {
+  margin: 0;
+}
+.cl-tile-names .cl-tile-handle {
+  margin: 2px 0 0;
+}
+
+.cl-tile-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+.cl-tile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cl-tile-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  line-height: 1;
+}
+.cl-tile-avatar.twitch { border-color: rgba(145,70,255,0.45); }
+.cl-tile-avatar.kick   { border-color: rgba(83,252,24,0.45); }
+.cl-tile-avatar--initial.twitch { border-color: var(--twitch); }
+.cl-tile-avatar--initial.kick   { border-color: var(--kick); }

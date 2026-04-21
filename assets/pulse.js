@@ -35,8 +35,13 @@
             <div class="cl-tile-rank ${top3}">${rank}</div>
             ${platformClass ? `<span class="cl-platform-chip ${platformClass}">${escapeHtml(platformLabel)}</span>` : ''}
           </div>
-          <div class="cl-tile-name">${escapeHtml(m.display_name || m.id)}</div>
-          <div class="cl-tile-handle">@${escapeHtml(m.primary_handle || m.id)}</div>
+          <div class="cl-tile-identity">
+            ${tileAvatar(m, platformClass)}
+            <div class="cl-tile-names">
+              <div class="cl-tile-name">${escapeHtml(m.display_name || m.id)}</div>
+              <div class="cl-tile-handle">@${escapeHtml(m.primary_handle || m.id)}</div>
+            </div>
+          </div>
           <div class="cl-tile-stats">
             <div class="cl-tile-delta">${deltaText}</div>
             <div class="cl-tile-delta-meta">
@@ -96,6 +101,20 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  function tileAvatar(m, platformClass) {
+    const name = m.display_name || m.id || '?';
+    const initial = name.charAt(0).toUpperCase();
+    if (m.avatar_url) {
+      return `<span class="cl-tile-avatar ${platformClass}">
+        <img src="${escapeHtml(m.avatar_url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <span class="cl-tile-avatar-fallback" style="display:none;">${escapeHtml(initial)}</span>
+      </span>`;
+    }
+    return `<span class="cl-tile-avatar ${platformClass} cl-tile-avatar--initial">
+      <span class="cl-tile-avatar-fallback">${escapeHtml(initial)}</span>
+    </span>`;
   }
 
   function formatK(n) {
