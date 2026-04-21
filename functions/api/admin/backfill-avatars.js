@@ -14,9 +14,11 @@
 import { jsonResponse, requireAdminAuth } from '../../_lib.js';
 
 // Twitch app token, cached in KV for 55 min
-async function getTwitchAppToken(env) {
-  const cached = await env.KV.get('twitch:app_token');
-  if (cached) return cached;
+async function getTwitchAppToken(env, forceRefresh = false) {
+  if (!forceRefresh) {
+    const cached = await env.KV.get('twitch:app_token');
+    if (cached) return cached;
+  }
   const res = await fetch('https://id.twitch.tv/oauth2/token', {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -29,25 +31,59 @@ async function getTwitchAppToken(env) {
 }
 
 async function twitchAvatar(env, login) {
-  const token = await getTwitchAppToken(env);
-  const res = await fetch(
+  let token = await getTwitchAppToken(env);
+  let res = await fetch(
     `https://api.twitch.tv/helix/users?login=${encodeURIComponent(login)}`,
     { headers: { 'client-id': env.TWITCH_CLIENT_ID, authorization: `Bearer ${token}` } }
   );
+  // If 401, cached token is stale — purge and retry once with a fresh token
+  if (res.status === 401) {
+    await env.KV.delete('twitch:app_token');
+    token = await getTwitchAppToken(env, true);
+    res = await fetch(
+      `https://api.twitch.tv/helix/users?login=${encodeURIComponent(login)}`,
+      { headers: { 'client-id': env.TWITCH_CLIENT_ID, authorization: `Bearer ${token}` } }
+    );
+  }
   if (!res.ok) throw new Error('twitch_user_' + res.status);
   const data = await res.json();
   const user = data?.data?.[0];
   return user?.profile_image_url || null;
 }
 
-// Kick public v2 channel endpoint — no auth
+// Browser-like headers to dodge Kick's anti-bot layer
+const KICK_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-GB,en;q=0.9',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Referer': 'https://kick.com/',
+  'Origin': 'https://kick.com',
+  'Sec-Fetch-Dest': 'empty',
+  'Sec-Fetch-Mode': 'cors',
+  'Sec-Fetch-Site': 'same-origin',
+};
+
+// Kick — try v2 first (richer), fall back to v1 if blocked
 async function kickAvatar(env, slug) {
-  const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`, {
-    headers: { 'User-Agent': 'Mozilla/5.0 ContentLore/1.0' },
-  });
-  if (!res.ok) throw new Error('kick_channel_' + res.status);
-  const data = await res.json();
-  return data?.user?.profile_pic || null;
+  // Try v2
+  let res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
+  if (res.ok) {
+    const data = await res.json();
+    if (!data?.error) {
+      const url = data?.user?.profile_pic || null;
+      if (url) return url;
+    }
+  }
+  // Fall back to v1
+  res = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
+  if (res.ok) {
+    const data = await res.json();
+    if (!data?.error) {
+      return data?.user?.profile_pic || null;
+    }
+  }
+  throw new Error('kick_channel_' + res.status);
 }
 
 export async function onRequestPost({ env, request }) {
@@ -85,15 +121,20 @@ export async function onRequestPost({ env, request }) {
       }
       if (kickSample) {
         try {
-          const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(kickSample.handle)}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 ContentLore/1.0' },
-          });
-          const data = await res.json();
+          // Try both v2 and v1 to see which works
+          const v2 = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(kickSample.handle)}`, { headers: KICK_HEADERS });
+          const v2body = await v2.text();
+          const v1 = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(kickSample.handle)}`, { headers: KICK_HEADERS });
+          const v1body = await v1.text();
           result.kick = {
             handle: kickSample.handle,
-            url: data?.user?.profile_pic || null,
-            user_keys: data?.user ? Object.keys(data.user) : null,
-            top_keys: Object.keys(data || {}),
+            v2_status: v2.status,
+            v2_preview: v2body.substring(0, 300),
+            v1_status: v1.status,
+            v1_preview: v1body.substring(0, 300),
+            extracted: await (async () => {
+              try { return await kickAvatar(env, kickSample.handle); } catch (e) { return 'error: ' + String(e?.message || e); }
+            })(),
           };
         } catch (e) { result.kick_error = String(e?.message || e); }
       }
