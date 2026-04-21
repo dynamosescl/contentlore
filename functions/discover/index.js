@@ -106,19 +106,32 @@ export async function onRequestGet({ env, request }) {
     </section>
 
     <!-- ==============================================================
-         LIVE RIBBON — sticky top-of-page strip of currently live creators
+         THE DESK — Live scene intelligence, top of every Discover page
          ============================================================== -->
-    <section class="cl-live-ribbon" id="cl-live-ribbon" aria-label="Currently live UK creators">
-      <div class="cl-live-ribbon-head">
-        <div class="cl-live-ribbon-label">
-          <span class="cl-live-dot"></span>
-          <span>Live right now</span>
+    <section class="cl-desk" id="cl-desk" data-state="loading" aria-label="Live UK streaming scene">
+
+      <header class="cl-desk-head">
+        <div class="cl-desk-head-left">
+          <div class="cl-desk-kicker">\u25c6 The Desk</div>
+          <h2 class="cl-desk-headline" id="cl-desk-headline">Reading the scene\u2026</h2>
         </div>
-        <div class="cl-live-ribbon-count" id="cl-live-ribbon-count">\u2014</div>
+        <div class="cl-desk-head-right" id="cl-desk-meta">
+          <span class="cl-desk-refresh">Refreshing every 90 seconds</span>
+        </div>
+      </header>
+
+      <!-- Hero slot: top 1-3 live streams, promoted -->
+      <div class="cl-desk-hero" id="cl-desk-hero"></div>
+
+      <!-- Compact rows: remaining live creators -->
+      <div class="cl-desk-rows" id="cl-desk-rows"></div>
+
+      <!-- Empty state, shown only when nobody is live -->
+      <div class="cl-desk-empty" id="cl-desk-empty" hidden>
+        <p class="cl-desk-empty-copy" id="cl-desk-empty-copy"></p>
+        <div class="cl-desk-empty-recent" id="cl-desk-empty-recent"></div>
       </div>
-      <div class="cl-live-ribbon-scroll" id="cl-live-ribbon-scroll">
-        <div class="cl-live-ribbon-loading">Checking the scene\u2026</div>
-      </div>
+
     </section>
 
     <!-- ==============================================================
@@ -200,7 +213,7 @@ export async function onRequestGet({ env, request }) {
 </div>
 
 <script src="/assets/discover.js" defer></script>
-<script src="/assets/live-ribbon.js" defer></script>
+<script src="/assets/desk.js" defer></script>
 <script src="/assets/livecount.js" defer></script>
 </body>
 </html>`;
