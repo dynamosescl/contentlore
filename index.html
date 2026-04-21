@@ -202,10 +202,22 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     </section>
 
+    <!-- SOCIAL GRAPH — who connected to whom this week -->
+    <section class="cl-graph-strip" id="cl-graph-strip">
+      <div class="cl-graph-strip-inner">
+        <div class="cl-section-label"><span class="cl-num">03</span> Scene Graph</div>
+        <h2>Who <em>raided</em> whom this week.</h2>
+        <p class="cl-graph-strip-dek">Raids, hosts and shoutouts pulled from live stream titles across Twitch and Kick. Seven-day rolling window.</p>
+        <div class="cl-graph-list" id="cl-graph-list">
+          <div class="cl-graph-loading">Reading the scene\u2026</div>
+        </div>
+      </div>
+    </section>
+
     <!-- PAPER SECTION — light contrast, stats -->
     <section class="cl-paper">
       <div class="cl-paper-inner">
-        <div class="cl-section-label"><span class="cl-num">03</span> The Index</div>
+        <div class="cl-section-label"><span class="cl-num">04</span> The Index</div>
         <h2>Read by the scene. <em>Trusted</em> by the industry.</h2>
 
         <div class="cl-paper-grid">
@@ -250,5 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="/assets/pulse.js" defer></script>
 <script src="/assets/livecount.js" defer></script>
 <script src="/assets/homepage-stats.js" defer></script>
+<script src="/assets/graph-strip.js" defer></script>
 </body>
 </html>

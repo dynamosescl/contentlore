@@ -106,6 +106,22 @@ export async function onRequestGet({ env, request }) {
     </section>
 
     <!-- ==============================================================
+         LIVE RIBBON — sticky top-of-page strip of currently live creators
+         ============================================================== -->
+    <section class="cl-live-ribbon" id="cl-live-ribbon" aria-label="Currently live UK creators">
+      <div class="cl-live-ribbon-head">
+        <div class="cl-live-ribbon-label">
+          <span class="cl-live-dot"></span>
+          <span>Live right now</span>
+        </div>
+        <div class="cl-live-ribbon-count" id="cl-live-ribbon-count">\u2014</div>
+      </div>
+      <div class="cl-live-ribbon-scroll" id="cl-live-ribbon-scroll">
+        <div class="cl-live-ribbon-loading">Checking the scene\u2026</div>
+      </div>
+    </section>
+
+    <!-- ==============================================================
          FILTER BAR
          ============================================================== -->
     <section class="cl-discover-filters">
@@ -184,6 +200,7 @@ export async function onRequestGet({ env, request }) {
 </div>
 
 <script src="/assets/discover.js" defer></script>
+<script src="/assets/live-ribbon.js" defer></script>
 <script src="/assets/livecount.js" defer></script>
 </body>
 </html>`;

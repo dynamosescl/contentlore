@@ -155,6 +155,23 @@ export async function onRequestGet({ env, params }) {
       </div>
     </div>
 
+    <div class="cl-network-sidebar" id="cl-network-sidebar" data-creator-id="${escapeHtml(slug)}">
+      <div class="cl-network-head">\u25c6 Network</div>
+      <div class="cl-network-stats">
+        <div class="cl-network-stat">
+          <span class="cl-network-stat-num" id="cl-net-inbound">\u2014</span>
+          <span class="cl-network-stat-label">Inbound</span>
+        </div>
+        <div class="cl-network-stat">
+          <span class="cl-network-stat-num" id="cl-net-outbound">\u2014</span>
+          <span class="cl-network-stat-label">Outbound</span>
+        </div>
+      </div>
+      <div class="cl-network-list" id="cl-network-list">
+        <div class="cl-network-empty">Loading connections\u2026</div>
+      </div>
+    </div>
+
     <div class="cl-signoff">
       <a href="/about/">About</a> · <a href="/ethics/">Ethics</a><br>
       <a href="/contact/">Contact</a> · <a href="/claim">Claim profile</a><br><br>
@@ -243,6 +260,14 @@ export async function onRequestGet({ env, params }) {
       </section>
       ` : ''}
 
+      <section class="cl-creator-edges" id="cl-creator-edges" data-creator-id="${escapeHtml(slug)}" style="display: none;">
+        <div class="cl-creator-edges-head">
+          <span class="cl-creator-edges-label">\u25c6 Scene connections</span>
+          <span class="cl-creator-edges-meta" id="cl-creator-edges-meta"></span>
+        </div>
+        <div class="cl-creator-edges-body" id="cl-creator-edges-body"></div>
+      </section>
+
       ${lore.length > 0 ? `
       <section class="cl-vault">
         <h2>The <em>Vault</em></h2>
@@ -273,6 +298,7 @@ export async function onRequestGet({ env, params }) {
 </div>
 
 <script src="/assets/livecount.js" defer></script>
+<script src="/assets/network.js" defer></script>
 </body>
 </html>`;
 
