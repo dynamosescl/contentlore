@@ -97,11 +97,11 @@ export async function onRequestGet({ env, request }) {
       <div>v0.1 \u00b7 live filtering</div>
     </div>
 
-    <section class="cl-hero" style="padding-bottom: 24px;">
-      <div class="cl-hero-main">
+    <section class="cl-discover-hero">
+      <div class="cl-discover-hero-inner">
         <div class="cl-hero-kicker">The Discovery Engine</div>
-        <h1>What\u2019s <em>worth</em> your watch-time tonight.</h1>
-        <p class="cl-hero-dek">Every UK creator we track, in one place, filterable the way platforms won\u2019t let you filter. <em>No algorithm pushing big streamers</em>. No platform paying us to surface a name. Just the scene, honestly sorted.</p>
+        <h1 class="cl-discover-hero-title">What\u2019s <em>worth</em> your watch-time tonight.</h1>
+        <p class="cl-discover-hero-dek">Every UK creator we track, in one place, filterable the way platforms won\u2019t let you filter. <em>No algorithm pushing big streamers</em>. No platform paying us to surface a name. Just the scene, honestly sorted.</p>
       </div>
     </section>
 

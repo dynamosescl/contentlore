@@ -3622,3 +3622,88 @@ body::before {
   .cl-claim-cta { padding: 48px 24px; }
   .cl-claim-cta::before { left: 24px; }
 }
+
+/* ============================================================
+   DISCOVERY ENGINE v0.2 — tighter hero, readable cards
+   ============================================================ */
+
+/* Compact hero purpose-built for tool/directory pages */
+.cl-discover-hero {
+  padding: 48px 40px 32px;
+  border-bottom: 1px solid var(--border);
+}
+.cl-discover-hero-inner { max-width: 800px; }
+.cl-discover-hero-title {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  margin: 12px 0 16px;
+  text-transform: none;
+}
+.cl-discover-hero-title em {
+  font-style: italic;
+  color: var(--signal);
+  font-weight: 500;
+}
+.cl-discover-hero-dek {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 640px;
+}
+.cl-discover-hero-dek em {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Wider cards — override the v0.1 280px minimum */
+.cl-discover-grid {
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+}
+
+/* Stronger contrast and bigger type inside cards */
+.cl-card {
+  padding: 24px 24px 20px;
+  min-height: 200px;
+  gap: 12px;
+}
+.cl-card-name {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.cl-card-handle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.cl-card-bio {
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-line-clamp: 4;
+}
+.cl-card-cat {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+.cl-card-stat, .cl-card-momentum {
+  font-size: 12px;
+}
+
+/* Darker card base so borders read, brighter hover */
+.cl-card {
+  background: #16161A;
+}
+.cl-card:hover {
+  background: #1C1C22;
+}
+
+@media (max-width: 760px) {
+  .cl-discover-hero { padding: 32px 24px 24px; }
+  .cl-discover-grid { grid-template-columns: 1fr; }
+}
