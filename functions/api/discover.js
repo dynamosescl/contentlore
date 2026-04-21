@@ -36,7 +36,7 @@ export async function onRequestGet({ env, request }) {
     // row per creator, and any creator with no snapshot in 7 days is effectively dormant.
     const sql = `
       WITH latest AS (
-        SELECT creator_id, platform, viewers, followers, captured_at,
+        SELECT creator_id, platform, viewers, followers, is_live, stream_title, stream_category, started_at, captured_at,
           ROW_NUMBER() OVER (PARTITION BY creator_id, platform ORDER BY captured_at DESC) AS rn
         FROM snapshots
         WHERE captured_at > unixepoch() - 604800
@@ -60,9 +60,12 @@ export async function onRequestGet({ env, request }) {
         cp.verified AS primary_verified,
         l.viewers AS current_viewers,
         l.followers AS current_followers,
+        l.stream_title AS current_stream_title,
+        l.stream_category AS current_game_name,
+        l.started_at AS current_started_at,
         l.captured_at AS last_snapshot_at,
         CASE 
-          WHEN l.viewers > 0 AND l.captured_at > ? THEN 1
+          WHEN l.is_live = 1 AND l.captured_at > ? THEN 1
           ELSE 0
         END AS is_live,
         prev.followers AS followers_7d_ago
@@ -103,6 +106,11 @@ export async function onRequestGet({ env, request }) {
         verified: r.primary_verified === 1,
         is_live: r.is_live === 1,
         current_viewers: r.current_viewers || 0,
+        stream_title: r.current_stream_title || null,
+        game_name: r.current_game_name || null,
+        uptime_mins: r.current_started_at
+          ? Math.max(0, Math.round((Date.now() / 1000 - r.current_started_at) / 60))
+          : null,
         followers: followers,
         momentum_delta: momentumDelta,
         momentum_pct: momentumPct,
