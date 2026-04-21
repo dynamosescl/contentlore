@@ -11,11 +11,12 @@
 
 import { jsonResponse, requireAdminAuth } from '../../_lib.js';
 
-// Real UK streaming title patterns (not the "raided by X" fantasy):
+// Real UK streaming title patterns (narrowed after v3 debug run):
 //  - @mentions: "@canniny", "@HAchubby"
 //  - collab prefixes: "w/ @alice", "ft. bob", "feat. carol"
-//  - occasional raid/host language (kept, will hit sometimes)
-const MENTION_PATTERN = /(?:\bw\/\s*|\bft\.?\s+|\bfeat\.?\s+|\bwith\s+|\braid(?:ed)?\s+(?:by\s+)?|\bhost(?:ed)?\s+(?:by\s+)?|\bshout\s?out\s+(?:to\s+)?)@?([a-zA-Z0-9_]{3,30})|@([a-zA-Z0-9_]{3,30})/gi;
+//  - explicit raid/host/shoutout language (rare but clean signal)
+// DROPPED: bare "with X" — generates too much English-word noise ("with the boys")
+const MENTION_PATTERN = /(?:\bw\/\s*@?|\bft\.?\s+@?|\bfeat\.?\s+@?|\braid(?:ed)?\s+(?:by\s+)?@?|\bhost(?:ed)?\s+(?:by\s+)?@?|\bshout\s?out\s+(?:to\s+)?@?)([a-zA-Z0-9_]{3,30})|(?:^|[\s|])@([a-zA-Z0-9_]{3,30})/gi;
 
 export async function onRequestPost({ env, request }) {
   const authError = requireAdminAuth(request, env);
@@ -28,12 +29,22 @@ export async function onRequestPost({ env, request }) {
 
   try {
     // Build handle map: handle (lowercase) -> creator_id
+    // IMPORTANT: handles in creator_platforms may be stored with platform prefixes
+    // like "kick-canniny" while stream titles use the raw form "@canniny".
+    // We index both forms so lookups work either way.
     const handleMapRes = await env.DB.prepare(`
       SELECT handle, creator_id FROM creator_platforms WHERE handle IS NOT NULL
     `).all();
     const handleMap = new Map();
     for (const r of (handleMapRes.results || [])) {
-      if (r.handle) handleMap.set(String(r.handle).toLowerCase(), r.creator_id);
+      if (!r.handle) continue;
+      const raw = String(r.handle).toLowerCase();
+      handleMap.set(raw, r.creator_id);
+      // Also index the stripped form (remove platform prefixes)
+      const stripped = raw.replace(/^(kick-|twitch-|youtube-|tiktok-)/, '');
+      if (stripped !== raw) {
+        handleMap.set(stripped, r.creator_id);
+      }
     }
 
     // Pull snapshots with titles, most recent first, bounded by limit
