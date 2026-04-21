@@ -133,6 +133,7 @@ export async function onRequestGet({ env, params }) {
     <div class="cl-nav-section">
       <div class="cl-nav-section-label">Read</div>
       <ul class="cl-nav-list">
+        <li><a href="/discover/" class="small">Discover</a></li>
         <li><a href="/the-platform/" class="small">The Platform</a></li>
         <li><a href="/ledger/" class="small">The Ledger</a></li>
         <li><a href="/gta-rp/" class="small">GTA RP</a></li>

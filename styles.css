@@ -2550,6 +2550,37 @@ body::before {
 .cl-tile:nth-child(6) { animation-delay: 0.40s; }
 .cl-tile:nth-child(7) { animation-delay: 0.46s; }
 
+/* Skeleton state — shown while Pulse data loads */
+.cl-tile--skeleton {
+  pointer-events: none;
+  opacity: 1;
+  animation: none;
+}
+.cl-tile--skeleton::before { background: var(--border); width: 40px; }
+.cl-tile--skeleton:hover { transform: none; border-color: var(--border); background: var(--bg-elev); }
+.cl-skel {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.03) 0%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: cl-shimmer 1.4s ease-in-out infinite;
+  border-radius: 2px;
+  height: 12px;
+}
+.cl-skel--rank { width: 22px; height: 22px; }
+.cl-skel--name { width: 72%; height: 20px; margin-top: 8px; }
+.cl-skel--handle { width: 48%; height: 12px; margin-top: 10px; }
+.cl-skel--delta { width: 35%; height: 28px; margin-top: 14px; }
+
+@keyframes cl-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .cl-tile-top {
   display: flex;
   justify-content: space-between;
@@ -3201,4 +3232,393 @@ body::before {
   text-decoration: none;
   border-bottom: 1px solid var(--signal);
   padding-bottom: 4px;
+}
+
+/* ============================================================
+   DISCOVERY ENGINE v0.1
+   /discover/ page styles. Filter bar, results grid, creator
+   cards, empty and loading states.
+   ============================================================ */
+
+/* Base platform square (used on cards as well as sidebar) */
+.platform-square {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--text-tertiary);
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.platform-square.twitch { background: var(--twitch); }
+.platform-square.kick   { background: var(--kick); }
+
+/* ----- Filter bar ----- */
+.cl-discover-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 36px;
+  padding: 24px 40px;
+  background: var(--bg-elev);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+.cl-df-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cl-df-group-search { flex: 1 1 220px; max-width: 320px; }
+
+.cl-df-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.cl-df-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cl-df-pill {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.cl-df-pill:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+.cl-df-pill.active {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--bg);
+  font-weight: 500;
+}
+
+.cl-df-input {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  width: 100%;
+  transition: border-color 0.15s ease;
+}
+.cl-df-input::placeholder { color: var(--text-tertiary); }
+.cl-df-input:focus {
+  outline: none;
+  border-color: var(--signal);
+}
+
+/* ----- Results header ----- */
+.cl-discover-results {
+  padding: 32px 40px 64px;
+}
+
+.cl-discover-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ----- Cards grid ----- */
+.cl-discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.cl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 22px 20px;
+  background: var(--bg-elev);
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.18s ease;
+  position: relative;
+  min-height: 160px;
+}
+.cl-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 0; height: 2px;
+  background: var(--signal);
+  transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cl-card:hover {
+  background: var(--bg-card);
+}
+.cl-card:hover::before { width: 100%; }
+.cl-card:hover .cl-card-name { color: var(--signal); }
+
+.cl-card.platform-twitch::before { background: var(--twitch); }
+.cl-card.platform-kick::before   { background: var(--kick); }
+
+.cl-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cl-card-name {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  transition: color 0.18s ease;
+}
+
+.cl-card-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--red-flag);
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.cl-card-live .cl-live-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--red-flag);
+}
+
+.cl-card-handle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cl-card-bio {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cl-card-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.cl-card-cat {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  background: var(--bg);
+  padding: 3px 7px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  border: 1px solid var(--border);
+}
+
+.cl-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.cl-card-stat {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.cl-card-momentum {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.cl-card-momentum.up   { color: var(--green-ok); }
+.cl-card-momentum.down { color: var(--red-flag); }
+.cl-card-momentum.flat { color: var(--text-tertiary); }
+
+/* ----- Empty state ----- */
+.cl-discover-empty {
+  padding: 64px 40px;
+  text-align: center;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+.cl-discover-empty h3 {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 22px;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+.cl-discover-empty p {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ----- Responsive ----- */
+@media (max-width: 760px) {
+  .cl-discover-filters {
+    padding: 20px 24px;
+    gap: 18px 24px;
+  }
+  .cl-discover-results {
+    padding: 24px 20px 48px;
+  }
+  .cl-discover-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   CLAIM CTA · shown on /people/ after creator grid
+   ============================================================ */
+.cl-claim-cta {
+  padding: 64px 40px;
+  background: var(--bg-elev);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-top: 48px;
+  position: relative;
+}
+.cl-claim-cta::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 40px;
+  width: 64px; height: 3px;
+  background: var(--signal);
+}
+
+.cl-claim-cta-inner {
+  max-width: 720px;
+}
+
+.cl-claim-cta-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--signal);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.cl-claim-cta-title {
+  font-family: var(--font-body);
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  margin: 0 0 16px;
+}
+.cl-claim-cta-title em {
+  font-style: italic;
+  color: var(--signal);
+  font-weight: 500;
+}
+
+.cl-claim-cta-dek {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0 0 28px;
+}
+
+.cl-claim-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.cl-claim-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  color: var(--bg);
+  background: var(--signal);
+  padding: 14px 22px;
+  text-decoration: none;
+  border: 1px solid var(--signal);
+  transition: all 0.18s ease;
+}
+.cl-claim-cta-btn:hover {
+  background: var(--signal-dim);
+  border-color: var(--signal-dim);
+}
+
+.cl-claim-cta-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.cl-claim-cta-link:hover {
+  color: var(--signal);
+  border-bottom-color: var(--signal);
+}
+
+@media (max-width: 760px) {
+  .cl-claim-cta { padding: 48px 24px; }
+  .cl-claim-cta::before { left: 24px; }
 }

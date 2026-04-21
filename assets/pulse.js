@@ -70,16 +70,19 @@
     } catch (e) {
       console.error('Pulse fetch failed:', e);
       container.innerHTML = `
-        <div class="cl-tile" style="opacity: 0.5;">
+        <div class="cl-tile" style="flex: 1; min-width: 100%; padding: 48px 40px; opacity: 0.7;">
           <div class="cl-tile-top"><div class="cl-tile-rank">—</div></div>
-          <div class="cl-tile-name">Pulse offline</div>
-          <div class="cl-tile-handle">unable to fetch live data</div>
+          <div class="cl-tile-name" style="margin-top: 12px;">Pulse briefly offline.</div>
+          <div class="cl-tile-handle" style="margin-top: 8px;">Retrying automatically in 60 seconds.</div>
         </div>`;
     }
   };
 
-  // Kick off fetch
+  // Kick off first fetch
   fetchMovers();
+
+  // Poll every 60 seconds so the "Live" label is actually true
+  setInterval(fetchMovers, 60 * 1000);
 
   // ==========================================================
   // Helpers

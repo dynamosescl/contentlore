@@ -92,6 +92,16 @@ export async function onRequestGet({ env, request }) {
       </ul>
     </div>
 
+    <div class="cl-nav-section">
+      <div class="cl-nav-section-label">Read</div>
+      <ul class="cl-nav-list">
+        <li><a href="/discover/" class="small">Discover</a></li>
+        <li><a href="/the-platform/" class="small">The Platform</a></li>
+        <li><a href="/ledger/" class="small">The Ledger</a></li>
+        <li><a href="/gta-rp/" class="small">GTA RP</a></li>
+      </ul>
+    </div>
+
     <div class="cl-live-stat" id="live-stat">
       <div class="cl-live-stat-head">
         <span class="cl-live-dot"></span>
@@ -178,6 +188,18 @@ export async function onRequestGet({ env, request }) {
         }).join('')}
       </div>
       `}
+    </section>
+
+    <section class="cl-claim-cta">
+      <div class="cl-claim-cta-inner">
+        <div class="cl-claim-cta-label">\u25c6 Are you on this list?</div>
+        <h2 class="cl-claim-cta-title">Claim your <em>profile</em>.</h2>
+        <p class="cl-claim-cta-dek">If you\u2019re a UK streamer we cover, claim your page. You get to edit your bio, add your other platforms, link your Discord and socials, and \u2014 for verified creators \u2014 submit canonical clips for The Vault.</p>
+        <div class="cl-claim-cta-row">
+          <a href="/claim" class="cl-claim-cta-btn">Claim your profile \u2192</a>
+          <a href="/about/" class="cl-claim-cta-link">What is ContentLore?</a>
+        </div>
+      </div>
     </section>
 
     <footer class="cl-footer-v2">
