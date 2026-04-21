@@ -6,6 +6,8 @@
     "/creator/*",
     "/people",
     "/people/*",
+    "/discover",
+    "/discover/*",
     "/claim",
     "/admin"
   ],
