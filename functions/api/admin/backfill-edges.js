@@ -11,7 +11,11 @@
 
 import { jsonResponse, requireAdminAuth } from '../../_lib.js';
 
-const MENTION_PATTERN = /\b(?:raid(?:ed)?|host(?:ed)?|shout\s?out|shouting\s+out|thanks\s+(?:to\s+)?)\s+(?:by\s+)?@?([a-zA-Z0-9_]{3,30})/gi;
+// Real UK streaming title patterns (not the "raided by X" fantasy):
+//  - @mentions: "@canniny", "@HAchubby"
+//  - collab prefixes: "w/ @alice", "ft. bob", "feat. carol"
+//  - occasional raid/host language (kept, will hit sometimes)
+const MENTION_PATTERN = /(?:\bw\/\s*|\bft\.?\s+|\bfeat\.?\s+|\bwith\s+|\braid(?:ed)?\s+(?:by\s+)?|\bhost(?:ed)?\s+(?:by\s+)?|\bshout\s?out\s+(?:to\s+)?)@?([a-zA-Z0-9_]{3,30})|@([a-zA-Z0-9_]{3,30})/gi;
 
 export async function onRequestPost({ env, request }) {
   const authError = requireAdminAuth(request, env);
@@ -55,16 +59,24 @@ export async function onRequestPost({ env, request }) {
       const matches = [...title.matchAll(MENTION_PATTERN)];
 
       for (const m of matches) {
-        const mentionedHandle = (m[1] || '').toLowerCase();
+        // Either group 1 (prefixed: w/ @x, ft. @x, raided by x) or group 2 (plain @x)
+        const mentionedHandle = ((m[1] || m[2]) || '').toLowerCase();
+        if (!mentionedHandle || mentionedHandle.length < 3) continue;
         const targetCreatorId = handleMap.get(mentionedHandle);
         if (!targetCreatorId || targetCreatorId === snap.creator_id) continue;
 
         mentionsFound++;
         const phrase = m[0].toLowerCase();
+
+        // Classification priority: explicit raid/host language > collab > plain mention
         let edgeType = 'mention';
-        if (phrase.includes('raid')) edgeType = 'raid';
-        else if (phrase.includes('host')) edgeType = 'host';
-        else if (phrase.includes('shout')) edgeType = 'shoutout';
+        if (phrase.includes('raid'))           edgeType = 'raid';
+        else if (phrase.includes('host'))      edgeType = 'host';
+        else if (phrase.includes('shout'))     edgeType = 'shoutout';
+        else if (phrase.includes('w/') ||
+                 phrase.includes('ft')  ||
+                 phrase.includes('feat')||
+                 phrase.includes('with')) edgeType = 'co_stream';
 
         if (sampleMatches.length < 10) {
           sampleMatches.push({
