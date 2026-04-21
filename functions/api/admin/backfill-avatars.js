@@ -64,26 +64,14 @@ const KICK_HEADERS = {
   'Sec-Fetch-Site': 'same-origin',
 };
 
-// Kick — try v2 first (richer), fall back to v1 if blocked
+// Kick — use v1 endpoint only (simpler, less rate-limited)
 async function kickAvatar(env, slug) {
-  // Try v2
-  let res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
-  if (res.ok) {
-    const data = await res.json();
-    if (!data?.error) {
-      const url = data?.user?.profile_pic || null;
-      if (url) return url;
-    }
-  }
-  // Fall back to v1
-  res = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
-  if (res.ok) {
-    const data = await res.json();
-    if (!data?.error) {
-      return data?.user?.profile_pic || null;
-    }
-  }
-  throw new Error('kick_channel_' + res.status);
+  const res = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
+  if (!res.ok) throw new Error('kick_channel_' + res.status);
+  const data = await res.json();
+  if (data?.error) throw new Error('kick_channel_error');
+  // Kick v1 puts avatar at data.user.profile_pic
+  return data?.user?.profile_pic || null;
 }
 
 export async function onRequestPost({ env, request }) {
@@ -121,21 +109,21 @@ export async function onRequestPost({ env, request }) {
       }
       if (kickSample) {
         try {
-          // Try both v2 and v1 to see which works
-          const v2 = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(kickSample.handle)}`, { headers: KICK_HEADERS });
-          const v2body = await v2.text();
-          const v1 = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(kickSample.handle)}`, { headers: KICK_HEADERS });
-          const v1body = await v1.text();
-          result.kick = {
-            handle: kickSample.handle,
-            v2_status: v2.status,
-            v2_preview: v2body.substring(0, 300),
-            v1_status: v1.status,
-            v1_preview: v1body.substring(0, 300),
-            extracted: await (async () => {
-              try { return await kickAvatar(env, kickSample.handle); } catch (e) { return 'error: ' + String(e?.message || e); }
-            })(),
-          };
+          const res = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(kickSample.handle)}`, { headers: KICK_HEADERS });
+          if (res.ok) {
+            const data = await res.json();
+            result.kick = {
+              handle: kickSample.handle,
+              status: res.status,
+              has_user_obj: !!data?.user,
+              user_keys: data?.user ? Object.keys(data.user) : null,
+              profile_pic: data?.user?.profile_pic || null,
+              top_keys: Object.keys(data || {}),
+            };
+          } else {
+            const body = await res.text();
+            result.kick = { handle: kickSample.handle, status: res.status, body: body.substring(0, 300) };
+          }
         } catch (e) { result.kick_error = String(e?.message || e); }
       }
       return jsonResponse({ ok: true, debug: true, samples: result });
