@@ -29,7 +29,7 @@ export async function onRequestPost({ env, request }) {
   const debug = body?.debug === true;
 
   try {
-    // DEBUG MODE — return raw API response for one Twitch and one Kick creator
+    // DEBUG MODE — hit Twitch and Kick APIs directly, return raw status + body
     if (debug) {
       const twitchSample = await env.DB.prepare(`
         SELECT c.id, c.display_name, cp.handle
@@ -47,23 +47,60 @@ export async function onRequestPost({ env, request }) {
         LIMIT 1
       `).first();
 
-      const result = {};
+      const result = {
+        env_check: {
+          has_twitch_client_id: !!env.TWITCH_CLIENT_ID,
+          has_twitch_client_secret: !!env.TWITCH_CLIENT_SECRET,
+          has_kick_client_id: !!env.KICK_CLIENT_ID,
+          has_kick_client_secret: !!env.KICK_CLIENT_SECRET,
+        },
+      };
+
+      // Twitch direct
       if (twitchSample) {
         try {
-          const tw = await fetchTwitchUser(env, twitchSample.handle);
-          result.twitch = { handle: twitchSample.handle, response: tw, response_keys: tw ? Object.keys(tw) : null };
+          const tokenRes = await fetch('https://id.twitch.tv/oauth2/token', {
+            method: 'POST',
+            headers: { 'content-type': 'application/x-www-form-urlencoded' },
+            body: `client_id=${env.TWITCH_CLIENT_ID}&client_secret=${env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`,
+          });
+          const tokenBody = await tokenRes.text();
+          result.twitch_token = { status: tokenRes.status, body: tokenBody.substring(0, 300) };
+          if (tokenRes.ok) {
+            const tokenData = JSON.parse(tokenBody);
+            const userRes = await fetch(
+              `https://api.twitch.tv/helix/users?login=${encodeURIComponent(twitchSample.handle)}`,
+              { headers: { 'client-id': env.TWITCH_CLIENT_ID, authorization: `Bearer ${tokenData.access_token}` } }
+            );
+            const userBody = await userRes.text();
+            result.twitch_user = {
+              handle: twitchSample.handle,
+              status: userRes.status,
+              body: userBody.substring(0, 800),
+            };
+          }
         } catch (e) {
-          result.twitch = { handle: twitchSample.handle, error: String(e?.message || e) };
+          result.twitch_error = String(e?.message || e);
         }
       }
+
+      // Kick direct — public v2 endpoint, no auth needed
       if (kickSample) {
         try {
-          const kk = await fetchKickChannel(env, kickSample.handle);
-          result.kick = { handle: kickSample.handle, response: kk, response_keys: kk ? Object.keys(kk) : null };
+          const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(kickSample.handle)}`, {
+            headers: { 'User-Agent': 'Mozilla/5.0 ContentLore/1.0' },
+          });
+          const body = await res.text();
+          result.kick_v2 = {
+            handle: kickSample.handle,
+            status: res.status,
+            body: body.substring(0, 800),
+          };
         } catch (e) {
-          result.kick = { handle: kickSample.handle, error: String(e?.message || e) };
+          result.kick_error = String(e?.message || e);
         }
       }
+
       return jsonResponse({ ok: true, debug: true, samples: result });
     }
 
