@@ -64,14 +64,42 @@ const KICK_HEADERS = {
   'Sec-Fetch-Site': 'same-origin',
 };
 
-// Kick — use v1 endpoint only (simpler, less rate-limited)
+// Kick — primary: v1 API (when not WAF-blocked). Fallback: scrape og:image from HTML.
+// Kick's WAF is intermittent — sometimes 403s our Worker, sometimes 200s it.
+// We try v1 first (cheaper), fall through to HTML if API is blocked.
 async function kickAvatar(env, slug) {
-  const res = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
-  if (!res.ok) throw new Error('kick_channel_' + res.status);
-  const data = await res.json();
-  if (data?.error) throw new Error('kick_channel_error');
-  // Kick v1 puts avatar at data.user.profile_pic
-  return data?.user?.profile_pic || null;
+  // Try v1 API
+  try {
+    const res = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
+    if (res.ok) {
+      const data = await res.json();
+      if (!data?.error && data?.user?.profile_pic) {
+        return data.user.profile_pic;
+      }
+    }
+  } catch { /* fall through */ }
+
+  // Fallback: scrape the HTML page
+  try {
+    const res = await fetch(`https://kick.com/${encodeURIComponent(slug)}`, {
+      headers: {
+        ...KICK_HEADERS,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+    });
+    if (!res.ok) throw new Error('kick_html_' + res.status);
+    const html = await res.text();
+    const ogMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i);
+    if (ogMatch && ogMatch[1] && !ogMatch[1].includes('/img/default') && !ogMatch[1].includes('og-default')) {
+      return ogMatch[1];
+    }
+    const jsonMatch = html.match(/"profile_pic"\s*:\s*"([^"]+)"/);
+    if (jsonMatch && jsonMatch[1]) {
+      return jsonMatch[1].replace(/\\\//g, '/');
+    }
+  } catch { /* give up */ }
+
+  return null;
 }
 
 export async function onRequestPost({ env, request }) {
@@ -109,21 +137,26 @@ export async function onRequestPost({ env, request }) {
       }
       if (kickSample) {
         try {
-          const res = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(kickSample.handle)}`, { headers: KICK_HEADERS });
-          if (res.ok) {
-            const data = await res.json();
-            result.kick = {
-              handle: kickSample.handle,
-              status: res.status,
-              has_user_obj: !!data?.user,
-              user_keys: data?.user ? Object.keys(data.user) : null,
-              profile_pic: data?.user?.profile_pic || null,
-              top_keys: Object.keys(data || {}),
-            };
-          } else {
-            const body = await res.text();
-            result.kick = { handle: kickSample.handle, status: res.status, body: body.substring(0, 300) };
-          }
+          const res = await fetch(`https://kick.com/${encodeURIComponent(kickSample.handle)}`, {
+            headers: {
+              ...KICK_HEADERS,
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            },
+          });
+          const html = await res.text();
+          const ogMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i);
+          const jsonMatch = html.match(/"profile_pic"\s*:\s*"([^"]+)"/);
+          result.kick = {
+            handle: kickSample.handle,
+            status: res.status,
+            html_size: html.length,
+            html_preview: html.substring(0, 200),
+            og_image: ogMatch ? ogMatch[1] : null,
+            profile_pic_json: jsonMatch ? jsonMatch[1].replace(/\\\//g, '/') : null,
+            extracted: await (async () => {
+              try { return await kickAvatar(env, kickSample.handle); } catch (e) { return 'error: ' + String(e?.message || e); }
+            })(),
+          };
         } catch (e) { result.kick_error = String(e?.message || e); }
       }
       return jsonResponse({ ok: true, debug: true, samples: result });
@@ -155,7 +188,11 @@ export async function onRequestPost({ env, request }) {
       let avatarUrl = null;
       try {
         if (t.platform === 'twitch')      avatarUrl = await twitchAvatar(env, t.handle);
-        else if (t.platform === 'kick')   avatarUrl = await kickAvatar(env, t.handle);
+        else if (t.platform === 'kick')   {
+          avatarUrl = await kickAvatar(env, t.handle);
+          // Gentle pacing on Kick to reduce WAF block risk
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
         else {
           errorCounts.unknown_platform++;
           errors.push({ id: t.id, category: 'unknown_platform', platform: t.platform });

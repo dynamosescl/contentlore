@@ -8,9 +8,10 @@
 # ================================================================
 
 $AdminPassword = Read-Host "Admin password"
-$BatchSize     = 40
+$BatchSize     = 25
 $Endpoint      = "https://contentlore.com/api/admin/backfill-avatars"
-$MaxIterations = 10
+$MaxIterations = 15
+$DelaySeconds  = 2
 
 $totalUpdated = 0
 $totalErrors  = 0
@@ -70,7 +71,7 @@ while ($iter -lt $MaxIterations) {
     break
   }
 
-  Start-Sleep -Milliseconds 500
+  Start-Sleep -Seconds $DelaySeconds
 }
 
 Write-Host ""
