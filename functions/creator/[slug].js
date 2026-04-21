@@ -192,8 +192,21 @@ export async function onRequestGet({ env, params }) {
 
     <section class="cl-creator">
       <div class="cl-creator-kicker">${escapeHtml(categories[0] || 'UK Creator')} · Profile</div>
-      <h1>${escapeHtml(displayName)}</h1>
-      <p class="cl-creator-bio">${escapeHtml(bio)}</p>
+      <div class="cl-creator-hero">
+        ${creator.avatar_url ? `
+          <div class="cl-creator-avatar platform-${escapeHtml((platforms[0]?.platform) || '')}">
+            <img src="${escapeHtml(creator.avatar_url)}" alt="${escapeHtml(displayName)}" onerror="this.style.display='none';this.parentElement.classList.add('cl-creator-avatar--fallback');this.parentElement.innerHTML='<span>${escapeHtml((displayName || '?').charAt(0).toUpperCase())}</span>';">
+          </div>
+        ` : `
+          <div class="cl-creator-avatar platform-${escapeHtml((platforms[0]?.platform) || '')} cl-creator-avatar--fallback">
+            <span>${escapeHtml((displayName || '?').charAt(0).toUpperCase())}</span>
+          </div>
+        `}
+        <div class="cl-creator-hero-text">
+          <h1>${escapeHtml(displayName)}</h1>
+          <p class="cl-creator-bio">${escapeHtml(bio)}</p>
+        </div>
+      </div>
 
       <div class="cl-creator-platforms">
         ${platforms.map(p => `
