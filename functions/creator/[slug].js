@@ -123,7 +123,7 @@ export async function onRequestGet({ env, params }) {
     <div class="cl-nav-section">
       <div class="cl-nav-section-label">Sections</div>
       <ul class="cl-nav-list">
-        <li><a href="/people/" class="active">People <span class="cl-count">189</span></a></li>
+        <li><a href="/people/" class="active">People <span class="cl-count">285</span></a></li>
         <li><a href="/places/">Places <span class="cl-count">soon</span></a></li>
         <li><a href="/platforms/">Platforms <span class="cl-count">04</span></a></li>
         <li><a href="/community/">Community <span class="cl-count">soon</span></a></li>
