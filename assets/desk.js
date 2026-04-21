@@ -165,7 +165,7 @@
       const data = res.ok ? await res.json() : null;
       if (data?.ok && data.recent?.length > 0) {
         emptyRecent.innerHTML = `
-          <div class="cl-desk-rows-label">Top of the last 24 hours</div>
+          <div class="cl-desk-rows-label">Top of the past week</div>
           ${data.recent.map(recentRow).join('')}
         `;
       } else {
@@ -179,9 +179,13 @@
   }
 
   function recentRow(c) {
-    const ago = c.hours_ago === 0 ? 'just now'
-              : c.hours_ago === 1 ? '1h ago'
-              : `${c.hours_ago}h ago`;
+    let ago;
+    if (c.hours_ago === 0)       ago = 'just now';
+    else if (c.hours_ago === 1)  ago = '1h ago';
+    else if (c.hours_ago < 24)   ago = `${c.hours_ago}h ago`;
+    else if (c.days_ago === 1)   ago = '1d ago';
+    else                          ago = `${c.days_ago}d ago`;
+
     return `
       <a class="cl-drow cl-drow-recent" href="${c.profile_url}">
         <i class="platform-square ${c.platform}"></i>

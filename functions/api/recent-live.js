@@ -1,32 +1,35 @@
 // ================================================================
 // functions/api/recent-live.js
 // GET /api/recent-live
-// Returns the top streams that were live in the last 24 hours,
+// Returns the top streams that were live in the last 7 days,
 // ranked by peak viewers. Powers the "Recent" fallback on The Desk
 // when nobody is currently live.
 //
 // Each row represents a distinct creator — we take the single highest-
-// viewer snapshot from each creator's last 24 hours.
+// viewer snapshot from each creator's last 7 days.
 // ================================================================
 
 import { jsonResponse } from '../_lib.js';
 
+const WINDOW_SECONDS = 7 * 86400;  // 7 days
+
 export async function onRequestGet({ env }) {
   try {
     // KV cache first
-    const cached = await env.KV.get('recent-live:24h', 'json');
+    const cached = await env.KV.get('recent-live:7d', 'json');
     if (cached && cached.ts && (Date.now() - cached.ts) < 300000) {
       return jsonResponse({
         ok: true,
         recent: cached.recent,
         count: cached.recent.length,
+        window_days: 7,
         cached: true,
       });
     }
 
-    const cutoff = Math.floor(Date.now() / 1000) - 86400;
+    const cutoff = Math.floor(Date.now() / 1000) - WINDOW_SECONDS;
 
-    // For each creator, pick their single highest-viewer snapshot in the last 24h
+    // For each creator, pick their single highest-viewer snapshot in the window
     const sql = `
       WITH creator_peak AS (
         SELECT 
@@ -40,7 +43,6 @@ export async function onRequestGet({ env }) {
         FROM snapshots s
         WHERE s.captured_at > ?
           AND s.viewers > 0
-          AND s.stream_title IS NOT NULL
       )
       SELECT
         c.id,
@@ -65,22 +67,26 @@ export async function onRequestGet({ env }) {
     const rows = result.results || [];
     const now = Math.floor(Date.now() / 1000);
 
-    const recent = rows.map((r) => ({
-      id: r.id,
-      display_name: r.display_name,
-      avatar_url: r.avatar_url,
-      platform: r.primary_platform,
-      handle: r.primary_handle,
-      peak_viewers: r.peak_viewers || 0,
-      stream_title: r.stream_title || null,
-      game_name: r.stream_category || null,
-      hours_ago: Math.max(0, Math.round((now - r.peak_at) / 3600)),
-      profile_url: `/creator/${r.id}`,
-    }));
+    const recent = rows.map((r) => {
+      const hoursAgo = Math.max(0, Math.round((now - r.peak_at) / 3600));
+      return {
+        id: r.id,
+        display_name: r.display_name,
+        avatar_url: r.avatar_url,
+        platform: r.primary_platform,
+        handle: r.primary_handle,
+        peak_viewers: r.peak_viewers || 0,
+        stream_title: r.stream_title || null,
+        game_name: r.stream_category || null,
+        hours_ago: hoursAgo,
+        days_ago: Math.floor(hoursAgo / 24),
+        profile_url: `/creator/${r.id}`,
+      };
+    });
 
     // Cache for 5 minutes
     await env.KV.put(
-      'recent-live:24h',
+      'recent-live:7d',
       JSON.stringify({ recent, ts: Date.now() }),
       { expirationTtl: 600 }
     );
@@ -89,6 +95,7 @@ export async function onRequestGet({ env }) {
       ok: true,
       recent,
       count: recent.length,
+      window_days: 7,
       cached: false,
     });
   } catch (err) {
