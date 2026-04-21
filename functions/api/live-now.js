@@ -1,96 +1,127 @@
 // ================================================================
-// functions/api/live-now.js
+// functions/api/live-now.js  (Phase 2 rewrite)
 // GET /api/live-now
-// Returns every tracked creator currently live with full context:
-// title, game, viewers, duration. KV-cached for 60 seconds to avoid
-// hammering platform APIs on every homepage/discover load.
+// 
+// Returns currently-live creators using stream_sessions.is_ongoing.
+// Adds uptime_mins (since session start) and handles edge cases.
+// Falls back to latest-snapshot query if sessions aren't populated yet.
 // ================================================================
 
 import { jsonResponse } from '../_lib.js';
 
 export async function onRequestGet({ env }) {
   try {
-    // KV cache first — live state doesn't change every second
-    const cached = await env.KV.get('live-now:full', 'json');
-    if (cached && cached.ts && (Date.now() - cached.ts) < 60000) {
-      return jsonResponse({
-        ok: true,
-        live: cached.live,
-        count: cached.live.length,
-        cached: true,
-      });
+    // Prefer stream_sessions.is_ongoing
+    const sessRes = await env.DB.prepare(`
+      SELECT 
+        c.id, c.display_name, c.avatar_url,
+        cp.handle, cp.platform,
+        ss.started_at, ss.peak_viewers, ss.avg_viewers,
+        ss.primary_category, ss.final_title
+      FROM stream_sessions ss
+      INNER JOIN creators c ON c.id = ss.creator_id
+      LEFT JOIN creator_platforms cp ON cp.creator_id = c.id AND cp.is_primary = 1
+      WHERE ss.is_ongoing = 1
+        AND c.role = 'creator'
+      ORDER BY ss.peak_viewers DESC
+    `).all();
+
+    const rows = sessRes.results || [];
+
+    // If sessions aren't populated, fall back to the latest snapshot approach
+    if (rows.length === 0) {
+      return await fallbackToSnapshots(env);
     }
 
-    // Reconstruct from latest snapshot per creator where viewers > 0
-    const recentCutoff = Math.floor(Date.now() / 1000) - 3600;
-
-    const sql = `
-      WITH latest AS (
-        SELECT 
-          creator_id, platform, viewers, followers, is_live,
-          stream_title, stream_category, started_at, captured_at,
-          ROW_NUMBER() OVER (PARTITION BY creator_id, platform ORDER BY captured_at DESC) AS rn
-        FROM snapshots
-        WHERE captured_at > ?
-      )
-      SELECT 
-        c.id,
-        c.display_name,
-        c.avatar_url,
-        cp.platform AS primary_platform,
-        cp.handle   AS primary_handle,
-        l.viewers,
-        l.followers,
-        l.stream_title,
-        l.stream_category AS game_name,
-        l.started_at,
-        l.captured_at
-      FROM creators c
-      INNER JOIN creator_platforms cp ON cp.creator_id = c.id AND cp.is_primary = 1
-      INNER JOIN latest l              ON l.creator_id = c.id AND l.platform = cp.platform AND l.rn = 1
-      WHERE c.role = 'creator'
-        AND l.is_live = 1
-      ORDER BY l.viewers DESC
-      LIMIT 200
-    `;
-
-    const result = await env.DB.prepare(sql).bind(recentCutoff).all();
-    const rows = result.results || [];
     const now = Math.floor(Date.now() / 1000);
-
-    const live = rows.map((r) => ({
-      id: r.id,
-      display_name: r.display_name,
-      avatar_url: r.avatar_url,
-      platform: r.primary_platform,
-      handle: r.primary_handle,
-      viewers: r.viewers || 0,
-      followers: r.followers || 0,
-      stream_title: r.stream_title || null,
-      game_name: r.game_name || null,
-      uptime_mins: r.started_at ? Math.round((now - r.started_at) / 60) : null,
-      profile_url: `/creator/${r.id}`,
-      watch_url: r.primary_platform === 'twitch'
-        ? `https://twitch.tv/${r.primary_handle}`
-        : r.primary_platform === 'kick'
-          ? `https://kick.com/${r.primary_handle}`
-          : null,
-    }));
-
-    // Cache for 60 seconds
-    await env.KV.put(
-      'live-now:full',
-      JSON.stringify({ live, ts: Date.now() }),
-      { expirationTtl: 120 }
-    );
-
-    return jsonResponse({
-      ok: true,
-      live,
-      count: live.length,
-      cached: false,
+    const live = rows.map((r) => {
+      // Get most recent viewer count from snapshots (session tracks peak not current)
+      return {
+        id: r.id,
+        display_name: r.display_name,
+        avatar_url: r.avatar_url,
+        platform: r.platform,
+        handle: r.handle,
+        viewers: r.peak_viewers, // best available without extra DB hit
+        peak_viewers: r.peak_viewers,
+        uptime_mins: Math.max(0, Math.round((now - r.started_at) / 60)),
+        game_name: r.primary_category,
+        stream_title: r.final_title,
+        profile_url: `/creator/${r.id}`,
+      };
     });
+
+    // Enrich with current viewer count from latest snapshots (one query, all creators)
+    if (live.length > 0) {
+      const ids = live.map(l => l.id);
+      const placeholders = ids.map(() => '?').join(',');
+      const latestRes = await env.DB.prepare(`
+        SELECT creator_id, MAX(captured_at) AS latest_ts
+        FROM snapshots
+        WHERE creator_id IN (${placeholders}) AND is_live = 1
+        GROUP BY creator_id
+      `).bind(...ids).all();
+
+      const latestMap = new Map();
+      for (const r of (latestRes.results || [])) {
+        latestMap.set(r.creator_id, r.latest_ts);
+      }
+
+      // Optionally fetch viewer counts from the most-recent row
+      const viewerRes = await env.DB.prepare(`
+        SELECT creator_id, viewers
+        FROM snapshots
+        WHERE creator_id IN (${placeholders})
+          AND is_live = 1
+          AND captured_at IN (SELECT MAX(captured_at) FROM snapshots s2 WHERE s2.creator_id = snapshots.creator_id AND s2.is_live = 1)
+      `).bind(...ids).all();
+
+      for (const r of (viewerRes.results || [])) {
+        const target = live.find(l => l.id === r.creator_id);
+        if (target) target.viewers = r.viewers;
+      }
+    }
+
+    return jsonResponse({ ok: true, live, count: live.length, source: 'sessions' });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }
+}
+
+// Fallback when stream_sessions table is empty / not yet populated.
+// Uses the most recent snapshot per creator if within the last hour.
+async function fallbackToSnapshots(env) {
+  const cutoff = Math.floor(Date.now() / 1000) - 3600;
+  const res = await env.DB.prepare(`
+    SELECT 
+      c.id, c.display_name, c.avatar_url,
+      cp.handle, s.platform,
+      s.viewers, s.stream_title, s.stream_category AS game_name, s.started_at, s.captured_at
+    FROM snapshots s
+    INNER JOIN creators c ON c.id = s.creator_id
+    LEFT JOIN creator_platforms cp ON cp.creator_id = c.id AND cp.is_primary = 1
+    WHERE s.captured_at > ?
+      AND s.is_live = 1
+      AND c.role = 'creator'
+      AND s.id IN (
+        SELECT MAX(id) FROM snapshots WHERE is_live = 1 GROUP BY creator_id
+      )
+    ORDER BY s.viewers DESC
+  `).bind(cutoff).all();
+
+  const now = Math.floor(Date.now() / 1000);
+  const live = (res.results || []).map(r => ({
+    id: r.id,
+    display_name: r.display_name,
+    avatar_url: r.avatar_url,
+    platform: r.platform,
+    handle: r.handle,
+    viewers: r.viewers || 0,
+    uptime_mins: r.started_at ? Math.max(0, Math.round((now - r.started_at) / 60)) : null,
+    game_name: r.game_name,
+    stream_title: r.stream_title,
+    profile_url: `/creator/${r.id}`,
+  }));
+
+  return jsonResponse({ ok: true, live, count: live.length, source: 'snapshots_fallback' });
 }
