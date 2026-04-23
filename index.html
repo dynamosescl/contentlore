@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
        SIDEBAR (shared component, same on every page)
        ================================================================ -->
   <aside class="cl-sidebar">
-    <a href="/" class="cl-masthead">Content<em>Lore</em><span class="cl-mark"></span></a>
-    <div class="cl-masthead-sub">The UK Streaming Desk · Est. 2026</div>
+    <a href="/" class="cl-masthead">Content<em>Lore Live</em><span class="cl-mark"></span></a>
+    <div class="cl-masthead-sub">GTA RP · FiveM · GTA 6 watch desk</div>
 
     <div class="cl-nav-section">
       <div class="cl-nav-section-label">Sections</div>
@@ -68,9 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="cl-nav-section">
       <div class="cl-nav-section-label">Read</div>
       <ul class="cl-nav-list">
+        <li><a href="#watch-6" class="small">Watch 6 Live</a></li>
         <li><a href="/discover/" class="small">Discover</a></li>
-        <li><a href="/the-platform/" class="small">The Platform</a></li>
-        <li><a href="/ledger/" class="small">The Ledger</a></li>
+        <li><a href="/the-platform/2026/04/fivem-enhanced-translated/" class="small">FiveM</a></li>
         <li><a href="/gta-rp/" class="small">GTA RP</a></li>
       </ul>
     </div>
@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="cl-live-stat-breakdown">
         <span><i class="platform-square twitch"></i> <span id="live-twitch">—</span></span>
         <span><i class="platform-square kick"></i> <span id="live-kick">—</span></span>
+        <span><i class="platform-square youtube"></i> <span id="live-youtube">—</span></span>
       </div>
     </div>
 
@@ -102,6 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
        MAIN
        ================================================================ -->
   <main class="cl-main">
+    <section class="cl-live-header">
+      <div class="cl-live-header-kicker">UK Stream Radar</div>
+      <h1>CONTENTLORE <em>LIVE</em></h1>
+      <p>Track GTA RP, FiveM, Kick, Twitch and YouTube creators in one fast watch desk.</p>
+    </section>
 
     <!-- TOPBAR -->
     <div class="cl-topbar">
@@ -116,28 +122,63 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- HERO -->
     <section class="cl-hero">
       <div class="cl-hero-main">
-        <div class="cl-hero-kicker">The Desk · Live from the British scene</div>
-        <h1>The home of <em>UK</em> streaming culture.</h1>
-        <p class="cl-hero-dek">We cover the British streaming scene the way it covers itself — <em>server by server, creator by creator, moment by moment</em>. 285 UK creators tracked live across Twitch and Kick. Editorial judgement, not platform algorithms.</p>
-        <div class="cl-hero-byline">By <strong>Dynamoses</strong> · Editor · Weekly, since April 2026</div>
+        <div class="cl-hero-kicker">Live scene control room</div>
+        <h2>Watch, track and find the next <em>UK</em> wave.</h2>
+        <p class="cl-hero-dek">Built for stream-first people. <span id="hero-creators">285</span> tracked creators, live movers, and GTA RP heavy coverage across Twitch, Kick and YouTube.</p>
+        <div class="cl-hero-byline">Live-first desk · zero fluff · updates every minute</div>
       </div>
 
       <div class="cl-hero-aside">
-        <a href="/the-platform/" class="cl-side-teaser accent">
-          <div class="cl-tag">◆ The Platform</div>
-          <h3>alt:V · three-phase shutdown, final lights out 6 July 2026.</h3>
-          <div class="cl-meta">Ledger · 6 min</div>
+        <a href="/gta-rp/" class="cl-side-teaser accent">
+          <div class="cl-tag">◆ GTA RP</div>
+          <h3>Jump straight into the GTA RP creator map and live scene pages.</h3>
+          <div class="cl-meta">Live RP desk</div>
         </a>
         <a href="/discover/" class="cl-side-teaser">
-          <div class="cl-tag">◆ Discover · new</div>
-          <h3>Every UK creator we track, filtered your way.</h3>
-          <div class="cl-meta">The Discovery Engine · v0.1</div>
+          <div class="cl-tag">◆ Watchlist Builder</div>
+          <h3>Build your own stream lineup with platform and momentum filters.</h3>
+          <div class="cl-meta">Discover creators fast</div>
         </a>
-        <a href="/people/" class="cl-side-teaser">
-          <div class="cl-tag">◆ The Vault</div>
-          <h3><span id="vault-creators">285</span> UK creators tracked. <span id="vault-snapshots">24,740</span> snapshots logged.</h3>
-          <div class="cl-meta">Editorial index</div>
+        <a href="/the-platform/2026/04/cfx-marketplace-100-days/" class="cl-side-teaser">
+          <div class="cl-tag">◆ GTA 6 + FiveM</div>
+          <h3>Latest GTA ecosystem shifts that matter to streamers and RP viewers.</h3>
+          <div class="cl-meta">Platform changes</div>
         </a>
+      </div>
+    </section>
+
+    <!-- DESK NAV -->
+    <section class="cl-desk-nav">
+      <a href="/discover/" class="cl-desk-nav-item">
+        <span class="cl-desk-nav-label">Creator Finder</span>
+        <h3>Find your next binge watch</h3>
+        <p>Sort by live now, momentum spikes, and platform in one tap.</p>
+      </a>
+      <a href="/people/" class="cl-desk-nav-item">
+        <span class="cl-desk-nav-label">Creator Cards</span>
+        <h3>Track favorites</h3>
+        <p>Quick profile cards with avatar, links, and current platform focus.</p>
+      </a>
+      <a href="/gta-rp/" class="cl-desk-nav-item">
+        <span class="cl-desk-nav-label">GTA RP Zone</span>
+        <h3>Server + scene focus</h3>
+        <p>Jump into RP creators, related tags, and live community waves.</p>
+      </a>
+      <a href="/the-platform/2026/04/fivem-enhanced-translated/" class="cl-desk-nav-item">
+        <span class="cl-desk-nav-label">FiveM + GTA 6</span>
+        <h3>Platform drops</h3>
+        <p>Catch major update pages tied to GTA 6, FiveM and creator impact.</p>
+      </a>
+    </section>
+
+    <section class="cl-watch6" id="watch-6">
+      <div class="cl-watch6-head">
+        <div class="cl-section-label"><span class="cl-num">01</span> Watch 6 Live</div>
+        <h2>Open six streams <em>at once</em>.</h2>
+        <p>Fast-launch deck for Twitch, Kick and YouTube creators who are live right now.</p>
+      </div>
+      <div class="cl-watch6-grid" id="watch6-grid">
+        <div class="cl-watch6-loading">Loading live creators…</div>
       </div>
     </section>
 
@@ -164,6 +205,19 @@ document.addEventListener('DOMContentLoaded', () => {
             </linearGradient>
           </defs>
         </svg>
+
+        <div class="cl-pulse-controls" role="group" aria-label="Filter scene pulse">
+          <div class="cl-pulse-pills" id="pulse-platform-filter">
+            <button class="cl-pulse-pill active" type="button" data-platform="all">All</button>
+            <button class="cl-pulse-pill" type="button" data-platform="twitch">Twitch</button>
+            <button class="cl-pulse-pill" type="button" data-platform="kick">Kick</button>
+            <button class="cl-pulse-pill" type="button" data-platform="youtube">YouTube</button>
+          </div>
+          <div class="cl-pulse-pills" id="pulse-size-filter">
+            <button class="cl-pulse-pill active" type="button" data-limit="7">Top 7</button>
+            <button class="cl-pulse-pill" type="button" data-limit="14">Top 14</button>
+          </div>
+        </div>
 
         <div class="cl-pulse-scroll" id="pulse-scroll">
           <!-- Populated by /assets/pulse.js from /api/momentum
@@ -209,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <h2>Who <em>raided</em> whom this week.</h2>
         <p class="cl-graph-strip-dek">Raids, hosts and shoutouts pulled from live stream titles across Twitch and Kick. Seven-day rolling window.</p>
         <div class="cl-graph-list" id="cl-graph-list">
-          <div class="cl-graph-loading">Reading the scene\u2026</div>
+          <div class="cl-graph-loading">Reading the scene…</div>
         </div>
       </div>
     </section>
@@ -262,6 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="/assets/pulse.js" defer></script>
 <script src="/assets/livecount.js" defer></script>
 <script src="/assets/homepage-stats.js" defer></script>
+<script src="/assets/watch6.js" defer></script>
 <script src="/assets/graph-strip.js" defer></script>
 </body>
 </html>
