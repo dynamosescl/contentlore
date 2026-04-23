@@ -15,7 +15,7 @@
 // Response includes total count so the client can report progress.
 // ================================================================
 
-import { jsonResponse, requireAdminAuth } from '../../../_lib.js';
+import { jsonResponse, requireAdminAuth, parseBoundedInt } from '../../../_lib.js';
 
 const EDITORIAL_PROMPT = `You are writing a short editorial bio for ContentLore, a scene publication that covers UK streaming culture.
 
@@ -40,6 +40,8 @@ Example good outputs:
 const TEMPLATED_PATTERN = /(?:UK-based|UK based)\s+(?:Twitch|Kick|variety|streamer)\s+(?:streamer\s+)?(?:who\s+(?:is\s+)?|that\s+)?(?:specialising|specializing|known|focused|active)\s+(?:in|on|for)/i;
 const COMMUNITY_ENGAGEMENT_PATTERN = /community\s+engagement|community-focused|building community|through conversational/i;
 
+const ALLOWED_MODES = new Set(['low_quality', 'empty_only', 'all']);
+
 function isLowQuality(bio) {
   if (!bio || bio.length < 40) return true;
   if (TEMPLATED_PATTERN.test(bio)) return true;
@@ -55,10 +57,14 @@ export async function onRequestPost({ env, request }) {
 
   let body = {};
   try { body = await request.json(); } catch { /* fine */ }
-  const offset = parseInt(body?.offset || 0, 10);
-  const batch = Math.min(parseInt(body?.batch || 10, 10), 15);
-  const mode = body?.mode || 'low_quality';
+  const offset = parseBoundedInt(body?.offset, 0, 0, 1_000_000);
+  const batch = parseBoundedInt(body?.batch, 10, 1, 15);
+  const mode = String(body?.mode || 'low_quality').trim();
   const apiKey = env.ANTHROPIC_API_KEY;
+
+  if (!ALLOWED_MODES.has(mode)) {
+    return jsonResponse({ ok: false, error: 'invalid mode' }, 400);
+  }
 
   if (!apiKey) {
     return jsonResponse({ ok: false, error: 'ANTHROPIC_API_KEY not configured' }, 500);
@@ -214,7 +220,7 @@ Current bio (may be empty or templated): ${t.bio || '[empty]'}`;
       offset,
       next_offset: offset + targets.length,
       total_creators: totalCreators,
-      progress_pct: Math.round(((offset + targets.length) / totalCreators) * 100),
+      progress_pct: totalCreators > 0 ? Math.round(((offset + targets.length) / totalCreators) * 100) : 100,
     });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);

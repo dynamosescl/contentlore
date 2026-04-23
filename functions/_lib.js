@@ -85,6 +85,18 @@ export function formatCount(n) {
 }
 
 /**
+ * Parse integer input and clamp it to a safe range.
+ * Returns fallback when input is missing/invalid.
+ */
+export function parseBoundedInt(raw, fallback, min, max) {
+  const text = String(raw ?? '').trim();
+  if (!/^-?\d+$/.test(text)) return fallback;
+  const n = Number(text);
+  if (!Number.isSafeInteger(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+/**
  * Slugify for URL-safe strings.
  */
 export function slugify(str) {

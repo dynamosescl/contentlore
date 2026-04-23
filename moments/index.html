@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ContentLore · Moments</title>
+  <meta name="description" content="Live moments across UK streaming clusters, grouped by what is trending now.">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="cl-app">
+    <main class="cl-main" style="max-width:1100px;margin:0 auto;padding:32px 24px;">
+      <div class="cl-section-label"><span class="cl-num">Moments</span> Live clusters</div>
+      <h1>What the scene is watching right now.</h1>
+      <p>Grouped from live streams by category with viewer and momentum signals.</p>
+
+      <section class="cl-paper" style="margin-top:24px;">
+        <div class="cl-paper-inner">
+          <div id="moments-empty" hidden>No moments available right now. Check back soon.</div>
+          <div class="cl-paper-grid" id="moments-list">
+            <div class="cl-paper-card">Loading moments…</div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="cl-footer-v2" style="margin-top:24px;">
+        <div><a href="/">← Back to home</a></div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="/assets/moments.js" defer></script>
+</body>
+</html>

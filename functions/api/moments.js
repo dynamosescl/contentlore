@@ -36,16 +36,12 @@ export async function onRequestGet({ env }) {
 
     // MOMENTUM (7-day follower growth)
     const momentumRes = await env.DB.prepare(`
-      SELECT creator_id, SUM(delta) AS momentum
-      FROM (
-        SELECT
-          s.creator_id,
-          (MAX(s.followers) - MIN(s.followers)) AS delta
-        FROM snapshots s
-        WHERE s.captured_at > ?
-        GROUP BY s.creator_id
-      )
-      GROUP BY creator_id
+      SELECT
+        s.creator_id,
+        (MAX(s.followers) - MIN(s.followers)) AS momentum
+      FROM snapshots s
+      WHERE s.captured_at > ?
+      GROUP BY s.creator_id
     `).bind(now - 7 * 86400).all();
 
     const momentumMap = new Map();
@@ -86,7 +82,7 @@ export async function onRequestGet({ env }) {
         viewers,
         game: c.primary_category || 'other',
         uptime_mins: c.started_at
-          ? Math.round((now - c.started_at) / 60)
+          ? Math.max(0, Math.round((now - c.started_at) / 60))
           : 0,
         momentum,
         edge,

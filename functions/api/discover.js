@@ -15,17 +15,27 @@
 //   limit=100              default 100, max 500
 // ================================================================
 
-import { jsonResponse } from '../_lib.js';
+import { jsonResponse, parseBoundedInt } from '../_lib.js';
+
+const ALLOWED_PLATFORMS = new Set(['twitch', 'kick']);
+const ALLOWED_SORTS = new Set(['momentum', 'followers', 'live', 'name']);
 
 export async function onRequestGet({ env, request }) {
   const url = new URL(request.url);
   const platform = url.searchParams.get('platform');
   const liveOnly = url.searchParams.get('live') === '1';
   const category = url.searchParams.get('category');
-  const minFollowers = parseInt(url.searchParams.get('min_followers') || '0', 10);
-  const maxFollowers = parseInt(url.searchParams.get('max_followers') || '0', 10);
+  const minFollowers = parseBoundedInt(url.searchParams.get('min_followers'), 0, 0, 10_000_000_000);
+  const maxFollowers = parseBoundedInt(url.searchParams.get('max_followers'), 0, 0, 10_000_000_000);
   const sort = url.searchParams.get('sort') || 'momentum';
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '100', 10), 500);
+  const limit = parseBoundedInt(url.searchParams.get('limit'), 100, 1, 500);
+
+  if (platform && !ALLOWED_PLATFORMS.has(platform)) {
+    return jsonResponse({ ok: false, error: 'invalid platform' }, 400);
+  }
+  if (!ALLOWED_SORTS.has(sort)) {
+    return jsonResponse({ ok: false, error: 'invalid sort' }, 400);
+  }
 
   try {
     const recentCutoff = Math.floor(Date.now() / 1000) - 3600; // 1 hour
@@ -87,10 +97,11 @@ export async function onRequestGet({ env, request }) {
     let creators = rows.map((r) => {
       const followers = r.current_followers || 0;
       const followers7d = r.followers_7d_ago || null;
-      const momentumDelta = (followers && followers7d) 
-        ? followers - followers7d 
+      const hasHistory = followers7d !== null && followers7d !== undefined;
+      const momentumDelta = hasHistory
+        ? followers - followers7d
         : null;
-      const momentumPct = (followers && followers7d && followers7d > 0)
+      const momentumPct = (hasHistory && followers7d > 0)
         ? ((followers - followers7d) / followers7d) * 100
         : null;
 
@@ -98,7 +109,7 @@ export async function onRequestGet({ env, request }) {
         id: r.id,
         display_name: r.display_name,
         bio: r.bio,
-        categories: r.categories ? r.categories.split(',').map((s) => s.trim()) : [],
+        categories: r.categories ? r.categories.split(',').map((s) => s.trim()).filter(Boolean) : [],
         avatar_url: r.avatar_url,
         accent_colour: r.accent_colour,
         platform: r.primary_platform,

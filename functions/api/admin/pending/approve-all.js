@@ -7,7 +7,7 @@
 // Auth: X-Admin-Password header required.
 // ================================================================
 
-import { jsonResponse, requireAdminAuth, slugify } from '../../../_lib.js';
+import { jsonResponse, requireAdminAuth, slugify, parseBoundedInt } from '../../../_lib.js';
 
 export async function onRequestPost({ env, request }) {
   const authError = requireAdminAuth(request, env);
@@ -19,7 +19,7 @@ export async function onRequestPost({ env, request }) {
   } catch {
     /* empty body is fine */
   }
-  const max = Math.min(parseInt(body?.max || 50, 10), 100);
+  const max = parseBoundedInt(body?.max, 50, 1, 100);
   const sourceFilter = body?.source || null;
 
   try {

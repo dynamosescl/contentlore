@@ -11,19 +11,24 @@
 //   limit=10        max rows, cap 50
 // ================================================================
 
-import { jsonResponse } from '../_lib.js';
+import { jsonResponse, parseBoundedInt } from '../_lib.js';
+
+const ALLOWED_EDGE_TYPES = new Set(['all', 'raid', 'host', 'shoutout', 'mention', 'co_stream']);
 
 export async function onRequestGet({ env, request }) {
   const url = new URL(request.url);
-  const window = Math.min(parseInt(url.searchParams.get('window') || '7', 10), 90);
+  const window = parseBoundedInt(url.searchParams.get('window'), 7, 1, 90);
   const type = url.searchParams.get('type') || 'all';
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '10', 10), 50);
+  const limit = parseBoundedInt(url.searchParams.get('limit'), 10, 1, 50);
+  if (!ALLOWED_EDGE_TYPES.has(type)) {
+    return jsonResponse({ ok: false, error: 'invalid type' }, 400);
+  }
 
   try {
     const cutoff = Math.floor(Date.now() / 1000) - (window * 86400);
     const params = [cutoff];
     let typeFilter = '';
-    if (type !== 'all' && ['raid', 'host', 'shoutout', 'mention', 'co_stream'].includes(type)) {
+    if (type !== 'all') {
       typeFilter = ' AND e.edge_type = ?';
       params.push(type);
     }

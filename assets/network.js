@@ -7,6 +7,9 @@
 (function() {
   'use strict';
 
+  const SAFE_EDGE_TYPES = new Set(['raid', 'host', 'shoutout', 'co_stream', 'mention']);
+  const SAFE_PLATFORMS = new Set(['twitch', 'kick', 'youtube', 'tiktok']);
+
   const wrap = document.getElementById('cl-network-sidebar');
   if (!wrap) return;
 
@@ -83,31 +86,62 @@
 
   function inlineEdgeChip(e) {
     const arrow = e.direction === 'in' ? '\u2190' : '\u2192';
+    const edgeType = normaliseEdgeType(e.edge_type);
+    const platform = normalisePlatform(e.platform);
+    const profileUrl = safeProfileUrl(e.profile_url, e.creator_id);
     const verbMap = {
       raid: 'raided', host: 'hosted', shoutout: 'shoutout',
       co_stream: 'co-streamed', mention: 'mentioned',
     };
-    const verb = verbMap[e.edge_type] || e.edge_type;
+    const verb = verbMap[edgeType] || edgeType;
     return `
-      <a class="cl-edge-chip ${e.edge_type}" href="${e.profile_url}">
+      <a class="cl-edge-chip ${edgeType}" href="${escapeAttr(profileUrl)}">
         <span class="cl-edge-chip-arrow">${arrow}</span>
-        <span class="cl-edge-chip-verb">${verb}</span>
-        <i class="platform-square ${e.platform || ''}"></i>
+        <span class="cl-edge-chip-verb">${escapeHtml(verb)}</span>
+        <i class="platform-square ${platform}"></i>
         <span class="cl-edge-chip-name">${escapeHtml(e.display_name || e.creator_id)}</span>
       </a>
     `;
   }
 
   function edgeHtml(e) {
+    const edgeType = normaliseEdgeType(e.edge_type);
+    const platform = normalisePlatform(e.platform);
+    const profileUrl = safeProfileUrl(e.profile_url, e.creator_id);
     return `
-      <a class="cl-network-edge" href="${e.profile_url}">
+      <a class="cl-network-edge" href="${escapeAttr(profileUrl)}">
         <div class="cl-network-edge-left">
-          <i class="platform-square ${e.platform || ''}"></i>
+          <i class="platform-square ${platform}"></i>
           <span class="cl-network-edge-name">${escapeHtml(e.display_name || e.creator_id)}</span>
         </div>
-        <span class="cl-network-edge-type ${e.edge_type}">${e.edge_type}${e.weight > 1 ? ' \u00d7' + e.weight : ''}</span>
+        <span class="cl-network-edge-type ${edgeType}">${escapeHtml(edgeType)}${e.weight > 1 ? ' \u00d7' + Number(e.weight) : ''}</span>
       </a>
     `;
+  }
+
+
+  function normaliseEdgeType(raw) {
+    const v = String(raw || '').toLowerCase();
+    return SAFE_EDGE_TYPES.has(v) ? v : 'mention';
+  }
+
+  function normalisePlatform(raw) {
+    const v = String(raw || '').toLowerCase();
+    return SAFE_PLATFORMS.has(v) ? v : '';
+  }
+
+  function safeProfileUrl(url, creatorId) {
+    const candidate = String(url || '').trim();
+    if (candidate.startsWith('/creator/')) return candidate;
+    return `/creator/${encodeURIComponent(creatorId || '')}`;
+  }
+
+  function escapeAttr(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;');
   }
 
   function escapeHtml(s) {

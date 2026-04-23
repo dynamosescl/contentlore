@@ -8,7 +8,7 @@
 // window: 1d | 7d | 30d | all
 // ================================================================
 
-import { jsonResponse } from '../_lib.js';
+import { jsonResponse, parseBoundedInt } from '../_lib.js';
 
 const ALLOWED_METRICS = new Set(['peak', 'avg', 'hours', 'growth_followers']);
 const WINDOW_SECONDS = {
@@ -22,7 +22,7 @@ export async function onRequestGet({ env, request }) {
   const url = new URL(request.url);
   const metric = url.searchParams.get('metric') || 'peak';
   const window = url.searchParams.get('window') || '7d';
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '25', 10), 50);
+  const limit = parseBoundedInt(url.searchParams.get('limit'), 25, 1, 50);
 
   if (!ALLOWED_METRICS.has(metric)) {
     return jsonResponse({ ok: false, error: 'invalid metric' }, 400);

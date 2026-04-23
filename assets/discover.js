@@ -14,7 +14,14 @@
 
   if (!grid) return;
 
+  if (!metaEl || !emptyEl) {
+    console.warn('[discover] Missing required DOM nodes (#cl-discover-meta or #cl-discover-empty).');
+    return;
+  }
+
   // State
+  const SAFE_PLATFORMS = new Set(['twitch', 'kick', 'youtube', 'tiktok']);
+
   const state = {
     platform: '',
     live: '',
@@ -117,7 +124,8 @@
   }
 
   function cardHtml(c) {
-    const platformClass = c.platform ? 'platform-' + c.platform : '';
+    const platform = normalisePlatform(c.platform);
+    const platformClass = platform ? 'platform-' + platform : '';
     const liveBadge = c.is_live
       ? `<span class="cl-card-live"><span class="cl-live-dot"></span>Live \u00b7 ${formatCount(c.current_viewers)}</span>`
       : '';
@@ -140,7 +148,7 @@
       : '';
 
     return `
-      <a class="cl-card ${platformClass} ${c.is_live ? 'is-live' : ''}" href="${c.profile_url}">
+      <a class="cl-card ${platformClass} ${c.is_live ? 'is-live' : ''}" href="${escapeAttr(safeProfileUrl(c.profile_url, c.id))}">
         <div class="cl-card-head">
           <div class="cl-card-identity">
             ${avatarHtml(c)}
@@ -149,7 +157,7 @@
           ${liveBadge}
         </div>
         <div class="cl-card-handle">
-          ${c.platform ? `<i class="platform-square ${c.platform}"></i>` : ''}
+          ${platform ? `<i class="platform-square ${platform}"></i>` : ''}
           ${c.handle ? escapeHtml(c.handle) : ''}
         </div>
         ${liveContext}
@@ -201,9 +209,22 @@
     return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
   }
 
+
+  function normalisePlatform(raw) {
+    const v = String(raw || '').toLowerCase();
+    return SAFE_PLATFORMS.has(v) ? v : '';
+  }
+
+  function safeProfileUrl(url, id) {
+    const candidate = String(url || '').trim();
+    if (candidate.startsWith('/creator/')) return candidate;
+    return `/creator/${encodeURIComponent(id || '')}`;
+  }
+
   // Card avatar — uses real avatar_url or falls back to a platform-coloured initial.
   function avatarHtml(c) {
-    const platformClass = c.platform ? 'platform-' + c.platform : '';
+    const platform = normalisePlatform(c.platform);
+    const platformClass = platform ? 'platform-' + platform : '';
     const name = c.display_name || c.id || '?';
     const initial = name.charAt(0).toUpperCase();
     if (c.avatar_url) {

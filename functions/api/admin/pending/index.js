@@ -5,7 +5,9 @@
 // Auth: X-Admin-Password header required.
 // ================================================================
 
-import { jsonResponse, requireAdminAuth } from '../../../_lib.js';
+import { jsonResponse, requireAdminAuth, parseBoundedInt } from '../../../_lib.js';
+
+const ALLOWED_STATUSES = new Set(['pending', 'approved', 'rejected']);
 
 export async function onRequestGet({ env, request }) {
   const authError = requireAdminAuth(request, env);
@@ -13,8 +15,11 @@ export async function onRequestGet({ env, request }) {
 
   const url = new URL(request.url);
   const status = url.searchParams.get('status') || 'pending';
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '200', 10), 500);
+  const limit = parseBoundedInt(url.searchParams.get('limit'), 200, 1, 500);
   const source = url.searchParams.get('source'); // optional filter: auto_discovery, self_claim, manual
+  if (!ALLOWED_STATUSES.has(status)) {
+    return jsonResponse({ ok: false, error: 'invalid status' }, 400);
+  }
 
   try {
     let sql = `

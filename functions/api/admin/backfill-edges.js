@@ -9,7 +9,7 @@
 // Body: { limit?: number (default 2000, cap 10000), dry_run?: bool }
 // ================================================================
 
-import { jsonResponse, requireAdminAuth } from '../../_lib.js';
+import { jsonResponse, requireAdminAuth, parseBoundedInt } from '../../_lib.js';
 
 // Real UK streaming title patterns (narrowed after v3 debug run):
 //  - @mentions: "@canniny", "@HAchubby"
@@ -24,7 +24,7 @@ export async function onRequestPost({ env, request }) {
 
   let body = {};
   try { body = await request.json(); } catch { /* fine */ }
-  const limit   = Math.min(parseInt(body?.limit || '2000', 10), 10000);
+  const limit   = parseBoundedInt(body?.limit, 2000, 1, 10000);
   const dryRun  = body?.dry_run === true;
 
   try {

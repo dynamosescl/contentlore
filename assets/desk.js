@@ -19,7 +19,12 @@
   const emptyRecent= document.getElementById('cl-desk-empty-recent');
 
   if (!root) return;
+  if (!headline || !metaEl || !heroEl || !rowsEl || !emptyCopy || !emptyRecent) {
+    console.warn('[desk] Missing required DOM nodes for desk render.');
+    return;
+  }
 
+  const SAFE_PLATFORMS = new Set(['twitch', 'kick', 'youtube', 'tiktok']);
   const POLL_MS = 90 * 1000;
 
   refresh();
@@ -78,7 +83,8 @@
 
   // Hero card — one of the top 3 live streams, promoted
   function heroCard(c) {
-    const platformClass = c.platform ? 'platform-' + c.platform : '';
+    const platform = normalisePlatform(c.platform);
+    const platformClass = platform ? 'platform-' + platform : '';
     const game  = c.game_name
       ? `<div class="cl-hcard-game">${escapeHtml(c.game_name)}</div>`
       : '';
@@ -86,15 +92,15 @@
       ? `<div class="cl-hcard-title">${escapeHtml(truncate(c.stream_title, 110))}</div>`
       : '';
     const uptime = c.uptime_mins != null ? formatUptime(c.uptime_mins) : '';
-    const watchUrl = c.platform === 'twitch'
-      ? `https://twitch.tv/${c.handle}`
-      : c.platform === 'kick'
-        ? `https://kick.com/${c.handle}`
+    const watchUrl = platform === 'twitch'
+      ? `https://twitch.tv/${encodeURIComponent(c.handle || '')}`
+      : platform === 'kick'
+        ? `https://kick.com/${encodeURIComponent(c.handle || '')}`
         : null;
 
     return `
       <article class="cl-hcard ${platformClass}">
-        <a class="cl-hcard-body" href="${c.profile_url}">
+        <a class="cl-hcard-body" href="${escapeAttr(safeProfileUrl(c.profile_url, c.id))}">
           <header class="cl-hcard-head">
             <div class="cl-hcard-identity">
               ${avatarHtml(c, 'lg')}
@@ -106,7 +112,7 @@
             </div>
           </header>
           <div class="cl-hcard-handle">
-            <i class="platform-square ${c.platform}"></i>
+            <i class="platform-square ${platform}"></i>
             <span>${escapeHtml(c.handle || '')}</span>
             ${uptime ? `<span class="cl-hcard-dot">\u00b7</span><span class="cl-hcard-uptime">live ${uptime}</span>` : ''}
           </div>
@@ -115,7 +121,7 @@
         </a>
         ${watchUrl ? `
           <a class="cl-hcard-watch" href="${watchUrl}" target="_blank" rel="noopener">
-            Watch on ${c.platform} \u2192
+            Watch on ${platform} \u2192
           </a>
         ` : ''}
       </article>
@@ -126,7 +132,8 @@
   // size: 'sm' (default) = 20px, 'lg' = 44px
   function avatarHtml(c, size) {
     const sz = size === 'lg' ? 'cl-avatar--lg' : 'cl-avatar--sm';
-    const platformClass = c.platform ? 'platform-' + c.platform : '';
+    const platform = normalisePlatform(c.platform);
+    const platformClass = platform ? 'platform-' + platform : '';
     const name = c.display_name || c.id || '?';
     const initial = name.charAt(0).toUpperCase();
     if (c.avatar_url) {
@@ -140,6 +147,17 @@
     </span>`;
   }
 
+  function normalisePlatform(raw) {
+    const v = String(raw || '').toLowerCase();
+    return SAFE_PLATFORMS.has(v) ? v : '';
+  }
+
+  function safeProfileUrl(url, id) {
+    const candidate = String(url || '').trim();
+    if (candidate.startsWith('/creator/')) return candidate;
+    return `/creator/${encodeURIComponent(id || '')}`;
+  }
+
   function escapeAttr(s) {
     if (s == null) return '';
     return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -147,14 +165,15 @@
 
   // Compact row — live creators beyond the top 3
   function compactRow(c) {
-    const watchUrl = c.platform === 'twitch'
-      ? `https://twitch.tv/${c.handle}`
-      : c.platform === 'kick'
-        ? `https://kick.com/${c.handle}`
+    const platform = normalisePlatform(c.platform);
+    const watchUrl = platform === 'twitch'
+      ? `https://twitch.tv/${encodeURIComponent(c.handle || '')}`
+      : platform === 'kick'
+        ? `https://kick.com/${encodeURIComponent(c.handle || '')}`
         : null;
 
     return `
-      <a class="cl-drow" href="${c.profile_url}">
+      <a class="cl-drow" href="${escapeAttr(safeProfileUrl(c.profile_url, c.id))}">
         ${avatarHtml(c)}
         <span class="cl-drow-name">${escapeHtml(c.display_name)}</span>
         <span class="cl-drow-game">${c.game_name ? escapeHtml(c.game_name) : ''}</span>
@@ -213,7 +232,7 @@
     else                          ago = `${c.days_ago}d ago`;
 
     return `
-      <a class="cl-drow cl-drow-recent" href="${c.profile_url}">
+      <a class="cl-drow cl-drow-recent" href="${escapeAttr(safeProfileUrl(c.profile_url, c.id))}">
         ${avatarHtml(c)}
         <span class="cl-drow-name">${escapeHtml(c.display_name)}</span>
         <span class="cl-drow-game">${c.game_name ? escapeHtml(c.game_name) : ''}</span>

@@ -5,12 +5,12 @@
 // This is the feed for Scene Pulse on the homepage.
 // ================================================================
 
-import { jsonResponse } from '../_lib.js';
+import { jsonResponse, parseBoundedInt } from '../_lib.js';
 
 export async function onRequestGet({ env, request }) {
   const url = new URL(request.url);
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '10', 10), 50);
-  const window = parseInt(url.searchParams.get('days') || '7', 10);
+  const limit = parseBoundedInt(url.searchParams.get('limit'), 10, 1, 50);
+  const window = parseBoundedInt(url.searchParams.get('days'), 7, 1, 30);
 
   try {
     const windowStart = Math.floor(Date.now() / 1000) - window * 86400;

@@ -11,7 +11,7 @@
 // Calls APIs inline and throws real errors so we can see what's going wrong.
 // ================================================================
 
-import { jsonResponse, requireAdminAuth } from '../../_lib.js';
+import { jsonResponse, requireAdminAuth, parseBoundedInt } from '../../_lib.js';
 
 // Twitch app token, cached in KV for 55 min
 async function getTwitchAppToken(env, forceRefresh = false) {
@@ -108,7 +108,7 @@ export async function onRequestPost({ env, request }) {
 
   let body = {};
   try { body = await request.json(); } catch { /* fine */ }
-  const limit = Math.min(parseInt(body?.limit || 50, 10), 100);
+  const limit = parseBoundedInt(body?.limit, 50, 1, 100);
   const debug = body?.debug === true;
 
   try {

@@ -6,7 +6,7 @@
 // Auth: X-Admin-Password header required.
 // ================================================================
 
-import { jsonResponse, requireAdminAuth } from '../../../_lib.js';
+import { jsonResponse, requireAdminAuth, parseBoundedInt } from '../../../_lib.js';
 
 const EDITORIAL_PROMPT = `You are writing a short editorial bio for ContentLore, a scene publication that covers UK streaming culture.
 
@@ -36,7 +36,7 @@ export async function onRequestPost({ env, request }) {
   } catch {
     /* no body fine */
   }
-  const max = Math.min(parseInt(body?.max || 10, 10), 25);
+  const max = parseBoundedInt(body?.max, 10, 1, 25);
   const onlyEmpty = body?.only_empty !== false; // default true
   const apiKey = env.ANTHROPIC_API_KEY;
 

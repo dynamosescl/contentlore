@@ -5,11 +5,11 @@
 // Used by homepage directory, Rising panel, and client-side filters.
 // ================================================================
 
-import { jsonResponse } from '../_lib.js';
+import { jsonResponse, parseBoundedInt } from '../_lib.js';
 
 export async function onRequestGet({ env, request }) {
   const url = new URL(request.url);
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '500', 10), 500);
+  const limit = parseBoundedInt(url.searchParams.get('limit'), 500, 1, 500);
   const category = url.searchParams.get('category'); // optional filter
 
   try {

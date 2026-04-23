@@ -35,6 +35,9 @@ export async function onRequestGet({ env }) {
 
     const now = Math.floor(Date.now() / 1000);
     const live = rows.map((r) => {
+      const uptimeMins = r.started_at != null
+        ? Math.max(0, Math.round((now - r.started_at) / 60))
+        : null;
       // Get most recent viewer count from snapshots (session tracks peak not current)
       return {
         id: r.id,
@@ -44,7 +47,7 @@ export async function onRequestGet({ env }) {
         handle: r.handle,
         viewers: r.peak_viewers, // best available without extra DB hit
         peak_viewers: r.peak_viewers,
-        uptime_mins: Math.max(0, Math.round((now - r.started_at) / 60)),
+        uptime_mins: uptimeMins,
         game_name: r.primary_category,
         stream_title: r.final_title,
         profile_url: `/creator/${r.id}`,
@@ -53,19 +56,9 @@ export async function onRequestGet({ env }) {
 
     // Enrich with current viewer count from latest snapshots (one query, all creators)
     if (live.length > 0) {
+      const byId = new Map(live.map((c) => [c.id, c]));
       const ids = live.map(l => l.id);
       const placeholders = ids.map(() => '?').join(',');
-      const latestRes = await env.DB.prepare(`
-        SELECT creator_id, MAX(captured_at) AS latest_ts
-        FROM snapshots
-        WHERE creator_id IN (${placeholders}) AND is_live = 1
-        GROUP BY creator_id
-      `).bind(...ids).all();
-
-      const latestMap = new Map();
-      for (const r of (latestRes.results || [])) {
-        latestMap.set(r.creator_id, r.latest_ts);
-      }
 
       // Optionally fetch viewer counts from the most-recent row
       const viewerRes = await env.DB.prepare(`
@@ -77,7 +70,7 @@ export async function onRequestGet({ env }) {
       `).bind(...ids).all();
 
       for (const r of (viewerRes.results || [])) {
-        const target = live.find(l => l.id === r.creator_id);
+        const target = byId.get(r.creator_id);
         if (target) target.viewers = r.viewers;
       }
     }

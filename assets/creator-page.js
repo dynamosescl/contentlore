@@ -11,6 +11,8 @@
   const creatorId = creatorEl?.dataset?.creatorId;
   if (!creatorId) return;
 
+  const SAFE_PLATFORMS = new Set(['twitch', 'kick', 'youtube', 'tiktok']);
+
   (async () => {
     try {
       const res = await fetch(`/api/creator/${encodeURIComponent(creatorId)}`);
@@ -23,8 +25,10 @@
       // Group snapshots by platform
       const byPlatform = {};
       for (const s of data.snapshots) {
-        if (!byPlatform[s.platform]) byPlatform[s.platform] = [];
-        if (s.followers != null) byPlatform[s.platform].push(s);
+        const platform = normalisePlatform(s.platform);
+        if (!platform) continue;
+        if (!byPlatform[platform]) byPlatform[platform] = [];
+        if (s.followers != null) byPlatform[platform].push(s);
       }
 
       const platforms = Object.keys(byPlatform);
@@ -41,10 +45,18 @@
     }
   })();
 
+  function normalisePlatform(raw) {
+    const v = String(raw || '').toLowerCase();
+    return SAFE_PLATFORMS.has(v) ? v : '';
+  }
+
   function renderSparkline(platform, series) {
+    const safePlatform = normalisePlatform(platform);
+    if (!safePlatform || series.length < 1) return '';
+
     if (series.length < 2) {
       return `<div class="cl-sparkline-row">
-        <span class="cl-platform-tag ${platform}">${platform.toUpperCase()}</span>
+        <span class="cl-platform-tag ${safePlatform}">${safePlatform.toUpperCase()}</span>
         <span class="cl-muted">${series[0]?.followers?.toLocaleString() || '—'} followers (not enough history for sparkline)</span>
       </div>`;
     }
@@ -69,7 +81,7 @@
 
     return `<div class="cl-sparkline-row">
       <div class="cl-sparkline-meta">
-        <span class="cl-platform-tag ${platform}">${platform.toUpperCase()}</span>
+        <span class="cl-platform-tag ${safePlatform}">${safePlatform.toUpperCase()}</span>
         <span class="cl-spark-current">${last.toLocaleString()}</span>
         <span class="cl-spark-delta ${deltaClass}">${deltaSign}${delta.toLocaleString()}</span>
       </div>
