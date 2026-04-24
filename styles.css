@@ -2159,6 +2159,7 @@ body::before {
 }
 .cl-live-stat-breakdown .platform-square.twitch { background: var(--twitch); }
 .cl-live-stat-breakdown .platform-square.kick { background: var(--kick); }
+.cl-live-stat-breakdown .platform-square.youtube { background: var(--youtube); }
 
 .cl-signoff {
   margin-top: auto;
@@ -2183,6 +2184,37 @@ body::before {
 .cl-main {
   min-width: 0;
   position: relative;
+}
+
+.cl-live-header {
+  padding: 46px var(--gutter) 22px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(232,176,74,0.12), rgba(232,176,74,0));
+}
+.cl-live-header-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--signal);
+}
+.cl-live-header h1 {
+  margin-top: 12px;
+  font-family: var(--font-display);
+  font-size: clamp(48px, 8vw, 120px);
+  line-height: 0.9;
+  letter-spacing: 0.015em;
+}
+.cl-live-header h1 em {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--chrome);
+  text-transform: none;
+}
+.cl-live-header p {
+  margin-top: 10px;
+  font-size: 20px;
+  color: var(--text-2);
 }
 
 .cl-topbar {
@@ -2284,7 +2316,8 @@ body::before {
   background: var(--signal);
 }
 
-.cl-hero h1 {
+.cl-hero h1,
+.cl-hero h2 {
   font-family: var(--font-serif);
   font-weight: 500;
   font-size: clamp(64px, 10vw, 168px);
@@ -2295,7 +2328,8 @@ body::before {
   font-variation-settings: "opsz" 144, "SOFT" 100;
   animation: cl-fadeUp 1.1s ease-out 0.2s backwards;
 }
-.cl-hero h1 em {
+.cl-hero h1 em,
+.cl-hero h2 em {
   font-style: italic;
   font-weight: 400;
   color: var(--signal);
@@ -2386,6 +2420,129 @@ body::before {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-3);
+}
+
+/* ============================================================
+   DESK NAV — compact homepage structure
+   ============================================================ */
+.cl-desk-nav {
+  padding: 10px var(--gutter) 40px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cl-desk-nav-item {
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  padding: 16px;
+  transition: border-color .15s ease, transform .15s ease;
+}
+
+.cl-desk-nav-item:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.cl-desk-nav-label {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 8px;
+}
+
+.cl-desk-nav-item h3 {
+  font-family: var(--font-serif);
+  color: var(--text);
+  font-size: 23px;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin-bottom: 8px;
+}
+
+.cl-desk-nav-item p {
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .cl-desk-nav { grid-template-columns: 1fr; }
+}
+
+/* Watch 6 Live */
+.cl-watch6 {
+  padding: 28px var(--gutter) 32px;
+  border-bottom: 1px solid var(--line);
+}
+.cl-watch6-head h2 {
+  margin-top: 10px;
+  font-family: var(--font-serif);
+  font-size: clamp(36px, 4vw, 58px);
+  line-height: 0.96;
+}
+.cl-watch6-head h2 em { color: var(--signal); }
+.cl-watch6-head p { color: var(--text-2); margin-top: 10px; }
+.cl-watch6-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.cl-watch6-card {
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  padding: 14px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cl-watch6-card:hover { border-color: var(--accent); }
+.cl-watch6-platform {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  padding: 3px 7px;
+}
+.cl-watch6-platform.twitch { border-color: rgba(145,70,255,0.5); }
+.cl-watch6-platform.kick { border-color: rgba(83,255,26,0.45); }
+.cl-watch6-platform.youtube { border-color: rgba(255,0,0,0.45); }
+.cl-watch6-identity { display: flex; gap: 10px; align-items: center; }
+.cl-watch6-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-card); border: 1px solid var(--line);
+}
+.cl-watch6-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cl-watch6-name { font-weight: 600; font-size: 18px; color: var(--text); }
+.cl-watch6-handle { color: var(--text-3); font-family: var(--font-mono); font-size: 11px; }
+.cl-watch6-meta { display: flex; justify-content: space-between; gap: 12px; color: var(--text-2); font-size: 13px; }
+.cl-watch6-cta {
+  margin-top: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--signal);
+}
+.cl-watch6-loading {
+  color: var(--text-2);
+  border: 1px dashed var(--line-strong);
+  padding: 20px;
+}
+@media (max-width: 1100px) {
+  .cl-watch6-grid { grid-template-columns: 1fr; }
 }
 
 /* ============================================================
@@ -2498,6 +2655,45 @@ body::before {
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
+.cl-pulse-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 0 56px 18px 0;
+  flex-wrap: wrap;
+}
+
+.cl-pulse-pills {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cl-pulse-pill {
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.cl-pulse-pill:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.cl-pulse-pill.active {
+  border-color: var(--accent);
+  background: rgba(232,176,74,0.12);
+  color: var(--text);
+}
+
 .cl-pulse-scroll {
   display: flex;
   gap: 20px;
@@ -2549,6 +2745,12 @@ body::before {
 .cl-tile:nth-child(5) { animation-delay: 0.34s; }
 .cl-tile:nth-child(6) { animation-delay: 0.40s; }
 .cl-tile:nth-child(7) { animation-delay: 0.46s; }
+
+@media (max-width: 900px) {
+  .cl-pulse-controls {
+    margin-right: 24px;
+  }
+}
 
 /* Skeleton state — shown while Pulse data loads */
 .cl-tile--skeleton {
@@ -2696,7 +2898,7 @@ body::before {
   overflow: hidden;
 }
 .cl-paper::before {
-  content: "03";
+  content: "04";
   position: absolute;
   top: -20px;
   left: var(--gutter);
@@ -3251,6 +3453,7 @@ body::before {
 }
 .platform-square.twitch { background: var(--twitch); }
 .platform-square.kick   { background: var(--kick); }
+.platform-square.youtube { background: var(--youtube); }
 
 /* ----- Filter bar ----- */
 .cl-discover-filters {

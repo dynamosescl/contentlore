@@ -1,267 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-GB">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ContentLore · The home of UK streaming culture.</title>
-<meta name="description" content="Editorial intelligence on the British streaming scene. People, places, platforms and community — written from inside the scene. 285 UK creators tracked across Twitch and Kick.">
-<meta name="theme-color" content="#0A0A0B">
-
-<!-- Open Graph -->
-<meta property="og:title" content="ContentLore · The home of UK streaming culture.">
-<meta property="og:description" content="Editorial intelligence on the British streaming scene. 285 UK creators tracked live across Twitch and Kick.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://contentlore.com/">
-<meta property="og:site_name" content="ContentLore">
-<meta property="og:image" content="https://contentlore.com/api/og/home">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ContentLore · The home of UK streaming culture.">
-<meta name="twitter:description" content="Editorial intelligence on the British streaming scene. 285 UK creators tracked live.">
-<meta name="twitter:image" content="https://contentlore.com/api/og/home">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500;1,6..72,600&family=Anton&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css">
-
-<script>
-// Today's date for the topbar
-document.addEventListener('DOMContentLoaded', () => {
-  const el = document.getElementById('today-date');
-  if (el) {
-    const d = new Date();
-    const opts = { day: 'numeric', month: 'long', year: 'numeric' };
-    el.textContent = d.toLocaleDateString('en-GB', opts);
-    const dow = document.getElementById('today-dow');
-    if (dow) {
-      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      dow.textContent = days[d.getDay()] + ' Edition';
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ContentLore — Coming Soon</title>
+  <meta name="description" content="ContentLore is being rebuilt. A new experience is coming soon." />
+  <meta name="theme-color" content="#0b0b12" />
+  <meta property="og:title" content="ContentLore — Coming Soon" />
+  <meta property="og:description" content="We're rebuilding ContentLore. Check back soon." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://contentlore.com/" />
+  <meta property="og:site_name" content="ContentLore" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ContentLore — Coming Soon" />
+  <meta name="twitter:description" content="We're rebuilding ContentLore. Check back soon." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Outfit:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #08080d;
+      --bg2: #111122;
+      --text: #f4f5ff;
+      --muted: #a8adcc;
+      --line: rgba(255,255,255,.16);
+      --accent: #9f7aea;
+      --accent2: #22d3ee;
     }
-  }
-});
-</script>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1000px 500px at 20% -10%, rgba(159,122,234,.30), transparent 55%),
+        radial-gradient(1000px 500px at 90% 120%, rgba(34,211,238,.20), transparent 60%),
+        linear-gradient(160deg, var(--bg), var(--bg2));
+    }
+    .card {
+      width: min(760px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: clamp(28px, 6vw, 56px);
+      background: rgba(10, 11, 20, .58);
+      backdrop-filter: blur(6px);
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    }
+    .logo {
+      font-family: Outfit, Inter, sans-serif;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: clamp(18px, 2.2vw, 22px);
+      margin: 0 0 20px;
+      color: #d9dcff;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 7vw, 70px);
+      line-height: .98;
+      letter-spacing: -.02em;
+      font-weight: 800;
+      text-wrap: balance;
+    }
+    p {
+      margin: 18px auto 0;
+      max-width: 56ch;
+      color: var(--muted);
+      font-size: clamp(16px, 2.6vw, 21px);
+      line-height: 1.45;
+    }
+    .dots {
+      display: inline-flex;
+      gap: 8px;
+      margin-top: 26px;
+      align-items: center;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(159,122,234,.6);
+      animation: pulse 1.8s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: .22s; background: #7c8fff; }
+    .dot:nth-child(3) { animation-delay: .44s; background: var(--accent2); }
+    @keyframes pulse {
+      0% { transform: scale(.94); box-shadow: 0 0 0 0 rgba(159,122,234,.6); }
+      70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(159,122,234,0); }
+      100% { transform: scale(.94); box-shadow: 0 0 0 0 rgba(159,122,234,0); }
+    }
+  </style>
 </head>
 <body>
-
-<div class="cl-app">
-
-  <!-- ================================================================
-       SIDEBAR (shared component, same on every page)
-       ================================================================ -->
-  <aside class="cl-sidebar">
-    <a href="/" class="cl-masthead">Content<em>Lore</em><span class="cl-mark"></span></a>
-    <div class="cl-masthead-sub">The UK Streaming Desk · Est. 2026</div>
-
-    <div class="cl-nav-section">
-      <div class="cl-nav-section-label">Sections</div>
-      <ul class="cl-nav-list">
-        <li><a href="/people/" class="active">People <span class="cl-count" id="sidebar-people-count">285</span></a></li>
-        <li><a href="/places/">Places <span class="cl-count">soon</span></a></li>
-        <li><a href="/platforms/">Platforms <span class="cl-count" id="sidebar-platforms-count">02</span></a></li>
-        <li><a href="/community/">Community <span class="cl-count">soon</span></a></li>
-      </ul>
+  <main class="card" aria-live="polite">
+    <div class="logo">ContentLore</div>
+    <h1>Coming Soon</h1>
+    <p>We’re rebuilding ContentLore from the ground up with a fresh design and clearer direction. Thanks for your patience — we’ll be back shortly.</p>
+    <div class="dots" aria-hidden="true">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
     </div>
-
-    <div class="cl-nav-section">
-      <div class="cl-nav-section-label">Read</div>
-      <ul class="cl-nav-list">
-        <li><a href="/discover/" class="small">Discover</a></li>
-        <li><a href="/the-platform/" class="small">The Platform</a></li>
-        <li><a href="/ledger/" class="small">The Ledger</a></li>
-        <li><a href="/gta-rp/" class="small">GTA RP</a></li>
-      </ul>
-    </div>
-
-    <div class="cl-live-stat" id="live-stat">
-      <div class="cl-live-stat-head">
-        <span class="cl-live-dot"></span>
-        Live signal
-      </div>
-      <div class="cl-live-stat-body">
-        <strong id="live-count">—</strong> creators live right now<br>
-        across Twitch and Kick.
-      </div>
-      <div class="cl-live-stat-breakdown">
-        <span><i class="platform-square twitch"></i> <span id="live-twitch">—</span></span>
-        <span><i class="platform-square kick"></i> <span id="live-kick">—</span></span>
-      </div>
-    </div>
-
-    <div class="cl-signoff">
-      <a href="/about/">About</a> · <a href="/ethics/">Ethics</a><br>
-      <a href="/contact/">Contact</a> · <a href="/claim">Claim profile</a><br><br>
-      © ContentLore 2026<br>
-      Independent UK publication
-    </div>
-  </aside>
-
-  <!-- ================================================================
-       MAIN
-       ================================================================ -->
-  <main class="cl-main">
-
-    <!-- TOPBAR -->
-    <div class="cl-topbar">
-      <div class="cl-topbar-left">
-        <span><strong>Issue 04</strong></span>
-        <span id="today-date">20 April 2026</span>
-        <span>GBP · BST</span>
-      </div>
-      <div id="today-dow">Monday Edition</div>
-    </div>
-
-    <!-- HERO -->
-    <section class="cl-hero">
-      <div class="cl-hero-main">
-        <div class="cl-hero-kicker">The Desk · Live from the British scene</div>
-        <h1>The home of <em>UK</em> streaming culture.</h1>
-        <p class="cl-hero-dek">We cover the British streaming scene the way it covers itself — <em>server by server, creator by creator, moment by moment</em>. 285 UK creators tracked live across Twitch and Kick. Editorial judgement, not platform algorithms.</p>
-        <div class="cl-hero-byline">By <strong>Dynamoses</strong> · Editor · Weekly, since April 2026</div>
-      </div>
-
-      <div class="cl-hero-aside">
-        <a href="/the-platform/" class="cl-side-teaser accent">
-          <div class="cl-tag">◆ The Platform</div>
-          <h3>alt:V · three-phase shutdown, final lights out 6 July 2026.</h3>
-          <div class="cl-meta">Ledger · 6 min</div>
-        </a>
-        <a href="/discover/" class="cl-side-teaser">
-          <div class="cl-tag">◆ Discover · new</div>
-          <h3>Every UK creator we track, filtered your way.</h3>
-          <div class="cl-meta">The Discovery Engine · v0.1</div>
-        </a>
-        <a href="/people/" class="cl-side-teaser">
-          <div class="cl-tag">◆ The Vault</div>
-          <h3><span id="vault-creators">285</span> UK creators tracked. <span id="vault-snapshots">24,740</span> snapshots logged.</h3>
-          <div class="cl-meta">Editorial index</div>
-        </a>
-      </div>
-    </section>
-
-    <!-- SCENE PULSE -->
-    <section class="cl-pulse">
-      <div class="cl-pulse-inner">
-        <div class="cl-pulse-header">
-          <div>
-            <div class="cl-section-label"><span class="cl-num">02</span> Scene Pulse</div>
-            <h2>Who's <em>rising</em> right now.</h2>
-          </div>
-          <div class="cl-pulse-meta">
-            <span class="cl-refresh-live" id="pulse-refresh">Live · refreshes every minute</span><br>
-            7-day follower momentum<br>
-            <span id="pulse-count">285</span> creators tracked
-          </div>
-        </div>
-
-        <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-          <defs>
-            <linearGradient id="clSparkGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#E8B04A" stop-opacity="0.25"/>
-              <stop offset="100%" stop-color="#E8B04A" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-        </svg>
-
-        <div class="cl-pulse-scroll" id="pulse-scroll">
-          <!-- Populated by /assets/pulse.js from /api/momentum
-               Five skeleton tiles shown until data arrives -->
-          <div class="cl-tile cl-tile--skeleton">
-            <div class="cl-tile-top"><span class="cl-skel cl-skel--rank"></span></div>
-            <div class="cl-skel cl-skel--name"></div>
-            <div class="cl-skel cl-skel--handle"></div>
-            <div class="cl-tile-stats"><div class="cl-skel cl-skel--delta"></div></div>
-          </div>
-          <div class="cl-tile cl-tile--skeleton">
-            <div class="cl-tile-top"><span class="cl-skel cl-skel--rank"></span></div>
-            <div class="cl-skel cl-skel--name"></div>
-            <div class="cl-skel cl-skel--handle"></div>
-            <div class="cl-tile-stats"><div class="cl-skel cl-skel--delta"></div></div>
-          </div>
-          <div class="cl-tile cl-tile--skeleton">
-            <div class="cl-tile-top"><span class="cl-skel cl-skel--rank"></span></div>
-            <div class="cl-skel cl-skel--name"></div>
-            <div class="cl-skel cl-skel--handle"></div>
-            <div class="cl-tile-stats"><div class="cl-skel cl-skel--delta"></div></div>
-          </div>
-          <div class="cl-tile cl-tile--skeleton">
-            <div class="cl-tile-top"><span class="cl-skel cl-skel--rank"></span></div>
-            <div class="cl-skel cl-skel--name"></div>
-            <div class="cl-skel cl-skel--handle"></div>
-            <div class="cl-tile-stats"><div class="cl-skel cl-skel--delta"></div></div>
-          </div>
-          <div class="cl-tile cl-tile--skeleton">
-            <div class="cl-tile-top"><span class="cl-skel cl-skel--rank"></span></div>
-            <div class="cl-skel cl-skel--name"></div>
-            <div class="cl-skel cl-skel--handle"></div>
-            <div class="cl-tile-stats"><div class="cl-skel cl-skel--delta"></div></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SOCIAL GRAPH — who connected to whom this week -->
-    <section class="cl-graph-strip" id="cl-graph-strip">
-      <div class="cl-graph-strip-inner">
-        <div class="cl-section-label"><span class="cl-num">03</span> Scene Graph</div>
-        <h2>Who <em>raided</em> whom this week.</h2>
-        <p class="cl-graph-strip-dek">Raids, hosts and shoutouts pulled from live stream titles across Twitch and Kick. Seven-day rolling window.</p>
-        <div class="cl-graph-list" id="cl-graph-list">
-          <div class="cl-graph-loading">Reading the scene\u2026</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PAPER SECTION — light contrast, stats -->
-    <section class="cl-paper">
-      <div class="cl-paper-inner">
-        <div class="cl-section-label"><span class="cl-num">04</span> The Index</div>
-        <h2>Read by the scene. <em>Trusted</em> by the industry.</h2>
-
-        <div class="cl-paper-grid">
-          <div class="cl-paper-card">
-            <span class="cl-stat-big" id="stat-creators">285</span>
-            <h3>UK creators tracked</h3>
-            <p>Verified individuals on Twitch and Kick, discovered through live sampling and self-claim. Growing every week we file.</p>
-          </div>
-          <div class="cl-paper-card">
-            <span class="cl-stat-big" id="stat-snapshots">24,740</span>
-            <h3>Snapshots logged</h3>
-            <p>Hourly follower and viewer captures across every tracked creator. The record of who rose, who fell, and when.</p>
-          </div>
-          <div class="cl-paper-card">
-            <span class="cl-stat-big" id="stat-platforms">2</span>
-            <h3>Platforms covered</h3>
-            <p>Twitch and Kick live today. YouTube and TikTok next. We go where UK streamers actually are — not where a dashboard says they should be.</p>
-          </div>
-          <div class="cl-paper-card">
-            <span class="cl-stat-big">01</span>
-            <h3>Point of view</h3>
-            <p>Independent. No platform partnerships. No algorithmic ranking. Editorial judgement, made by someone who streams.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="cl-footer-v2">
-      <div>ContentLore · Independent UK streaming publication</div>
-      <div>
-        <a href="/about/">About</a> ·
-        <a href="/ethics/">Ethics</a> ·
-        <a href="/contact/">Contact</a> ·
-        <a href="/claim">Claim profile</a>
-      </div>
-    </footer>
-
   </main>
-</div>
-
-<script src="/assets/pulse.js" defer></script>
-<script src="/assets/livecount.js" defer></script>
-<script src="/assets/homepage-stats.js" defer></script>
-<script src="/assets/graph-strip.js" defer></script>
 </body>
 </html>

@@ -1,23 +1,26 @@
 // ================================================================
 // functions/api/live.js
 // GET /api/live
-// Returns current count of live creators across Twitch + Kick.
+// Returns current count of live creators across platforms.
 // Polled by the sidebar live indicator.
 // Uses KV cache (3 min TTL) to avoid hammering platform APIs.
 // ================================================================
 
-import { jsonResponse, fetchTwitchStream, fetchKickChannel } from '../_lib.js';
+import { jsonResponse } from '../_lib.js';
 
 export async function onRequestGet({ env }) {
   try {
     // Check KV cache first
     const cached = await env.KV.get('live:counts', 'json');
     if (cached && cached.ts && (Date.now() - cached.ts) < 180000) {
+      const platformCounts = cached.platform_counts || {};
       return jsonResponse({
         ok: true,
         total: cached.total,
-        twitch: cached.twitch,
-        kick: cached.kick,
+        twitch: cached.twitch ?? platformCounts.twitch ?? 0,
+        kick: cached.kick ?? platformCounts.kick ?? 0,
+        youtube: cached.youtube ?? platformCounts.youtube ?? 0,
+        platform_counts: platformCounts,
         cached: true,
       });
     }
@@ -44,22 +47,26 @@ export async function onRequestGet({ env }) {
 
     const result = await env.DB.prepare(sql).bind(recentCutoff).all();
     const rows = result.results || [];
-    let twitch = 0;
-    let kick = 0;
+    const platformCounts = {};
+    let total = 0;
     for (const r of rows) {
-      if (r.platform === 'twitch') twitch = r.live_count;
-      if (r.platform === 'kick') kick = r.live_count;
+      const key = String(r.platform || '').toLowerCase();
+      const count = Number(r.live_count || 0);
+      platformCounts[key] = count;
+      total += count;
     }
-    const total = twitch + kick;
+    const twitch = platformCounts.twitch || 0;
+    const kick = platformCounts.kick || 0;
+    const youtube = platformCounts.youtube || 0;
 
     // Cache for 3 minutes
     await env.KV.put(
       'live:counts',
-      JSON.stringify({ total, twitch, kick, ts: Date.now() }),
+      JSON.stringify({ total, twitch, kick, youtube, platform_counts: platformCounts, ts: Date.now() }),
       { expirationTtl: 300 }
     );
 
-    return jsonResponse({ ok: true, total, twitch, kick, cached: false });
+    return jsonResponse({ ok: true, total, twitch, kick, youtube, platform_counts: platformCounts, cached: false });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }

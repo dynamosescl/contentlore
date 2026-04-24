@@ -6,6 +6,11 @@
 (function () {
   const container = document.getElementById('pulse-scroll');
   if (!container) return;
+  const platformFilter = document.getElementById('pulse-platform-filter');
+  const sizeFilter = document.getElementById('pulse-size-filter');
+  let activePlatform = 'all';
+  let activeLimit = 7;
+  let allMovers = [];
 
   const render = (movers) => {
     if (!movers || movers.length === 0) {
@@ -58,13 +63,35 @@
     }).join('');
   };
 
+  const applyFilters = () => {
+    const byPlatform = activePlatform === 'all'
+      ? allMovers
+      : allMovers.filter((m) => (m.primary_platform || '').toLowerCase() === activePlatform);
+    render(byPlatform.slice(0, activeLimit));
+  };
+
+  const syncActiveButtons = () => {
+    if (platformFilter) {
+      platformFilter.querySelectorAll('.cl-pulse-pill').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.platform === activePlatform);
+      });
+    }
+    if (sizeFilter) {
+      sizeFilter.querySelectorAll('.cl-pulse-pill').forEach((btn) => {
+        btn.classList.toggle('active', Number(btn.dataset.limit) === activeLimit);
+      });
+    }
+  };
+
   const fetchMovers = async () => {
     try {
-      const res = await fetch('/api/momentum?limit=7');
+      const res = await fetch('/api/momentum?limit=30');
       if (!res.ok) throw new Error('API failed');
       const data = await res.json();
       if (data.ok && data.movers) {
-        render(data.movers);
+        allMovers = data.movers;
+        applyFilters();
+        syncActiveButtons();
 
         // Update refresh timestamp
         const refreshEl = document.getElementById('pulse-refresh');
@@ -85,6 +112,26 @@
 
   // Kick off first fetch
   fetchMovers();
+
+  if (platformFilter) {
+    platformFilter.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-platform]');
+      if (!btn) return;
+      activePlatform = btn.dataset.platform || 'all';
+      syncActiveButtons();
+      applyFilters();
+    });
+  }
+
+  if (sizeFilter) {
+    sizeFilter.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-limit]');
+      if (!btn) return;
+      activeLimit = Number(btn.dataset.limit) || 7;
+      syncActiveButtons();
+      applyFilters();
+    });
+  }
 
   // Poll every 60 seconds so the "Live" label is actually true
   setInterval(fetchMovers, 60 * 1000);

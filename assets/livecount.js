@@ -10,6 +10,7 @@
   const countEl = document.getElementById('live-count');
   const twitchEl = document.getElementById('live-twitch');
   const kickEl = document.getElementById('live-kick');
+  const youtubeEl = document.getElementById('live-youtube');
   if (!stat || !countEl) return;
 
   const fetchLive = async () => {
@@ -25,6 +26,7 @@
         countEl.textContent = data.total || 0;
         if (twitchEl) twitchEl.textContent = `Twitch ${data.twitch || 0}`;
         if (kickEl) kickEl.textContent = `Kick ${data.kick || 0}`;
+        if (youtubeEl) youtubeEl.textContent = `YouTube ${data.youtube || 0}`;
       }
     } catch (e) {
       stat.style.display = 'none';

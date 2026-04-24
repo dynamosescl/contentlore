@@ -12,6 +12,24 @@
     return Number(n).toLocaleString('en-GB');
   };
 
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+
+  const setCreatorsEverywhere = (value) => {
+    setText('stat-creators', value);
+    setText('vault-creators', value);
+    setText('pulse-count', value);
+    setText('sidebar-people-count', value);
+    setText('hero-creators', value);
+  };
+
+  const setPlatformsEverywhere = (value) => {
+    setText('stat-platforms', value);
+    setText('sidebar-platforms-count', value);
+  };
+
   async function loadStats() {
     try {
       const res = await fetch('/api/stats');
@@ -19,29 +37,14 @@
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'stats not ok');
 
-      // Paper section stats
-      const c = document.getElementById('stat-creators');
-      const s = document.getElementById('stat-snapshots');
-      const p = document.getElementById('stat-platforms');
-      if (c) c.textContent = fmtCompact(data.creators);
-      if (s) s.textContent = fmtCompact(data.snapshots);
-      if (p) p.textContent = String(data.platforms).padStart(2, '0');
+      const creators = fmtCompact(data.creators);
+      const snapshots = fmtCompact(data.snapshots);
+      const platforms = String(data.platforms).padStart(2, '0');
 
-      // Hero aside Vault card
-      const vc = document.getElementById('vault-creators');
-      const vs = document.getElementById('vault-snapshots');
-      if (vc) vc.textContent = fmtCompact(data.creators);
-      if (vs) vs.textContent = fmtCompact(data.snapshots);
-
-      // Pulse meta counter
-      const pc = document.getElementById('pulse-count');
-      if (pc) pc.textContent = fmtCompact(data.creators);
-
-      // Sidebar nav counts
-      const sp = document.getElementById('sidebar-people-count');
-      const sPlat = document.getElementById('sidebar-platforms-count');
-      if (sp) sp.textContent = fmtCompact(data.creators);
-      if (sPlat) sPlat.textContent = String(data.platforms).padStart(2, '0');
+      setCreatorsEverywhere(creators);
+      setText('stat-snapshots', snapshots);
+      setText('vault-snapshots', snapshots);
+      setPlatformsEverywhere(platforms);
     } catch (err) {
       // Silent \u2014 the hard-coded fallback numbers remain in place.
       console.error('Stats load failed:', err);
