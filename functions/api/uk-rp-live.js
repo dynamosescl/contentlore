@@ -179,53 +179,31 @@ function buildTwitchEntry(entry, twitchResult) {
 }
 
 // ================================================================
-// Kick: v1 API with HTML scrape fallback when WAF blocks DC IPs
-// (mirrors contentlore-scheduler/src/polling.js pattern)
+// Kick: v1 with v2 fallback. Both return the same shape; trying both
+// gives us a different code path / edge-cache layer at Kick's CDN
+// in case one is WAF-blocked from CF datacenter IPs.
+//
+// (HTML scrape fallback was removed — Kick moved to Next.js 13 App
+// Router with self.__next_f.push streaming chunks. The old regex
+// targets — "session_title", "viewer_count", "profile_pic" — no
+// longer appear in the rendered HTML at all.)
 // ================================================================
 async function fetchKick(slug) {
-  // Attempt v1 API first
-  try {
-    const res = await fetch(`https://kick.com/api/v1/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
-    if (res.ok) {
-      const data = await res.json();
-      if (!data?.error) return { source: 'v1', data };
-    }
-  } catch { /* fall through */ }
-
-  // HTML scrape fallback
-  try {
-    const res = await fetch(`https://kick.com/${encodeURIComponent(slug)}`, {
-      headers: { ...KICK_HEADERS, 'Accept': 'text/html,*/*' },
-    });
-    if (!res.ok) return null;
-    const html = await res.text();
-
-    const livestreamMatch  = html.match(/"livestream"\s*:\s*(\{[^}]*\}|null)/);
-    const titleMatch       = html.match(/"session_title"\s*:\s*"([^"]+)"/);
-    const viewerMatch      = html.match(/"viewer_count"\s*:\s*(\d+)/);
-    const categoryMatch    = html.match(/"category"\s*:\s*\{\s*"id"\s*:\s*\d+\s*,\s*"name"\s*:\s*"([^"]+)"/);
-    const profilePicMatch  = html.match(/"profile_pic"\s*:\s*"([^"]+)"/);
-    const createdAtMatch   = html.match(/"livestream"[^}]*"created_at"\s*:\s*"([^"]+)"/);
-
-    const result = {
-      user: { profile_pic: profilePicMatch ? profilePicMatch[1].replace(/\\\//g, '/') : null },
-    };
-    if (livestreamMatch && livestreamMatch[1] !== 'null') {
-      result.livestream = {
-        session_title: titleMatch ? titleMatch[1].replace(/\\"/g, '"') : null,
-        viewer_count: viewerMatch ? parseInt(viewerMatch[1], 10) : 0,
-        categories: categoryMatch ? [{ name: categoryMatch[1] }] : [],
-        created_at: createdAtMatch ? createdAtMatch[1] : null,
-      };
-    }
-    return { source: 'html', data: result };
-  } catch {
-    return null;
+  for (const version of ['v1', 'v2']) {
+    try {
+      const res = await fetch(`https://kick.com/api/${version}/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
+      if (res.ok) {
+        const data = await res.json();
+        if (!data?.error) return { source: version, data };
+      }
+    } catch { /* try next version */ }
   }
+  return { source: 'failed', data: null };
 }
 
 function buildKickEntry(entry, kickData) {
   const data = kickData?.data;
+  const source = kickData?.source || 'failed';
   const display_name = entry.name;
   const avatar_url = data?.user?.profile_pic || null;
 
@@ -249,9 +227,10 @@ function buildKickEntry(entry, kickData) {
       started_at: startedAtSec,
       uptime_mins: uptimeMins,
       thumbnail_url: null,
+      _kick_source: source,
     };
   }
-  return offlineStub(entry, display_name, avatar_url);
+  return { ...offlineStub(entry, display_name, avatar_url), _kick_source: source };
 }
 
 function offlineStub(entry, display_name, avatar_url) {
