@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 80" width="480" height="80">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue');
+      .content { font-family: 'Bebas Neue', Impact, sans-serif; font-size: 56px; fill: #f5eef2; letter-spacing: 3px; }
+      .lore { font-family: 'Bebas Neue', Impact, sans-serif; font-size: 56px; fill: #e8308c; letter-spacing: 3px; filter: url(#glow); }
+    </style>
+  </defs>
+  <text x="10" y="60" class="content">CONTENT</text>
+  <text x="285" y="60" class="lore">LORE</text>
+</svg>
