@@ -1,4 +1,4 @@
-# ContentLore — Project Guide
+# ContentLore — Project Bible
 
 A living document for anyone (or any agent) working on this repo. Update as the project evolves.
 
@@ -6,7 +6,7 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 
 ## 1. Project Overview
 
-**ContentLore** is a UK GTA RP streaming intelligence platform. It tracks a curated 22-creator allowlist across Twitch and Kick, surfaces who's live, and provides a multi-stream viewer for the UK roleplay scene.
+**ContentLore** is a UK GTA RP streaming intelligence platform. It tracks a curated 22-creator allowlist across Twitch and Kick, surfaces who's live, and provides a multi-stream viewer for the UK roleplay scene. The differentiator vs. competitors (HasRoot, StreamsCharts, etc.) is **UK-scene focus** — none of them specialise in British GTA RP.
 
 **Stack**
 - **Hosting:** Cloudflare Pages (static + Functions) at `contentlore.com`
@@ -30,67 +30,146 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 
 ---
 
-## 2. Current State
+## 2. Current State (post-cleanup)
 
-**Active pages (10):**
-- `index.html`, `gta-rp/{,now/,multi/,servers/,fivem-enhanced/,gta-6/}`, `mod/`, `admin/{content,discovery}.html`
-- Top-level redirect stubs (kept for SEO continuity): `about/`, `contact/`, `creators/`, `ethics/`, `ledger/`, `rising/`, `signals/`, `the-platform/{,element-club/,frameworks/,tebex-audit/,2026/04/...}`, `gta-rp/{beef,lore}/`
+**Active pages (10):** `/`, `/gta-rp/{,now/,multi/,servers/,fivem-enhanced/,gta-6/}`, `/mod/`, `/admin/{content,discovery}.html`
 
-**Active Functions (11):**
-- Public read: `uk-rp-live` (curated allowlist, bypasses DB), `live-now` (DB-backed full live list), `creators`, `stats`, `beefs`, `lore-arcs`
-- Admin (Bearer `ADMIN_TOKEN`): `admin/{discovery, beef, lore, backfill-avatars}`
-- Shared: `_lib.js` (Twitch/Kick OAuth, helpers), `_scheduled.js` (legacy in-Pages cron, superseded by the worker)
+**Active Functions (11):** `uk-rp-live`, `live-now`, `creators`, `stats`, `beefs`, `lore-arcs`, `admin/{discovery, beef, lore, backfill-avatars}` — plus `_lib.js`, `_scheduled.js`
 
-**Data pipeline (every 15 min):**
-1. Worker `scheduler/polling.js` → polls 12 creators round-robin via `cron:live-scan:cursor`, writes `snapshots` (live state + viewer count + title), scrapes mentions into `creator_edges`
-2. Worker `scheduler/sessions.js` → stitches consecutive `is_live=1` snapshots into `stream_sessions` (gap > 20 min closes a session)
-3. Worker `scheduler/scenes.js` → groups live creators by detected server → writes `scene_snapshots`
-4. Worker `scheduler/discovery.js` → scans Twitch GTA V category for new UK RP streams → upserts into `pending_creators`
-5. `/api/uk-rp-live` does NOT use this DB pipeline — it queries Twitch + Kick directly per request (30s KV cache) for the 22 curated handles
+**22-creator allowlist:**
+- 16 Twitch: tyrone, lbmm, reeclare, stoker, samham, deggyuk, megsmary, tazzthegeeza, wheelydev, rexality, steeel, justj0hnnyhd, cherish_remedy, lorddorro, jck0__, absthename
+- 6 Kick: kavsual, shammers, bags, dynamoses, dcampion, elliewaller
 
-**Critical caveat:** the curated 22 are mostly NOT in the DB. The DB has ~7,766 auto-discovered creators that don't matter for the product. The hub bypasses this entirely via `/api/uk-rp-live`.
+**12 UK servers tracked:** Unique, TNG, Orbit, New Era, Prodigy, D10, Unmatched, VeraRP, The Endz, Let's RP, Drill UK, British Life
+
+**Data pipeline:** Scheduler worker (every 15 min) → polls Twitch/Kick → `snapshots` → `stream_sessions` → `scene_snapshots`. `/api/uk-rp-live` bypasses DB entirely and queries Twitch + Kick APIs directly for the 22 allowlisted creators (30s KV cache).
+
+**Codebase size:** ~4,000 lines after cleanup (was ~15,000). Zero orphaned Functions. Zero dead assets. Zero pink/magenta surfaces remaining (all electric blue/cyan).
 
 ---
 
-## 3. Roadmap
+## 3. Competitive Landscape
 
-Phase boundaries are guidelines, not contracts. Reorder freely.
+**HasRoot** (`gtarp.hasroot.com`) is the closest competitor — US-focused, tracks NoPixel + 20 other servers. Features ContentLore doesn't have yet:
+- Clip Activity Feed (auto-pulls trending Twitch clips)
+- Clip Search across all tracked creators
+- VOD History browser
+- Streamer Activity Timeline (visual schedule heatmap)
+- Character Database (who plays which character on which server)
+- Server-specific subdomains
+- Streamer Login (creators claim their profile)
+- Browser push notifications when tracked creators go live
 
-### Phase 1 — Polish (quick wins)
-- [ ] Add the missing `body::after` CRT flicker animation to `index.html` so the homepage matches the rest of `/gta-rp/*`
-- [ ] Compress `logo.png` (298 KB → ~50 KB target). Loaded eagerly on every page; biggest single asset
-- [ ] Move Twitch thumbnail `{width}x{height}` substitution from `gta-rp/index.html`'s `getThumb()` into `/api/uk-rp-live` server-side (return concrete URLs for two sizes)
-- [ ] Add cache headers to hot endpoints: `s-maxage=20` on `/api/uk-rp-live`, `s-maxage=15` on `/api/live-now`. The KV cache already de-dupes; CF edge cache would let multiple users share one fetch
-- [ ] Unify admin design: port `admin/content.html` and `admin/discovery.html` from Oswald/magenta-cyan to Bebas/oklch — or fold both into `/mod/` as new tabs and retire `admin/*.html`
+**Other analytics platforms:**
+- **StreamsCharts** — multi-platform live stats
+- **SullyGnome** — Twitch deep analytics
+- **TwitchTracker** — Twitch stats and charts
+- **GTA Genius** — GTA RP specific
 
-### Phase 2 — Features
-- [ ] Creator profile pages: `/creator/{handle}` showing stream history, peak/avg viewers, primary servers, follower trend. Source: `stream_sessions` + `snapshots` for the curated 22
-- [ ] Server detail pages with CFX live player counts (CFX has a public API). Currently `/gta-rp/servers/` only shows live-streaming creator counts
-- [ ] Scene detection: auto-tag which server each creator is on from their stream title. Reuse the keyword logic in `scheduler/scenes.js`
-- [ ] `/now` page enrichment once `scene_snapshots` has accumulated multiple weeks: server-population deltas, "trending up/down" servers
-- [ ] Mod panel: in-UI allowlist editor — currently the 22-creator list is hardcoded in `functions/api/uk-rp-live.js`. Move to D1 or KV so it can be edited without a deploy
-
-### Phase 3 — Growth
-- [ ] Expand allowlist beyond 22 — fix the discovery-to-approval pipeline (also covers the C2 schema bug fix from the cleanup pass; smoke-test live before relying on it)
-- [ ] Social sharing — generate OG images per page (homepage, hub, multi, individual creators). The old `og/*` Functions were deleted in cleanup; re-add when needed
-- [ ] Discord webhook on allowlisted creator going live (poll-based: scheduler detects state transition `is_live: false → true`)
-- [ ] Weekly digest — server-rendered page or email summarising scene activity (top creators by hours, biggest single streams, new beefs)
-- [ ] Mobile PWA — manifest + service worker; the multi-view especially benefits from "add to home screen" on tablets
-
-### Phase 4 — Intelligence
-- [ ] Historical analytics — viewer trends per creator, server population charts. `stream_sessions` already has the data; needs a chart-rendering surface
-- [ ] Creator network graph — render `creator_edges` (raid/host/shoutout) as an interactive graph. Old `assets/network.js` had a draft; deleted in cleanup but recoverable from git history
-- [ ] Server health scores — composite of live-creator count, total viewers, viewer retention; surface trend arrows on `/gta-rp/servers/`
-- [ ] Automated daily/weekly scene reports — AI-generated summaries of what happened. `ANTHROPIC_API_KEY` is already provisioned (was used by the deleted `enrich-batch.js`)
+**Niche advantage:** none of them focus on the UK scene. That's our wedge — be the definitive UK GTA RP discovery + intelligence surface.
 
 ---
 
-## 4. Architecture
+## 4. Platform Expansion
+
+The site currently tracks Twitch + Kick. Expansion plan:
+
+**Kick — migrate to official API**
+Now has official public API at `docs.kick.com` with OAuth 2.1. Endpoints: channels, livestreams, categories. Has webhooks for `stream.online` / `stream.offline` events. ContentLore should migrate from v1/v2 endpoint scraping to the official API. `KICK_CLIENT_ID` and `KICK_CLIENT_SECRET` already set in env.
+
+**TikTok — content discovery layer**
+Most UK GTA RP creators post highlights to TikTok. Display API gives profile info + recent videos. Embed API shows TikTok videos inline. Use for surfacing clips/highlights — not live tracking. Requires TikTok developer registration + app review (3-7 days).
+
+**YouTube — long-form content footprint**
+Some creators upload VODs and edited content. YouTube Data API v3 gives channel stats, recent uploads, live stream status. Free tier generous (10,000 quota/day). Useful for creator profiles showing full content footprint.
+
+---
+
+## 5. Design Direction
+
+**Established (DONE):**
+- Site-wide colour: electric blue/cyan `oklch(0.82 0.20 195)` — zero pink remaining
+- Fonts: Bebas Neue (display), Inter (body), JetBrains Mono (code)
+- Effects: scanline overlay, CRT flicker, neon glow animations on hub pages
+- Logo: CL monogram with play button (ChatGPT-generated, recoloured to blue)
+
+**Outstanding:**
+- More animations / micro-interactions
+- Hero background videos
+- Card depth (shadow layering, parallax)
+- Mobile-first multi-view layout
+- Homepage CRT flicker animation (`body::after` missing — present on `/gta-rp/*` but not `/`)
+- Compress `logo.png` from 298 KB to ~50 KB
+- Admin pages (`admin/content.html`, `admin/discovery.html`) still use old Oswald/magenta design — port to Bebas/oklch or merge into `/mod/`
+
+---
+
+## 6. Roadmap
+
+Phase boundaries are guidelines, not contracts. Reorder freely. `[x]` = done, `[~]` = code complete pending verification, `[ ]` = open.
+
+### PHASE 1 — FOUNDATION (quick wins)
+- [ ] Switch to official Kick API (drop v1/v2 endpoint reliance in both `functions/api/uk-rp-live.js` and `contentlore-scheduler/src/polling.js`)
+- [ ] Fix homepage CRT flicker (missing `body::after` animation)
+- [ ] Compress `logo.png` (298 KB → ~50 KB via WebP or PNG optimisation)
+- [ ] Move stream thumbnail `{width}x{height}` substitution server-side in `uk-rp-live`
+- [ ] Add cache headers to hot endpoints (`s-maxage=20` on `uk-rp-live` and `live-now`)
+- [ ] Add TikTok + YouTube handle fields to allowlist data structure
+- [ ] Port `admin/content.html` and `admin/discovery.html` to Bebas/oklch design (or merge into mod panel)
+- [~] Fix `/api/admin/discovery` approve flow (schema mismatch — fixed in commit `7d02190`, **needs smoke test against live D1**)
+- [x] Delete `migrations/007_scene_snapshots.sql` (conflict with 004) — done in cleanup
+- [x] Scheduler: fix broken Kick HTML regex in `contentlore-scheduler/src/polling.js` — done in commit `0ff3d31` (replaced with v1→v2 fallback; will be superseded by official Kick API migration)
+
+### PHASE 2 — ENGAGEMENT (the features that drive repeat visits)
+
+- [ ] **Clip Wall** — auto-pull top clips from Twitch Clips API + Kick clips for all 22 creators. Masonry grid, filterable by creator/server/platform/date. Click to play inline. Share button. **#1 traffic driver.**
+- [ ] **Creator Profiles** — individual page per creator at `/creator/{handle}`. Multi-platform presence (Twitch, Kick, TikTok, YouTube links with follower counts). Stream history heatmap (30 days). Stats (avg viewers, peak, hours, top servers). Recent clips. Server affinity from title detection. Social links. "Claim this profile" flow for creators to verify and add info.
+- [ ] **Server Status Dashboard** — "flight departures board" aesthetic. CFX API integration for real-time player counts (`https://servers-frontend.fivem.net/api/servers/single/{server_id}`). Rows: Server Name | Status | Players/Max | Peak Today | Top Streamer. Historical population line charts. Health indicator (growing/stable/declining from 30-day trend). Alert when server hits peak. Refreshes every 60s.
+- [ ] **Scene Timeline / "What Happened Today"** — visual timeline showing who was live when, which server, how long. Like a TV guide for RP. Review yesterday's scene at a glance. Uses `scene_snapshots` data from scheduler.
+
+#### Multi-View Improvements
+- [ ] Mobile layout — single stream with swipeable tabs for switching creators + chat
+- [ ] Bigger tiles — when only 1-2 streams selected, make them fill the screen properly
+- [ ] Stream info overlay — show game name, viewer count, uptime below each tile (not just badges)
+- [ ] Picture-in-picture mode — pop out a stream while browsing other pages
+- [ ] Quick-add from live page — button on each stream card that adds directly to multi-view without navigating
+- [ ] Layout presets — 1×1 (focus), 2×1 (side by side), 2×2 (quad), 3×2 (six pack)
+- [ ] Persistent selections — remember your last multi-view setup across sessions (localStorage)
+- [ ] Better empty state — show previews/thumbnails of who's live with one-click add buttons instead of just "Stage's empty"
+- [ ] Fix Twitch autoplay warning — ensure iframe is visible before loading `src` to satisfy Twitch's style-visibility requirement
+
+### PHASE 3 — GAMIFICATION (community stickiness)
+- [ ] **Watch Streaks** — track daily visits (opt-in, persistent storage API). Streak counter. Badges: Week Warrior (7d), Month Regular (30d), Scene Veteran (100d). Leaderboard. Could tie into Discord roles for verified streak holders.
+- [ ] **"Who Should I Watch?" Randomiser** — button picks a currently-live creator and loads their stream. Fun discovery mechanism.
+- [ ] **Predictions / Polls** — "Who will have most viewers tonight?", "Which server busiest this weekend?" Community votes with tracked results.
+- [ ] **RP Awards** — monthly community vote: Best Newcomer, Most Dramatic Scene, Best Police Chase, Funniest Moment. Drives engagement and creator recognition.
+- [ ] **Scene Bingo** — auto-generated bingo card per session: "Someone gets pulled over", "Gang war starts", "Tyrone does something chaotic". Community marks off squares.
+
+### PHASE 4 — INTELLIGENCE (data depth)
+- [ ] **GTA 6 Deep Dive** — live news feed (RSS / web sources) about GTA 6 RP modding progress. Community sentiment tracker poll with historical results. Creator transition plans (survey data). Visual countdown timeline with milestones. Impact calculator ("If X% viewers move to GTA 6, here's what happens to UK scene").
+- [ ] **FiveM Enhanced Deep Dive** — real migration status per server (not just "monitoring" — actual data from server owners). Technical changelog per update. Framework compatibility matrix (ESX, QBCore, QBOX Enhanced-readiness). Creator impact section (who's mentioned Enhanced on stream via title keyword detection).
+- [ ] **Historical Analytics** — viewer trends over time per creator. Server population charts. Scene activity heatmap (hours × days of week showing when UK scene is busiest).
+- [ ] **Creator Network Graph** — visual graph showing who raids/hosts who. Data already in `creator_edges` table. Interactive network visualisation.
+- [ ] **Weekly Scene Digest** — auto-generated "This Week in UK GTA RP" page: peak moments, new creators, server changes, top clips. Could also push to Discord webhook.
+- [ ] **Creator Growth Tracker** — follower/viewer growth over time per creator. "Fastest growing" weekly highlight.
+
+### PHASE 5 — GROWTH (external reach)
+- [ ] **Discord Bot** — when any allowlist creator goes live, post to Discord channel with embed (thumbnail, game, viewers). Free marketing that drives traffic back to site.
+- [ ] **Browser Push Notifications** — opt-in alerts when favourite creators go live.
+- [ ] **Social Sharing** — OG images auto-generated for each page. Share cards for clips, creator profiles, scene summaries.
+- [ ] **Mobile PWA** — service worker, offline support, install prompt. Multi-view needs mobile layout (one stream + swipeable chat tabs).
+- [ ] **Character Wiki** — community-contributed character database. Who plays who on which server. Search by character name. Huge for RP — viewers know character names not streamer names.
+- [ ] **Sound Alerts** — GTA-themed sound when someone goes live (optional, toggleable). Vice City radio jingle vibes.
+
+---
+
+## 7. Architecture
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
 │                         DATA SOURCES                               │
-│   Twitch helix API           Kick v1/v2 API + HTML scrape          │
+│   Twitch helix          Kick v1/v2 (→ official API in Phase 1)     │
+│   (Future: TikTok Display API, YouTube Data API v3)                │
 └──────────────┬───────────────────────────┬─────────────────────────┘
                │                           │
                ▼                           ▼
@@ -125,11 +204,11 @@ Phase boundaries are guidelines, not contracts. Reorder freely.
            ▼                                  ▼
 ┌──────────────────────────────────────────────────────┐
 │  Pages Functions (read-side)                         │
-│   /api/live-now    DB-backed live list                │
-│   /api/creators    paged directory                    │
-│   /api/stats       aggregates                         │
-│   /api/beefs       /api/lore-arcs   editorial         │
-│   /api/admin/*     write surface (Bearer token)       │
+│   /api/live-now    DB-backed live list               │
+│   /api/creators    paged directory                   │
+│   /api/stats       aggregates                        │
+│   /api/beefs       /api/lore-arcs   editorial        │
+│   /api/admin/*     write surface (Bearer token)      │
 └──────────────────────┬───────────────────────────────┘
                        │
                        ▼
@@ -157,7 +236,7 @@ Phase boundaries are guidelines, not contracts. Reorder freely.
 
 ---
 
-## 5. Credentials (env vars)
+## 8. Credentials (env vars)
 
 Set in the Cloudflare dashboard for each project. **Never commit values.**
 
@@ -166,24 +245,31 @@ Set in the Cloudflare dashboard for each project. **Never commit values.**
 |---|---|---|
 | `TWITCH_CLIENT_ID` | `_lib.js`, `uk-rp-live` | helix API |
 | `TWITCH_CLIENT_SECRET` | same | helix API OAuth |
-| `KICK_CLIENT_ID` | `_lib.js` | optional — public Kick API |
-| `KICK_CLIENT_SECRET` | same | optional |
+| `KICK_CLIENT_ID` | `_lib.js`, future official API client | Kick OAuth 2.1 |
+| `KICK_CLIENT_SECRET` | same | Kick OAuth 2.1 |
 | `ADMIN_TOKEN` | `admin/{discovery, beef, lore, backfill-avatars}` | Bearer auth |
-| `ADMIN_PASSWORD` | `_lib.js`'s `requireAdminAuth` | currently unused after cleanup; kept for future legacy revival |
-| `ANTHROPIC_API_KEY` | currently unused after cleanup | reserved for Phase 4 AI summaries |
+| `ADMIN_PASSWORD` | `_lib.js`'s `requireAdminAuth` | currently unused after cleanup; kept for legacy revival |
+| `ANTHROPIC_API_KEY` | currently unused | reserved for Phase 4 AI summaries |
+
+**Planned (Phase 1+):**
+| Var | Purpose |
+|---|---|
+| `TIKTOK_CLIENT_KEY` / `TIKTOK_CLIENT_SECRET` | TikTok Display + Embed APIs |
+| `YOUTUBE_API_KEY` | YouTube Data API v3 |
+| `DISCORD_WEBHOOK_URL` | Phase 5 live notifications |
 
 **Scheduler worker (`contentlore-scheduler`)**
 | Var | Purpose |
 |---|---|
 | `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | polling |
-| `KICK_CLIENT_ID` / `KICK_CLIENT_SECRET` | optional |
+| `KICK_CLIENT_ID` / `KICK_CLIENT_SECRET` | polling (and official API after migration) |
 | `ADMIN_PASSWORD` | gates `/trigger`, `/rebuild-sessions`, `/backfill-sessions` |
 
 **Two-token gotcha:** the Pages admin endpoints use `ADMIN_TOKEN` (Bearer). The scheduler worker uses `ADMIN_PASSWORD` (`X-Admin-Password` header). The mod panel knows both — token for Pages calls, password for scheduler calls. Don't unify them without updating mod panel JS.
 
 ---
 
-## 6. Deployment
+## 9. Deployment
 
 ### Pages site (auto-deploys from git)
 ```bash
@@ -209,7 +295,7 @@ npx wrangler d1 execute contentlore-db --file=migrations/00X_name.sql
 # Production
 npx wrangler d1 execute contentlore-db --file=migrations/00X_name.sql --remote
 ```
-Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. **Migration numbering has duplicates** (two `005_` files, `004` and `007` both for scene_snapshots before the 007 cleanup). Pick the next free number for new ones.
+Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. **Migration numbering has duplicates** (two `005_` files). Pick the next free number for new ones.
 
 ### Smoke tests after deploy
 ```bash
@@ -221,10 +307,12 @@ All three should return non-zero numbers. The scheduler `/status` shows the most
 
 ---
 
-## 7. Conventions & gotchas
+## 10. Conventions & gotchas
 
 - **All handles are stored lowercase.** Compare lowercased on both sides
-- **The 22-creator allowlist** is duplicated between `gta-rp/index.html` and `gta-rp/multi/index.html` (legacy) and `functions/api/uk-rp-live.js` (canonical). The HTML copies are no longer used since the endpoint returns the full list — safe to drop on next touch
-- **Kick HTML scraping is dead** — Kick moved to Next.js streaming hydration (April 2026). Don't try to regex the page; use v1 with v2 fallback (already done in `uk-rp-live.js` and `scheduler/polling.js`)
+- **Allowlist source of truth** is `functions/api/uk-rp-live.js`. Phase 2's "in-UI allowlist editor" task will move it to D1/KV for editability
+- **Kick v1/v2 endpoint scraping** is the current fallback chain after the HTML regex died (Kick switched to Next.js streaming hydration in April 2026). Phase 1's official API migration replaces both
 - **`_redirects` has a SPA-style catch-all** (`/* /index.html 200`). Any unmatched route returns the homepage with HTTP 200, never a real 404. Useful for SEO continuity, but means broken links don't surface as errors
-- **Tyrone's record has `role='rising'`** in the live D1, which excludes him from `/api/live-now` (that query filters `WHERE role = 'creator'`). One-off oddity — fix it manually in the dashboard if it matters
+- **Tyrone's record has `role='rising'`** in the live D1, which excludes him from `/api/live-now` (that query filters `WHERE role = 'creator'`). One-off oddity — fix manually in the dashboard if it matters; or rely on `/api/uk-rp-live` which doesn't touch the DB
+- **Twitch iframe autoplay warning** — Twitch refuses `autoplay=true` if the iframe was hidden when the `src` was set. If the multi-view loads tiles before the container is rendered, console fills with "Couldn't autoplay because of style visibility checks". Phase 2 multi-view improvements include the fix
+- **`functions/_scheduled.js`** is the legacy in-Pages cron handler. **Cloudflare Pages doesn't fire crons for Pages Functions** — only the standalone Worker (`contentlore-scheduler`) actually runs on a schedule. The Pages-side file is dead code preserved for reference until safely removed
