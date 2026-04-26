@@ -271,15 +271,23 @@ function avatarHtml(name, url, size, cls) {
 // === DATA ===
 async function loadData() {
   try {
-    const [liveRes, creatorsRes] = await Promise.all([
+    const [liveRes, creatorsRes, recentRes] = await Promise.all([
       fetch('/api/live-now'),
       fetch('/api/creators?limit=500'),
+      fetch('/api/recent-live').catch(() => ({json:()=>({})})),
     ]);
     const liveJson = await liveRes.json();
     const creatorsJson = await creatorsRes.json();
+    const recentJson = await recentRes.json();
 
     const live = (liveJson.ok && liveJson.live) ? liveJson.live : [];
     const creators = (creatorsJson.ok && creatorsJson.creators) ? creatorsJson.creators : [];
+    const recentSessions = recentJson.sessions || recentJson.recent || [];
+
+    // Build set of recently active creator names
+    const recentNames = new Set();
+    live.forEach(s => recentNames.add((s.display_name||s.handle||'').toLowerCase()));
+    recentSessions.forEach(s => recentNames.add((s.creator_name||s.display_name||s.name||'').toLowerCase()));
 
     // Build avatar lookup
     creatorAvatars = {};
@@ -298,7 +306,14 @@ async function loadData() {
       liveMap[s.handle.toLowerCase()] = s;
     });
 
-    streams = creators.map(c => {
+    streams = creators
+      .filter(c => {
+        // Only show creators who are live or recently active
+        const name = (c.display_name||'').toLowerCase();
+        const handle = (c.primary_handle||'').toLowerCase();
+        return recentNames.has(name) || recentNames.has(handle);
+      })
+      .map(c => {
       const handle = (c.primary_handle || c.display_name || '').toLowerCase();
       const liveS = liveMap[handle] || liveMap[(c.display_name||'').toLowerCase()];
       if (liveS) {
@@ -451,8 +466,9 @@ function renderStage() {
     const muted = audioFollow ? k !== topKey : k !== unmutedKey;
     const isAudio = k === audioKey;
     const plat = (s.platform||'twitch').toLowerCase();
+    const twitchParents = `parent=${PARENT}&parent=www.${PARENT}&parent=contentlore.com&parent=www.contentlore.com`;
     const src = plat === 'twitch'
-      ? `https://player.twitch.tv/?channel=${encodeURIComponent(s.handle)}&parent=${PARENT}&muted=${muted}&autoplay=true`
+      ? `https://player.twitch.tv/?channel=${encodeURIComponent(s.handle)}&${twitchParents}&muted=${muted}&autoplay=true`
       : `https://player.kick.com/${encodeURIComponent(s.handle)}?muted=${muted}&autoplay=true`;
 
     return `<div class="tile${isTop?' top-tile':''}">
@@ -507,7 +523,7 @@ function renderChat() {
   if (!active) return;
   const plat = (active.platform||'twitch').toLowerCase();
   frame.src = plat === 'twitch'
-    ? `https://www.twitch.tv/embed/${encodeURIComponent(active.handle)}/chat?parent=${PARENT}&darkpopout`
+    ? `https://www.twitch.tv/embed/${encodeURIComponent(active.handle)}/chat?parent=${PARENT}&parent=www.${PARENT}&parent=contentlore.com&parent=www.contentlore.com&darkpopout`
     : `https://kick.com/${encodeURIComponent(active.handle)}/chatroom`;
 }
 
