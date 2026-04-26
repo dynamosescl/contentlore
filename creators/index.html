@@ -26,9 +26,12 @@ h1 .accent{color:var(--mag)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:24px}
 .card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;transition:all .15s;cursor:pointer}
 .card:hover{border-color:var(--mag);background:var(--bg3)}
-.card .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.card .avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;object-fit:cover;border:2px solid var(--border);background:var(--bg3)}
+.card .avatar-placeholder{width:32px;height:32px;border-radius:50%;flex-shrink:0;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:14px;color:var(--t3)}
+.card .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;position:absolute;bottom:-1px;right:-1px;border:2px solid var(--bg2)}
 .card .dot.live{background:var(--green);box-shadow:0 0 6px var(--green)}
 .card .dot.off{background:var(--border)}
+.card .avatar-wrap{position:relative;flex-shrink:0}
 .card .name{font-family:var(--font-d);font-size:14px;text-transform:uppercase;letter-spacing:.5px}
 .card .meta{font-family:var(--font-m);font-size:10px;color:var(--t3)}
 .card .viewers{font-family:var(--font-m);font-size:12px;color:var(--green);margin-left:auto}
@@ -82,8 +85,12 @@ async function load() {
     const grid = document.getElementById('creator-grid');
     grid.innerHTML = merged.slice(0,100).map(c => {
       const name = c.creator_name || c.name || '?';
+      const img = c.profile_image_url || c.profile_image || c.avatar_url || c.thumbnail_url || '';
+      const avatarHtml = img
+        ? `<div class="avatar-wrap"><img class="avatar" src="${img}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'avatar-placeholder\\'>${name.charAt(0).toUpperCase()}</div>'"><div class="dot ${c.isLive?'live':'off'}"></div></div>`
+        : `<div class="avatar-wrap"><div class="avatar-placeholder">${name.charAt(0).toUpperCase()}</div><div class="dot ${c.isLive?'live':'off'}"></div></div>`;
       return `<div class="card" onclick="window.open('https://twitch.tv/${name.toLowerCase()}','_blank')">
-        <div class="dot ${c.isLive?'live':'off'}"></div>
+        ${avatarHtml}
         <div><div class="name">${name}</div><div class="meta">${c.server||c.primary_platform||'twitch'}</div></div>
         ${c.isLive ? `<div class="viewers">${fmtN(c.viewers)}</div>` : ''}
       </div>`;

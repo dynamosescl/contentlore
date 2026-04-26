@@ -5,7 +5,7 @@
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
-  const hours = Math.min(parseInt(url.searchParams.get('hours') || '24'), 72);
+  const hours = Math.min(Math.max(parseInt(url.searchParams.get('hours') || '24') || 24, 1), 72);
   const server = url.searchParams.get('server');
 
   const headers = {
@@ -22,20 +22,20 @@ export async function onRequest(context) {
         SELECT id, server, streamers, total_viewers, streamer_count,
                peak_viewer_name, peak_viewer_count, keywords, snapshot_at
         FROM scene_snapshots
-        WHERE snapshot_at > datetime('now', '-${hours} hours')
+        WHERE snapshot_at > datetime('now', ? || ' hours')
           AND server = ?
         ORDER BY snapshot_at ASC
       `;
-      params = [server];
+      params = ['-' + hours, server];
     } else {
       query = `
         SELECT id, server, streamers, total_viewers, streamer_count,
                peak_viewer_name, peak_viewer_count, keywords, snapshot_at
         FROM scene_snapshots
-        WHERE snapshot_at > datetime('now', '-${hours} hours')
+        WHERE snapshot_at > datetime('now', ? || ' hours')
         ORDER BY snapshot_at ASC
       `;
-      params = [];
+      params = ['-' + hours];
     }
 
     const result = await env.DB.prepare(query).bind(...params).all();
@@ -50,7 +50,6 @@ export async function onRequest(context) {
     const serverTotals = {};
 
     for (const snap of snapshots) {
-      // Round to nearest 15 min
       const d = new Date(snap.snapshot_at + 'Z');
       const mins = Math.floor(d.getMinutes() / 15) * 15;
       d.setMinutes(mins, 0, 0);
@@ -65,7 +64,6 @@ export async function onRequest(context) {
         keywords: snap.keywords,
       };
 
-      // Accumulate server totals
       if (!serverTotals[snap.server]) {
         serverTotals[snap.server] = { totalSnapshots: 0, peakViewers: 0, avgViewers: 0, viewerSum: 0 };
       }
@@ -76,7 +74,6 @@ export async function onRequest(context) {
       }
     }
 
-    // Calculate averages
     for (const srv of Object.keys(serverTotals)) {
       serverTotals[srv].avgViewers = Math.round(
         serverTotals[srv].viewerSum / serverTotals[srv].totalSnapshots
@@ -84,7 +81,6 @@ export async function onRequest(context) {
       delete serverTotals[srv].viewerSum;
     }
 
-    // Build ordered timeline array
     const timelineArray = Object.entries(timeline)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([slot, servers]) => ({ time: slot, servers }));

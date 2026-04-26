@@ -77,6 +77,8 @@ td.actions{white-space:nowrap}
 .tags{display:flex;gap:3px;flex-wrap:wrap;max-width:180px}
 .tag{font-family:var(--font-m);font-size:9px;color:var(--t3);padding:1px 5px;background:var(--bg3);border:1px solid var(--border)}
 .empty{text-align:center;padding:40px;color:var(--t3);font-family:var(--font-m);font-size:13px}
+.avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);background:var(--bg3)}
+.avatar-ph{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:12px;color:var(--t3)}
 .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;font-family:var(--font-m);font-size:13px;clip-path:var(--clip);z-index:999;transform:translateY(100px);opacity:0;transition:all .3s}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.success{background:var(--green);color:#000}
@@ -107,6 +109,7 @@ td.actions{white-space:nowrap}
     <thead>
       <tr>
         <th><input type="checkbox" class="check" id="select-all" onchange="toggleAll()"></th>
+        <th></th>
         <th>Creator</th>
         <th>Title</th>
         <th>Viewers</th>
@@ -117,7 +120,7 @@ td.actions{white-space:nowrap}
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody id="table-body"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+    <tbody id="table-body"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
   </table>
 </div>
 
@@ -169,7 +172,7 @@ function renderStats(counts) {
 function renderTable() {
   const tbody = document.getElementById('table-body');
   if (!creators.length) {
-    tbody.innerHTML = `<tr><td colspan="9" class="empty">No ${currentStatus} creators</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="empty">No ${currentStatus} creators</td></tr>`;
     return;
   }
   tbody.innerHTML = creators.map(c => {
@@ -190,6 +193,7 @@ function renderTable() {
 
     return `<tr class="${isSelected}" data-id="${c.id}">
       <td><input type="checkbox" class="check" data-id="${c.id}" onchange="toggleSelect(${c.id})"${checked}></td>
+      <td>${c.profile_image ? `<img class="avatar" src="${c.profile_image}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'avatar-ph\\'>${(c.name||'?').charAt(0).toUpperCase()}</div>'">` : `<div class="avatar-ph">${(c.name||'?').charAt(0).toUpperCase()}</div>`}</td>
       <td class="name"><a href="${link}" target="_blank">${c.name}</a></td>
       <td class="title" title="${(c.discovered_title||'').replace(/"/g,'&quot;')}">${c.discovered_title || '—'}</td>
       <td class="viewers">${c.discovered_viewers ? fmtN(c.discovered_viewers) : '—'}</td>
