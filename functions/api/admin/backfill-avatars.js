@@ -23,9 +23,6 @@ function authCheck(request, env) {
 }
 
 async function getTwitchToken(env) {
-  const cached = await env.KV.get('twitch_token');
-  if (cached) return cached;
-
   const res = await fetch('https://id.twitch.tv/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -33,10 +30,9 @@ async function getTwitchToken(env) {
   });
   const data = await res.json();
   if (data.access_token) {
-    await env.KV.put('twitch_token', data.access_token, { expirationTtl: (data.expires_in || 3600) - 300 });
     return data.access_token;
   }
-  throw new Error('Failed to get Twitch token');
+  throw new Error('Twitch token failed: ' + JSON.stringify(data));
 }
 
 async function fetchTwitchUsers(logins, token, clientId) {
@@ -74,9 +70,30 @@ export async function onRequestGet(context) {
 
     const total = await env.DB.prepare('SELECT COUNT(*) as count FROM creators').first();
 
+    // Test Twitch token
+    let tokenTest = 'not tested';
+    try {
+      const hasClientId = !!env.TWITCH_CLIENT_ID;
+      const hasClientSecret = !!env.TWITCH_CLIENT_SECRET;
+      if (hasClientId && hasClientSecret) {
+        const tokenRes = await fetch('https://id.twitch.tv/oauth2/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `client_id=${env.TWITCH_CLIENT_ID}&client_secret=${env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`,
+        });
+        const tokenData = await tokenRes.json();
+        tokenTest = tokenData.access_token ? 'OK - token acquired' : ('FAILED: ' + JSON.stringify(tokenData));
+      } else {
+        tokenTest = `Missing: client_id=${hasClientId}, client_secret=${hasClientSecret}`;
+      }
+    } catch (e) {
+      tokenTest = 'ERROR: ' + e.message;
+    }
+
     return new Response(JSON.stringify({
       total_creators: total.count,
       missing_avatars: missing.count,
+      twitch_token_test: tokenTest,
       message: 'POST to this endpoint to run the backfill',
     }), { headers: corsHeaders() });
   } catch (err) {
