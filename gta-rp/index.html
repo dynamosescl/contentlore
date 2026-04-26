@@ -196,84 +196,23 @@ body>*{position:relative;z-index:3}
 <div class="footer">ContentLore · UK GTA RP · 2025</div>
 
 <script>
-// UK GTA RP Allowlist — the curated scene
-const ALLOWLIST = [
-  {handle:'tyrone',platform:'twitch',name:'Tyrone'},
-  {handle:'lbmm',platform:'twitch',name:'LBMM'},
-  {handle:'reeclare',platform:'twitch',name:'Reeclare'},
-  {handle:'stoker',platform:'twitch',name:'Stoker'},
-  {handle:'samham',platform:'twitch',name:'SamHam'},
-  {handle:'deggyuk',platform:'twitch',name:'DeggyUK'},
-  {handle:'megsmary',platform:'twitch',name:'MegsMary'},
-  {handle:'tazzthegeeza',platform:'twitch',name:'TaZzTheGeeza'},
-  {handle:'wheelydev',platform:'twitch',name:'WheelyDev'},
-  {handle:'rexality',platform:'twitch',name:'RexaliTy'},
-  {handle:'steeel',platform:'twitch',name:'Steeel'},
-  {handle:'justj0hnnyhd',platform:'twitch',name:'JustJ0hnnyHD'},
-  {handle:'cherish_remedy',platform:'twitch',name:'Cherish_Remedy'},
-  {handle:'lorddorro',platform:'twitch',name:'LordDorro'},
-  {handle:'jck0__',platform:'twitch',name:'JCK0__'},
-  {handle:'absthename',platform:'twitch',name:'ABsTheName'},
-  {handle:'kavsual',platform:'kick',name:'Kavsual'},
-  {handle:'shammers',platform:'kick',name:'Shammers'},
-  {handle:'bags',platform:'kick',name:'Bags'},
-  {handle:'dynamoses',platform:'kick',name:'Dynamoses'},
-  {handle:'dcampion',platform:'kick',name:'DCampion'},
-  {handle:'elliewaller',platform:'kick',name:'EllieWaller'},
-];
-
 let liveCreators = [];
 let allCreators = [];
-let avatarMap = {};
+let totalRoster = 0;
 let refreshing = false;
 
 async function loadAll() {
   refreshing = true;
   try {
-    const [lRes] = await Promise.all([
-      fetch('/api/live-now'),
-    ]);
-    const lJson = await lRes.json();
-    const allLive = (lJson.ok && lJson.live) ? lJson.live : [];
-    // Only show allowlisted creators
-    const allowHandles = new Set(ALLOWLIST.map(c => c.handle.toLowerCase()));
-    const allowNames = new Set(ALLOWLIST.map(c => c.name.toLowerCase()));
-    liveCreators = allLive.filter(s => {
-      const h = (s.handle||s.display_name||'').toLowerCase();
-      const n = (s.display_name||'').toLowerCase();
-      return allowHandles.has(h) || allowNames.has(n);
-    });
-
-    // Get full creators for avatars (only once)
-    if (Object.keys(avatarMap).length === 0) {
-      try {
-        const aRes = await fetch('/api/creators?limit=500');
-        const aJson = await aRes.json();
-        (aJson.creators || []).forEach(c => {
-          const k = (c.display_name||'').toLowerCase();
-          if (k && c.avatar_url && !c.avatar_url.includes('previews-ttv')) avatarMap[k] = c.avatar_url;
-        });
-      } catch(e) {}
-    }
-
-    // Build roster from allowlist — the curated UK GTA RP scene
-    const liveNames = new Set(liveCreators.map(s => (s.display_name||s.handle||'').toLowerCase()));
-    allCreators = ALLOWLIST
-      .filter(c => !liveNames.has(c.handle.toLowerCase()) && !liveNames.has(c.name.toLowerCase()))
-      .map(c => ({
-        display_name: c.name,
-        platform: c.platform,
-        handle: c.handle,
-      }))
-      .sort((a,b) => a.display_name.localeCompare(b.display_name));
-
+    const r = await fetch('/api/uk-rp-live');
+    const d = await r.json();
+    const all = (d.ok && d.live) ? d.live : [];
+    liveCreators = all.filter(s => s.is_live);
+    allCreators  = all.filter(s => !s.is_live);
+    totalRoster  = d.count || all.length;
     renderAll();
   } catch(e) { console.error('Load failed:', e); }
   refreshing = false;
-}
-
-function getProfileAvatar(name) {
-  return avatarMap[(name||'').toLowerCase()] || '';
 }
 
 function getThumb(s, w, h) {
@@ -306,7 +245,7 @@ function renderAll() {
   // Hero
   document.getElementById('s-live').textContent = live.length;
   document.getElementById('s-viewers').textContent = fmtBig(total);
-  document.getElementById('s-scene').textContent = ALLOWLIST.length;
+  document.getElementById('s-scene').textContent = totalRoster;
   document.getElementById('s-plat').textContent = plats||0;
   const dot = document.getElementById('h-dot');
   const status = document.getElementById('h-status');
@@ -343,7 +282,7 @@ function renderAll() {
 function renderFeatured(s) {
   const plat = (s.platform||'twitch').toLowerCase();
   const thumb = getThumb(s, '640', '360');
-  const av = getProfileAvatar(s.display_name);
+  const av = s.avatar_url;
   const url = s.profile_url || '#';
   const thumbHtml = thumb
     ? `<img src="${thumb}" alt="${esc(s.stream_title||s.display_name)}" loading="lazy">`
@@ -384,7 +323,7 @@ function renderFeatured(s) {
 function renderStreamCard(s) {
   const plat = (s.platform||'twitch').toLowerCase();
   const thumb = getThumb(s, '440', '248');
-  const av = getProfileAvatar(s.display_name);
+  const av = s.avatar_url;
   const url = s.profile_url || '#';
   const uptime = fmtUp(s.uptime_mins);
 
@@ -416,7 +355,7 @@ function renderStreamCard(s) {
 
 function renderRosterCard(s) {
   const plat = (s.platform||'twitch').toLowerCase();
-  const av = getProfileAvatar(s.display_name);
+  const av = s.avatar_url;
   const avHtml = av
     ? `<img class="r-av" src="${av}" alt="" loading="lazy">`
     : `<div class="r-av-ph">${(s.display_name||'?').charAt(0)}</div>`;
