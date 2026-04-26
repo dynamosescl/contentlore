@@ -4,373 +4,180 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ContentLore — UK Streaming Intelligence</title>
-<meta name="description" content="ContentLore is the UK streaming intelligence platform. Live tracking, scene detection, editorial analysis and community intelligence across UK GTA RP.">
-<meta property="og:title" content="ContentLore — UK Streaming Intelligence">
-<meta property="og:description" content="The UK streaming intelligence platform. Live tracking, editorial analysis, community intelligence.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://contentlore.com">
+<meta name="description" content="The UK GTA RP streaming intelligence platform. Live tracking, scene detection, editorial analysis.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0A0A0B;--bg2:#111113;--bg3:#161618;--bg4:#1C1C1F;
-  --border:#2A2A2E;--border-a:#3A3A3F;
-  --t1:#E8E8EC;--t2:#9898A0;--t3:#5A5A65;
-  --mag:#FF2D6B;--mag-g:rgba(255,45,107,.3);--mag-dim:rgba(255,45,107,.12);
-  --cyan:#00E5FF;--cyan-g:rgba(0,229,255,.25);--cyan-dim:rgba(0,229,255,.1);
-  --green:#00FF85;--green-dim:rgba(0,255,133,.12);
-  --orange:#FF8A00;--gold:#D4A574;--gold-dim:rgba(212,165,116,.12);
-  --font-d:'Oswald',sans-serif;--font-m:'JetBrains Mono',monospace;--font-e:'Newsreader',serif;--font-b:system-ui,-apple-system,sans-serif;
-  --clip:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
-  --clip-sm:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+  --bg:oklch(0.09 0.04 295);--fg:oklch(0.97 0.02 320);
+  --card:oklch(0.13 0.05 295);--card2:oklch(0.18 0.06 295);
+  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
+  --signal:oklch(0.72 0.30 350);--signal-dim:oklch(0.58 0.24 350);--signal-cyan:oklch(0.85 0.18 200);
+  --border:oklch(0.28 0.08 295);--live:oklch(0.72 0.30 350);
+  --twitch:oklch(0.65 0.25 295);--kick:oklch(0.82 0.22 145);
+  --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
+  --cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
 }
-body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:100vh}
+html{background:var(--bg);color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.72 0.30 350/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body>*{position:relative;z-index:3}
 
-/* NAV */
-.nav{height:56px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:100}
-.nav-brand{font-family:var(--font-d);font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:4px;margin-right:auto;text-decoration:none;color:var(--t1);display:flex;align-items:center;gap:6px}
-.nav-brand .cl{color:var(--mag)}
-.nav-links{display:flex;gap:0}
-.nav-link{font-family:var(--font-d);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);text-decoration:none;padding:18px 16px;border-bottom:2px solid transparent;transition:all .2s}
-.nav-link:hover{color:var(--t2)}
-.nav-link.active{color:var(--gold);border-bottom-color:var(--gold)}
-.nav-link.hub{color:var(--mag)}
-.nav-link.hub:hover{color:var(--mag);border-bottom-color:var(--mag)}
+.nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;text-decoration:none;color:var(--fg);margin-right:auto}
+.nav-brand span{color:var(--signal)}
+.nav a.link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px 12px;transition:color .2s}
+.nav a.link:hover{color:var(--fg)}
+.nav a.link.hub{color:var(--signal)}
 
 /* HERO */
-.hero{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(255,45,107,.06) 0%,transparent 70%);pointer-events:none}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
-.hero-title{font-family:var(--font-d);font-size:96px;font-weight:700;text-transform:uppercase;letter-spacing:8px;line-height:.9}
-.hero-title .line1{display:block;color:var(--t1)}
-.hero-title .line2{display:block;background:linear-gradient(135deg,var(--mag),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-tagline{font-family:var(--font-e);font-size:20px;font-style:italic;color:var(--t2);margin-top:20px;letter-spacing:.5px}
-.hero-desc{font-family:var(--font-b);font-size:15px;color:var(--t3);margin-top:12px;max-width:560px;line-height:1.7}
-.hero-cta{display:flex;gap:12px;margin-top:32px}
-.cta-btn{font-family:var(--font-d);font-size:14px;text-transform:uppercase;letter-spacing:2px;padding:14px 28px;text-decoration:none;clip-path:var(--clip);transition:all .25s;display:inline-flex;align-items:center;gap:8px}
-.cta-primary{background:var(--mag);color:#fff}
-.cta-primary:hover{box-shadow:0 0 30px var(--mag-g);transform:translateY(-2px)}
-.cta-secondary{background:var(--bg3);border:1px solid var(--border);color:var(--t1)}
-.cta-secondary:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-2px)}
+.hero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
+.hero h1{font-family:var(--font-d);font-size:clamp(48px,10vw,96px);line-height:.92;letter-spacing:3px}
+.hero h1 .accent{color:var(--signal);animation:flicker 4.5s steps(1,end) infinite}
+@keyframes flicker{0%,19%,21%,23%,100%{opacity:1;text-shadow:0 0 6px oklch(0.72 0.30 350/.7),0 0 18px oklch(0.72 0.30 350/.45)}20%,22%{opacity:.85;text-shadow:none}}
+.hero-tag{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:4px;color:var(--ink-dim);margin-top:12px}
+.hero-cta{display:flex;gap:12px;margin-top:28px}
+.cta{font-family:var(--font-d);font-size:16px;letter-spacing:2px;padding:12px 28px;text-decoration:none;clip-path:var(--cut);transition:all .25s}
+.cta-primary{background:var(--signal);color:var(--bg)}
+.cta-primary:hover{box-shadow:0 0 28px oklch(0.72 0.30 350/.5);transform:translateY(-2px)}
+.cta-secondary{background:var(--card);border:1px solid var(--border);color:var(--fg)}
+.cta-secondary:hover{border-color:var(--signal-cyan);color:var(--signal-cyan);transform:translateY(-2px)}
 
 /* LIVE PULSE */
-.pulse-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 0;overflow:hidden}
-.pulse-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:20px}
-.pulse-dot{width:8px;height:8px;background:var(--green);border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.pulse-text{font-family:var(--font-m);font-size:12px;color:var(--t2)}
-.pulse-stats{display:flex;gap:20px;margin-left:auto}
-.pulse-stat{display:flex;align-items:center;gap:6px}
-.pulse-stat .val{font-family:var(--font-d);font-size:18px;font-weight:600}
-.pulse-stat .lbl{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px}
+.pulse{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px}
+.pulse-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px}
+.pulse-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;animation:lp 2s infinite}
+.pulse-dot.on{background:var(--live)}
+.pulse-dot.off{background:var(--ink-faint)}
+@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.72 0.30 350/.8)}70%{box-shadow:0 0 0 8px oklch(0.72 0.30 350/0)}}
+.pulse-text{font-family:var(--font-m);font-size:12px;color:var(--ink-dim);flex:1}
+.pulse-stats{display:flex;gap:20px}
+.ps{display:flex;align-items:baseline;gap:4px}
+.ps-val{font-family:var(--font-d);font-size:22px}
+.ps-lbl{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
 
-.container{max-width:1200px;margin:0 auto;padding:0 24px}
-
-/* SECTION */
-.section{padding:48px 0}
-.section-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
-.section-title{font-family:var(--font-d);font-size:28px;font-weight:600;text-transform:uppercase;letter-spacing:3px;white-space:nowrap}
-.section-line{flex:1;height:1px;background:var(--border)}
-.section-link{font-family:var(--font-m);font-size:11px;color:var(--cyan);text-decoration:none;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
-.section-link:hover{text-decoration:underline}
-
-/* HUB FEATURE */
-.hub-feature{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center}
-.hub-visual{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:32px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.hub-stat{text-align:center;padding:16px}
-.hub-stat .val{font-family:var(--font-d);font-size:36px;font-weight:700}
-.hub-stat .lbl{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px}
-.hub-text h3{font-family:var(--font-d);font-size:32px;text-transform:uppercase;letter-spacing:3px;line-height:1.1}
-.hub-text h3 .accent{color:var(--mag)}
-.hub-text p{font-family:var(--font-e);font-size:16px;color:var(--t2);margin-top:14px;line-height:1.7}
-.hub-links{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
-.hub-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:6px 14px;background:var(--bg3);border:1px solid var(--border);color:var(--t2);text-decoration:none;clip-path:var(--clip-sm);transition:all .15s}
-.hub-link:hover{border-color:var(--mag);color:var(--mag)}
-
-/* PRODUCT CARDS */
-.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.product{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:24px;transition:all .25s;text-decoration:none;color:var(--t1);display:block}
-.product:hover{border-color:var(--mag);transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
-.product-icon{font-size:28px;margin-bottom:12px}
-.product-title{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:1.5px}
-.product-desc{font-family:var(--font-b);font-size:13px;color:var(--t2);margin-top:8px;line-height:1.5}
-.product-tag{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;clip-path:var(--clip-sm);margin-top:12px;display:inline-block}
-.product-tag.live{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,133,.3)}
-.product-tag.editorial{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(212,165,116,.3)}
-.product-tag.intel{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(0,229,255,.3)}
+/* GRID */
+.mx{max-width:1100px;margin:0 auto;padding:40px 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:20px;text-decoration:none;color:var(--fg);display:block;transition:all .25s}
+.card:hover{border-color:var(--signal);transform:translateY(-3px);box-shadow:0 0 20px oklch(0.72 0.30 350/.3)}
+.card-icon{font-size:22px;margin-bottom:8px}
+.card-title{font-family:var(--font-d);font-size:20px;letter-spacing:1px}
+.card-desc{font-size:12px;color:var(--ink-dim);margin-top:6px;line-height:1.5}
+.card-tag{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;display:inline-block;margin-top:10px}
+.card-tag.live{background:oklch(0.82 0.22 145/.12);color:oklch(0.82 0.22 145);border:1px solid oklch(0.82 0.22 145/.3)}
+.card-tag.edit{background:oklch(0.72 0.30 350/.1);color:var(--signal);border:1px solid oklch(0.72 0.30 350/.3)}
+.card-tag.intel{background:oklch(0.85 0.18 200/.1);color:var(--signal-cyan);border:1px solid oklch(0.85 0.18 200/.3)}
 
 /* EDITORIAL */
-.editorial-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
-.editorial-main{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:28px;text-decoration:none;color:var(--t1);display:block;transition:all .25s}
-.editorial-main:hover{border-color:var(--gold);transform:translateY(-2px)}
-.editorial-main .em-eyebrow{font-family:var(--font-m);font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px}
-.editorial-main .em-title{font-family:var(--font-d);font-size:24px;text-transform:uppercase;letter-spacing:1.5px;margin-top:8px;line-height:1.2}
-.editorial-main .em-desc{font-family:var(--font-e);font-size:15px;color:var(--t2);margin-top:10px;line-height:1.6}
-.editorial-sidebar{display:flex;flex-direction:column;gap:12px}
-.editorial-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:18px;text-decoration:none;color:var(--t1);display:block;transition:all .2s;flex:1}
-.editorial-card:hover{border-color:var(--gold)}
-.editorial-card .ec-eyebrow{font-family:var(--font-m);font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:1px}
-.editorial-card .ec-title{font-family:var(--font-d);font-size:14px;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.ed-row{display:grid;grid-template-columns:1.5fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:700px){.ed-row{grid-template-columns:1fr}}
+.ed-main{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:24px;text-decoration:none;color:var(--fg);display:block;transition:all .2s}
+.ed-main:hover{border-color:var(--signal)}
+.ed-kicker{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px}
+.ed-title{font-family:var(--font-d);font-size:24px}
+.ed-desc{font-size:13px;color:var(--ink-dim);margin-top:8px;line-height:1.6}
+.ed-side{display:flex;flex-direction:column;gap:12px}
+.ed-card{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:16px;text-decoration:none;color:var(--fg);display:block;flex:1;transition:all .2s}
+.ed-card:hover{border-color:var(--signal)}
+.ed-card .ed-kicker{margin-bottom:4px}
+.ed-card .ed-title{font-size:16px}
 
-/* ABOUT STRIP */
-.about{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:40px 0;margin:0}
-.about-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px}
-.about-col h4{font-family:var(--font-d);font-size:14px;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:10px}
-.about-col p{font-family:var(--font-e);font-size:14px;color:var(--t2);line-height:1.7}
-.about-col a{color:var(--cyan);text-decoration:none}
-.about-col a:hover{text-decoration:underline}
+.sh{font-family:var(--font-d);font-size:28px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.sh::after{content:'';flex:1;height:1px;background:var(--border)}
 
-/* FOOTER */
-.footer{padding:24px;text-align:center;font-family:var(--font-m);font-size:11px;color:var(--t3)}
-.footer-links{display:flex;justify-content:center;gap:20px;margin-bottom:10px}
-.footer-links a{color:var(--t3);text-decoration:none;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1px}
-.footer-links a:hover{color:var(--t2)}
+.footer{border-top:1px solid var(--border);padding:20px;text-align:center;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
+.footer a{color:var(--ink-faint);text-decoration:none;margin:0 8px}
+.footer a:hover{color:var(--fg)}
 
-body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
-*{position:relative;z-index:1}.nav{z-index:100}
-
-@media(max-width:900px){
-  .hero-title{font-size:56px;letter-spacing:4px}
-  .hub-feature{grid-template-columns:1fr}
-  .product-grid{grid-template-columns:1fr}
-  .editorial-grid{grid-template-columns:1fr}
-  .about-inner{grid-template-columns:1fr}
-}
-@media(max-width:500px){
-  .hero-title{font-size:40px}
-  .nav-links{overflow-x:auto;-webkit-overflow-scrolling:touch}
-}
+::selection{background:var(--signal);color:var(--bg)}
+@media(max-width:600px){.grid{grid-template-columns:1fr 1fr}.hero{padding:48px 24px 36px}.pulse-stats{gap:12px}}
 </style>
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-brand"><span class="cl">Content</span>Lore</a>
-  <div class="nav-links">
-    <a href="/" class="nav-link active">Home</a>
-    <a href="/gta-rp/" class="nav-link hub">GTA RP Hub</a>
-    <a href="/the-platform/" class="nav-link">Platform Intel</a>
-    <a href="/creators/" class="nav-link">Creators</a>
-    <a href="/about/" class="nav-link">About</a>
-  </div>
+  <a href="/" class="nav-brand">Content<span>Lore</span></a>
+  <a href="/gta-rp/" class="link hub">GTA RP Hub</a>
+  <a href="/the-platform/" class="link">Platform</a>
+  <a href="/about/" class="link">About</a>
 </nav>
 
-<!-- HERO -->
 <div class="hero">
-  <div class="hero-title">
-    <span class="line1">Content</span>
-    <span class="line2">Lore</span>
-  </div>
-  <div class="hero-tagline">UK Streaming Intelligence</div>
-  <p class="hero-desc">The platform that tracks, analyses and contextualises UK GTA RP streaming. Live data, editorial depth, community intelligence.</p>
+  <h1>CONTENT<br><span class="accent">LORE</span></h1>
+  <div class="hero-tag">UK Streaming Intelligence</div>
   <div class="hero-cta">
-    <a href="/gta-rp/" class="cta-btn cta-primary">Enter the Hub</a>
-    <a href="/gta-rp/now/" class="cta-btn cta-secondary">What's Live Now</a>
+    <a href="/gta-rp/" class="cta cta-primary">Enter the Hub</a>
+    <a href="/gta-rp/now/" class="cta cta-secondary">What's Live</a>
   </div>
 </div>
 
-<!-- LIVE PULSE -->
-<div class="pulse-bar">
+<div class="pulse">
   <div class="pulse-inner">
-    <div class="pulse-dot"></div>
-    <span class="pulse-text" id="pulse-sentence">Scanning live streams…</span>
+    <div class="pulse-dot" id="p-dot"></div>
+    <span class="pulse-text" id="p-text">Scanning…</span>
     <div class="pulse-stats">
-      <div class="pulse-stat"><span class="val" style="color:var(--green)" id="p-live">—</span><span class="lbl">Live</span></div>
-      <div class="pulse-stat"><span class="val" style="color:var(--mag)" id="p-viewers">—</span><span class="lbl">Viewers</span></div>
-      <div class="pulse-stat"><span class="val" style="color:var(--cyan)" id="p-creators">—</span><span class="lbl">Tracked</span></div>
+      <div class="ps"><span class="ps-val" style="color:var(--signal)" id="p-live">—</span><span class="ps-lbl">live</span></div>
+      <div class="ps"><span class="ps-val" style="color:var(--signal-cyan)" id="p-viewers">—</span><span class="ps-lbl">viewers</span></div>
+      <div class="ps"><span class="ps-val" style="color:var(--fg)" id="p-tracked">—</span><span class="ps-lbl">tracked</span></div>
     </div>
   </div>
 </div>
 
-<div class="container">
-
-  <!-- GTA RP HUB FEATURE -->
-  <div class="section">
-    <div class="section-header">
-      <h2 class="section-title">GTA RP Hub</h2>
-      <div class="section-line"></div>
-      <a href="/gta-rp/" class="section-link">Enter Hub →</a>
-    </div>
-    <div class="hub-feature">
-      <div class="hub-text">
-        <h3>UK <span class="accent">GTA RP</span> Streaming Intelligence</h3>
-        <p>Multi-POV stream viewer with scene detection. Beef and lore editorial tracking. Real-time command centre. Server directory with live overlay. The most comprehensive UK RP intelligence platform on the internet.</p>
-        <div class="hub-links">
-          <a href="/gta-rp/now/" class="hub-link">Now</a>
-          <a href="/gta-rp/multi/" class="hub-link">Multi-View</a>
-          <a href="/gta-rp/beef/" class="hub-link">Beef Tracker</a>
-          <a href="/gta-rp/lore/" class="hub-link">Lore Arcs</a>
-          <a href="/gta-rp/servers/" class="hub-link">Servers</a>
-          <a href="/gta-rp/fivem-enhanced/" class="hub-link">FiveM Enhanced</a>
-          <a href="/gta-rp/gta-6/" class="hub-link">GTA 6 Intel</a>
-        </div>
-      </div>
-      <div class="hub-visual">
-        <div class="hub-stat"><div class="val" style="color:var(--green)" id="h-live">—</div><div class="lbl">Streaming Now</div></div>
-        <div class="hub-stat"><div class="val" style="color:var(--mag)" id="h-viewers">—</div><div class="lbl">Viewers</div></div>
-        <div class="hub-stat"><div class="val" style="color:var(--cyan)" id="h-servers">—</div><div class="lbl">Servers</div></div>
-        <div class="hub-stat"><div class="val" style="color:var(--orange)" id="h-beefs">—</div><div class="lbl">Active Beefs</div></div>
-      </div>
-    </div>
+<div class="mx">
+  <div class="sh">Hub</div>
+  <div class="grid">
+    <a href="/gta-rp/" class="card"><div class="card-icon">📡</div><div class="card-title">Live</div><div class="card-desc">Who's streaming right now across Twitch and Kick.</div><span class="card-tag live">Live Data</span></a>
+    <a href="/gta-rp/now/" class="card"><div class="card-icon">⚡</div><div class="card-title">Now</div><div class="card-desc">Real-time command centre. Server bars, scene clusters, viewer deltas.</div><span class="card-tag live">Live Data</span></a>
+    <a href="/gta-rp/multi/" class="card"><div class="card-icon">📺</div><div class="card-title">Multi-View</div><div class="card-desc">Watch up to 6 streams side by side with chat.</div><span class="card-tag live">Live Data</span></a>
+    <a href="/gta-rp/beef/" class="card"><div class="card-icon">🥩</div><div class="card-title">Beef</div><div class="card-desc">Every rivalry and grudge match. Heat ratings, beat timelines.</div><span class="card-tag edit">Editorial</span></a>
+    <a href="/gta-rp/lore/" class="card"><div class="card-icon">📖</div><div class="card-title">Lore</div><div class="card-desc">Story arcs and sagas tracked chapter by chapter.</div><span class="card-tag edit">Editorial</span></a>
+    <a href="/gta-rp/servers/" class="card"><div class="card-icon">🖥</div><div class="card-title">Servers</div><div class="card-desc">UK RP server directory with live activity overlay.</div><span class="card-tag live">Live Data</span></a>
+    <a href="/gta-rp/fivem-enhanced/" class="card"><div class="card-icon">🔧</div><div class="card-title">FiveM Enhanced</div><div class="card-desc">Platform migration tracker. Server readiness dashboard.</div><span class="card-tag intel">Intelligence</span></a>
+    <a href="/gta-rp/gta-6/" class="card"><div class="card-icon">🔮</div><div class="card-title">GTA 6</div><div class="card-desc">Impact analysis, transition scenarios, community preparedness.</div><span class="card-tag intel">Intelligence</span></a>
   </div>
 
-  <!-- PRODUCTS -->
-  <div class="section">
-    <div class="section-header">
-      <h2 class="section-title">Platform</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="product-grid">
-      <a href="/gta-rp/now/" class="product">
-        <div class="product-icon">📡</div>
-        <div class="product-title">Now — Command Centre</div>
-        <div class="product-desc">Real-time server activity, scene clusters, viewer deltas, live ticker. The pulse of UK RP in one screen.</div>
-        <span class="product-tag live">Live Data</span>
-      </a>
-      <a href="/gta-rp/multi/" class="product">
-        <div class="product-icon">📺</div>
-        <div class="product-title">Multi-View</div>
-        <div class="product-desc">Watch up to 6 streams simultaneously. Scene detection groups streams by server. Double-click to feature.</div>
-        <span class="product-tag live">Live Data</span>
-      </a>
-      <a href="/gta-rp/beef/" class="product">
-        <div class="product-icon">🥩</div>
-        <div class="product-title">Beef Tracker</div>
-        <div class="product-desc">Every rivalry, grudge and score to settle. Heat ratings, beat-by-beat timelines, both-sides-live alerts.</div>
-        <span class="product-tag editorial">Editorial</span>
-      </a>
-      <a href="/gta-rp/lore/" class="product">
-        <div class="product-icon">📖</div>
-        <div class="product-title">Lore Arcs</div>
-        <div class="product-desc">Story arcs, gang wars, heists and sagas tracked chapter by chapter across every UK RP server.</div>
-        <span class="product-tag editorial">Editorial</span>
-      </a>
-      <a href="/gta-rp/fivem-enhanced/" class="product">
-        <div class="product-icon">⚡</div>
-        <div class="product-title">FiveM Enhanced</div>
-        <div class="product-desc">Platform transition tracker. Server readiness dashboard, migration timelines, technical impact analysis.</div>
-        <span class="product-tag intel">Intelligence</span>
-      </a>
-      <a href="/gta-rp/gta-6/" class="product">
-        <div class="product-icon">🔮</div>
-        <div class="product-title">GTA 6 Intelligence</div>
-        <div class="product-desc">Strategic briefing on GTA 6's impact. Scenarios, community preparedness, server migration planning.</div>
-        <span class="product-tag intel">Intelligence</span>
-      </a>
-    </div>
-  </div>
-
-  <!-- EDITORIAL -->
-  <div class="section">
-    <div class="section-header">
-      <h2 class="section-title">Editorial</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="editorial-grid">
-      <a href="/the-platform/" class="editorial-main">
-        <div class="em-eyebrow">Platform Intelligence</div>
-        <div class="em-title">The Platform — FiveM, Frameworks & The Business of RP</div>
-        <div class="em-desc">Deep analysis of the FiveM ecosystem, Element Club Platina, Tebex revenue streams, the alt:V shutdown, and what Cfx Marketplace means for server owners. The business layer beneath the roleplay.</div>
-      </a>
-      <div class="editorial-sidebar">
-        <a href="/gta-rp/servers/" class="editorial-card">
-          <div class="ec-eyebrow">Directory</div>
-          <div class="ec-title">UK RP Server Registry</div>
-        </a>
-        <a href="/ethics/" class="editorial-card">
-          <div class="ec-eyebrow">Standards</div>
-          <div class="ec-title">Editorial Code & Ethics</div>
-        </a>
-        <a href="/ledger/" class="editorial-card">
-          <div class="ec-eyebrow">Transparency</div>
-          <div class="ec-title">The Ledger</div>
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ABOUT -->
-<div class="about">
-  <div class="about-inner">
-    <div class="about-col">
-      <h4>What Is ContentLore</h4>
-      <p>ContentLore is an independent streaming intelligence platform focused on the UK GTA RP ecosystem. We track live streams, detect scenes, curate editorial content, and provide the community with tools and context no one else offers.</p>
-    </div>
-    <div class="about-col">
-      <h4>How It Works</h4>
-      <p>We poll Twitch and Kick every 15 minutes, capturing live status, viewers, and stream metadata for thousands of creators. Scene detection groups concurrent streams by server. Editorial layers add context through beef tracking and lore curation.</p>
-    </div>
-    <div class="about-col">
-      <h4>Open & Independent</h4>
-      <p>ContentLore operates independently with full editorial transparency. Read our <a href="/ethics/">code of ethics</a>, check the <a href="/ledger/">ledger</a>, or <a href="/contact/">get in touch</a>. Built on Cloudflare's edge network for speed everywhere.</p>
+  <div class="sh" style="margin-top:40px">Editorial</div>
+  <div class="ed-row">
+    <a href="/the-platform/" class="ed-main">
+      <div class="ed-kicker">Platform Intelligence</div>
+      <div class="ed-title">The Platform — FiveM, Frameworks & The Business of RP</div>
+      <div class="ed-desc">Deep analysis of the FiveM ecosystem, Element Club, Tebex revenue streams, and what Cfx Marketplace means for server owners.</div>
+    </a>
+    <div class="ed-side">
+      <a href="/gta-rp/servers/" class="ed-card"><div class="ed-kicker">Directory</div><div class="ed-title">UK RP Server Registry</div></a>
+      <a href="/ethics/" class="ed-card"><div class="ed-kicker">Standards</div><div class="ed-title">Editorial Code & Ethics</div></a>
+      <a href="/ledger/" class="ed-card"><div class="ed-kicker">Transparency</div><div class="ed-title">The Ledger</div></a>
     </div>
   </div>
 </div>
 
 <div class="footer">
-  <div class="footer-links">
-    <a href="/about/">About</a>
-    <a href="/ethics/">Ethics</a>
-    <a href="/ledger/">Ledger</a>
-    <a href="/contact/">Contact</a>
-  </div>
-  ContentLore © 2025 — UK Streaming Intelligence
+  <a href="/about/">About</a><a href="/ethics/">Ethics</a><a href="/ledger/">Ledger</a><a href="/contact/">Contact</a>
+  <br>ContentLore © 2025
 </div>
 
 <script>
 async function loadPulse() {
   try {
-    const [liveRes, statsRes, beefRes] = await Promise.all([
-      fetch('/api/live-now').catch(() => ({json:()=>({})})),
-      fetch('/api/stats').catch(() => ({json:()=>({})})),
-      fetch('/api/beefs').catch(() => ({json:()=>({})})),
-    ]);
-    const live = await liveRes.json();
-    const stats = await statsRes.json();
-    const beefs = await beefRes.json();
-
-    const liveArr = live.live || live.creators || [];
-    const totalViewers = liveArr.reduce((s,c) => s + (c.viewers||0), 0);
-    const creatorCount = stats.total_creators || stats.creators || '7,770+';
-    const activeBeefs = (beefs.beefs || []).filter(b => b.status === 'active').length;
-
-    // Pulse bar
-    document.getElementById('p-live').textContent = liveArr.length;
-    document.getElementById('p-viewers').textContent = fmtN(totalViewers);
-    document.getElementById('p-creators').textContent = typeof creatorCount === 'number' ? fmtN(creatorCount) : creatorCount;
-
-    if (liveArr.length > 0) {
-      document.getElementById('pulse-sentence').textContent =
-        `${liveArr.length} UK RP creators streaming to ${fmtN(totalViewers)} viewers right now`;
-    } else {
-      document.getElementById('pulse-sentence').textContent = 'No UK RP streams live right now — check back later';
-    }
-
-    // Hub stats
-    document.getElementById('h-live').textContent = liveArr.length;
-    document.getElementById('h-viewers').textContent = fmtN(totalViewers);
-    document.getElementById('h-beefs').textContent = activeBeefs;
-
+    const r = await fetch('/api/live-now');
+    const d = await r.json();
+    const live = (d.ok && d.live) ? d.live : [];
+    const viewers = live.reduce((s,c) => s + (c.viewers||0), 0);
+    document.getElementById('p-live').textContent = live.length;
+    document.getElementById('p-viewers').textContent = viewers >= 1000 ? (viewers/1000).toFixed(1)+'k' : viewers;
+    document.getElementById('p-dot').className = 'pulse-dot ' + (live.length > 0 ? 'on' : 'off');
+    document.getElementById('p-text').textContent = live.length > 0
+      ? live.length + ' UK RP creator' + (live.length!==1?'s':'') + ' streaming to ' + (viewers>=1000?(viewers/1000).toFixed(1)+'k':viewers) + ' viewers'
+      : 'No UK RP streams live right now';
     try {
-      const srvRes = await fetch('/api/servers');
-      const srvData = await srvRes.json();
-      document.getElementById('h-servers').textContent = (srvData.servers || srvData || []).length;
-    } catch(e) {
-      document.getElementById('h-servers').textContent = '—';
-    }
-  } catch(e) {
-    console.error('Pulse load failed:', e);
-  }
+      const s = await fetch('/api/stats');
+      const sd = await s.json();
+      document.getElementById('p-tracked').textContent = (sd.total_creators||7770).toLocaleString();
+    } catch(e) { document.getElementById('p-tracked').textContent = '7,770'; }
+  } catch(e) { console.error(e); }
 }
-
-function fmtN(n) {
-  if (n == null || isNaN(n)) return '0';
-  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n/1000).toFixed(1) + 'k';
-  return n.toLocaleString();
-}
-
 loadPulse();
 setInterval(loadPulse, 60000);
 </script>
