@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContentLore — FiveM Enhanced Tracker | UK GTA RP</title>
+<meta name="description" content="Track the FiveM Enhanced transition across UK GTA RP servers. Migration status, server readiness and creator impact.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0A0A0B;--bg2:#111113;--bg3:#161618;--bg4:#1C1C1F;
+  --border:#2A2A2E;--border-a:#3A3A3F;
+  --t1:#E8E8EC;--t2:#9898A0;--t3:#5A5A65;
+  --mag:#FF2D6B;--mag-g:rgba(255,45,107,.3);--mag-dim:rgba(255,45,107,.12);
+  --cyan:#00E5FF;--cyan-g:rgba(0,229,255,.25);--cyan-dim:rgba(0,229,255,.1);
+  --green:#00FF85;--green-dim:rgba(0,255,133,.12);
+  --orange:#FF8A00;--red:#FF3B3B;--yellow:#FFD600;
+  --purple:#A855F7;--purple-dim:rgba(168,85,247,.12);
+  --font-d:'Oswald',sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:system-ui,-apple-system,sans-serif;
+  --clip:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+  --clip-sm:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+}
+body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:100vh}
+
+.nav{height:48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:3px;margin-right:24px;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--t1)}
+.nav-brand .cl{color:var(--mag)}
+.nav-brand .gta{font-size:11px;color:var(--t3);letter-spacing:1px;background:var(--mag-dim);padding:2px 6px;clip-path:var(--clip-sm)}
+.nav-links{display:flex;gap:0}
+.nav-link{font-family:var(--font-d);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);text-decoration:none;padding:14px 14px;border-bottom:2px solid transparent;transition:all .2s}
+.nav-link:hover{color:var(--t2)}
+.nav-link.active{color:var(--mag);border-bottom-color:var(--mag)}
+.nav-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* HERO */
+.hero{padding:48px 0 32px;position:relative}
+.hero-eyebrow{font-family:var(--font-m);font-size:11px;color:var(--purple);text-transform:uppercase;letter-spacing:2px;display:flex;align-items:center;gap:8px}
+.hero-eyebrow::before{content:'';width:20px;height:2px;background:var(--purple)}
+.hero h1{font-family:var(--font-d);font-size:48px;font-weight:700;text-transform:uppercase;letter-spacing:4px;line-height:1;margin-top:8px}
+.hero h1 .accent{background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-family:var(--font-b);font-size:15px;color:var(--t2);margin-top:12px;line-height:1.6;max-width:700px}
+
+/* BRIEFING BOX */
+.briefing{background:var(--bg2);border:1px solid var(--purple);border-left:3px solid var(--purple);padding:20px 24px;margin:24px 0;position:relative}
+.briefing::before{content:'INTELLIGENCE BRIEFING';position:absolute;top:-10px;left:16px;background:var(--bg);padding:0 8px;font-family:var(--font-m);font-size:9px;color:var(--purple);text-transform:uppercase;letter-spacing:1.5px}
+.briefing p{font-family:var(--font-b);font-size:14px;color:var(--t2);line-height:1.7}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
+.kpi{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:16px;text-align:center}
+.kpi-val{font-family:var(--font-d);font-size:32px;font-weight:700}
+.kpi-label{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px}
+
+/* SECTIONS */
+.section{margin:32px 0}
+.section-header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.section-title{font-family:var(--font-d);font-size:22px;font-weight:600;text-transform:uppercase;letter-spacing:2px}
+.section-line{flex:1;height:1px;background:var(--border)}
+
+/* SERVER READINESS */
+.server-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.srv-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);overflow:hidden;transition:all .25s}
+.srv-card:hover{border-color:var(--purple);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.srv-status-bar{height:4px}
+.srv-body{padding:16px 18px}
+.srv-name{font-family:var(--font-d);font-size:20px;text-transform:uppercase;letter-spacing:1.5px}
+.srv-meta{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.badge{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:3px 10px;clip-path:var(--clip-sm)}
+.badge-ready{background:var(--green-dim);border:1px solid var(--green);color:var(--green)}
+.badge-testing{background:rgba(255,214,0,.12);border:1px solid var(--yellow);color:var(--yellow)}
+.badge-planning{background:var(--cyan-dim);border:1px solid var(--cyan);color:var(--cyan)}
+.badge-waiting{background:var(--bg3);border:1px solid var(--border);color:var(--t3)}
+.badge-unknown{background:var(--bg3);border:1px solid var(--border);color:var(--t3)}
+.srv-desc{font-family:var(--font-b);font-size:13px;color:var(--t2);margin-top:10px;line-height:1.5}
+.srv-details{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.srv-detail{background:var(--bg3);padding:8px 12px}
+.srv-detail-label{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px}
+.srv-detail-val{font-family:var(--font-d);font-size:14px;margin-top:2px}
+
+/* TIMELINE */
+.timeline{border-left:2px solid var(--purple);padding-left:24px;margin-left:12px}
+.tl-event{margin-bottom:24px;position:relative}
+.tl-event::before{content:'';position:absolute;left:-29px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--purple);border:2px solid var(--bg)}
+.tl-event.milestone::before{background:var(--green);box-shadow:0 0 12px rgba(0,255,133,.4)}
+.tl-event.upcoming::before{background:var(--orange)}
+.tl-date{font-family:var(--font-m);font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px}
+.tl-title{font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.tl-desc{font-family:var(--font-b);font-size:13px;color:var(--t2);margin-top:4px;line-height:1.5}
+.tl-category{font-family:var(--font-m);font-size:9px;color:var(--purple);text-transform:uppercase;margin-top:4px}
+
+/* CREATOR IMPACT */
+.creator-table{width:100%;border-collapse:collapse}
+.creator-table th{font-family:var(--font-m);font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)}
+.creator-table td{padding:12px 14px;border-bottom:1px solid var(--border);transition:background .15s}
+.creator-table tr:hover td{background:var(--bg2)}
+.creator-table .name{font-family:var(--font-d);font-size:14px;text-transform:uppercase}
+
+/* TECHNICAL */
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tech-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:18px}
+.tech-card h4{font-family:var(--font-d);font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--purple);margin-bottom:8px}
+.tech-card p{font-family:var(--font-b);font-size:13px;color:var(--t2);line-height:1.6}
+.tech-card .highlight{color:var(--cyan);font-family:var(--font-m);font-size:12px}
+
+.empty-state{text-align:center;padding:40px;font-family:var(--font-m);font-size:13px;color:var(--t3)}
+
+.footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-family:var(--font-m);font-size:11px;color:var(--t3);margin-top:40px}
+
+body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+*{position:relative;z-index:1}.nav{z-index:100}
+
+@media(max-width:800px){
+  .hero h1{font-size:32px}
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .server-grid{grid-template-columns:1fr}
+  .tech-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/gta-rp/" class="nav-brand"><span class="cl">Content</span>Lore<span class="gta">GTA RP</span></a>
+  <div class="nav-links">
+    <a href="/gta-rp/" class="nav-link nav-live">Live</a>
+    <a href="/gta-rp/now/" class="nav-link">Now</a>
+    <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/lore/" class="nav-link">Lore</a>
+    <a href="/gta-rp/beef/" class="nav-link">Beef</a>
+    <a href="/gta-rp/servers/" class="nav-link">Servers</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-eyebrow">Intelligence Report</div>
+    <h1>FiveM <span class="accent">Enhanced</span></h1>
+    <p class="hero-sub">Tracking the FiveM Enhanced platform transition across the UK GTA RP ecosystem. Server readiness, migration timelines, creator impact and technical implications.</p>
+  </div>
+
+  <div class="briefing">
+    <p id="briefing-text">FiveM Enhanced represents a significant platform upgrade that will reshape how UK RP servers operate. This page tracks every server's migration status, key timeline events, and the impact on the creator ecosystem. Data is sourced from ContentLore's transition tracking tables and updated as developments unfold.</p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-val" style="color:var(--purple)" id="k-servers">—</div><div class="kpi-label">Servers Tracked</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:var(--green)" id="k-ready">—</div><div class="kpi-label">Migration Ready</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:var(--yellow)" id="k-testing">—</div><div class="kpi-label">In Testing</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:var(--cyan)" id="k-events">—</div><div class="kpi-label">Timeline Events</div></div>
+  </div>
+
+  <!-- SERVER READINESS -->
+  <div class="section">
+    <div class="section-header">
+      <h2 class="section-title">Server Readiness</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="server-grid" id="server-grid"><div class="empty-state">Loading server data…</div></div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section">
+    <div class="section-header">
+      <h2 class="section-title">Transition Timeline</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="timeline" id="timeline"><div class="empty-state">Loading timeline…</div></div>
+  </div>
+
+  <!-- CREATOR IMPACT -->
+  <div class="section">
+    <div class="section-header">
+      <h2 class="section-title">Creator Impact</h2>
+      <div class="section-line"></div>
+    </div>
+    <table class="creator-table">
+      <thead><tr><th>Creator</th><th>Server</th><th>Status</th><th>Notes</th></tr></thead>
+      <tbody id="creator-body"><tr><td colspan="4" class="empty-state">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- TECHNICAL OVERVIEW -->
+  <div class="section">
+    <div class="section-header">
+      <h2 class="section-title">Technical Overview</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <h4>What Is FiveM Enhanced?</h4>
+        <p>FiveM Enhanced is a platform upgrade bringing improved performance, better anti-cheat, enhanced scripting APIs, and native voice chat improvements. It requires server-side migration and may break existing scripts that rely on deprecated APIs.</p>
+      </div>
+      <div class="tech-card">
+        <h4>Impact on UK Servers</h4>
+        <p>UK RP servers face varying migration complexity depending on their custom script ecosystem. Larger servers with extensive custom frameworks (JESTRP, ONERP) require more testing time. Smaller servers may migrate faster but face resource constraints.</p>
+      </div>
+      <div class="tech-card">
+        <h4>Creator Experience</h4>
+        <p>For streamers, the transition is largely transparent — improved performance and stability. However, during migration windows, some servers may experience downtime or reduced features, potentially affecting stream quality and viewer experience.</p>
+      </div>
+      <div class="tech-card">
+        <h4>Timeline Outlook</h4>
+        <p>The transition is ongoing with no hard deadline. Servers are migrating at their own pace. ContentLore tracks each server's stated plans and observed progress to give the community clear visibility on where things stand.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">ContentLore — FiveM Enhanced Intelligence · Updated from transition tracking data</div>
+
+<script>
+const STATUS_COLORS = {
+  ready: 'var(--green)',
+  migrated: 'var(--green)',
+  testing: 'var(--yellow)',
+  planning: 'var(--cyan)',
+  waiting: 'var(--t3)',
+  unknown: 'var(--t3)',
+};
+
+async function loadData() {
+  try {
+    const r = await fetch('/api/transitions');
+    const data = await r.json();
+    renderKPIs(data);
+    renderServers(data.servers || []);
+    renderTimeline(data.timeline || []);
+    renderCreators(data.creators || []);
+  } catch(e) {
+    console.error('Load failed:', e);
+  }
+}
+
+function renderKPIs(data) {
+  const servers = data.servers || [];
+  const ready = servers.filter(s => ['ready','migrated','complete'].includes((s.status||'').toLowerCase())).length;
+  const testing = servers.filter(s => (s.status||'').toLowerCase() === 'testing').length;
+  document.getElementById('k-servers').textContent = servers.length;
+  document.getElementById('k-ready').textContent = ready;
+  document.getElementById('k-testing').textContent = testing;
+  document.getElementById('k-events').textContent = (data.timeline || []).length;
+}
+
+function renderServers(servers) {
+  const grid = document.getElementById('server-grid');
+  if (!servers.length) { grid.innerHTML = '<div class="empty-state">No server transition data available yet</div>'; return; }
+
+  grid.innerHTML = servers.map(s => {
+    const status = (s.status || s.migration_status || 'unknown').toLowerCase();
+    const color = STATUS_COLORS[status] || STATUS_COLORS.unknown;
+    const name = s.server_name || s.name || 'Unknown';
+    const desc = s.description || s.notes || s.migration_notes || '';
+
+    // Try to extract any extra fields for details
+    const details = [];
+    if (s.framework) details.push({label: 'Framework', val: s.framework});
+    if (s.player_count || s.slots) details.push({label: 'Slots', val: s.player_count || s.slots});
+    if (s.region) details.push({label: 'Region', val: s.region});
+    if (s.migration_date || s.target_date) details.push({label: 'Target', val: s.migration_date || s.target_date});
+
+    const detailsHtml = details.length ? `<div class="srv-details">${details.map(d =>
+      `<div class="srv-detail"><div class="srv-detail-label">${d.label}</div><div class="srv-detail-val">${d.val}</div></div>`
+    ).join('')}</div>` : '';
+
+    return `<div class="srv-card">
+      <div class="srv-status-bar" style="background:${color}"></div>
+      <div class="srv-body">
+        <div class="srv-name">${name}</div>
+        <div class="srv-meta">
+          <span class="badge badge-${status}">${status}</span>
+        </div>
+        ${desc ? `<div class="srv-desc">${desc}</div>` : ''}
+        ${detailsHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTimeline(events) {
+  const el = document.getElementById('timeline');
+  if (!events.length) { el.innerHTML = '<div class="empty-state">No timeline events recorded yet</div>'; return; }
+
+  el.innerHTML = events.map(e => {
+    const category = e.category || e.type || '';
+    const isMilestone = (category.toLowerCase().includes('milestone') || category.toLowerCase().includes('launch'));
+    const isUpcoming = e.upcoming || (e.date && new Date(e.date) > new Date());
+    const cls = isMilestone ? ' milestone' : isUpcoming ? ' upcoming' : '';
+    const date = e.date || 'TBC';
+    const title = e.title || e.event_name || 'Event';
+    const desc = e.description || e.details || '';
+
+    return `<div class="tl-event${cls}">
+      <div class="tl-date">${date}</div>
+      <div class="tl-title">${title}</div>
+      ${desc ? `<div class="tl-desc">${desc}</div>` : ''}
+      ${category ? `<div class="tl-category">${category}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderCreators(creators) {
+  const tbody = document.getElementById('creator-body');
+  if (!creators.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No creator transition data yet</td></tr>'; return; }
+
+  tbody.innerHTML = creators.map(c => {
+    const name = c.creator_name || c.name || 'Unknown';
+    const server = c.server || c.current_server || '—';
+    const status = c.status || c.migration_status || 'monitoring';
+    const notes = c.notes || c.details || '—';
+    const color = STATUS_COLORS[status.toLowerCase()] || 'var(--t2)';
+
+    return `<tr>
+      <td class="name">${name}</td>
+      <td style="font-family:var(--font-m);font-size:12px;color:var(--mag)">${server}</td>
+      <td><span class="badge badge-${status.toLowerCase()}" style="color:${color}">${status}</span></td>
+      <td style="font-size:12px;color:var(--t2)">${notes}</td>
+    </tr>`;
+  }).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>
