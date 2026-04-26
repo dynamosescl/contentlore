@@ -1,9 +1,6 @@
 // GET /api/admin/backfill-avatars — dry run, shows how many need backfill
 // POST /api/admin/backfill-avatars — executes backfill
 // Auth: Bearer token from ADMIN_TOKEN env var
-//
-// Fetches Twitch Helix GET /users for creators missing avatar_url,
-// then updates D1 with profile_image_url from Twitch.
 
 function corsHeaders() {
   return {
@@ -26,7 +23,6 @@ function authCheck(request, env) {
 }
 
 async function getTwitchToken(env) {
-  // Try KV cache
   const cached = await env.KV.get('twitch_token');
   if (cached) return cached;
 
@@ -44,7 +40,6 @@ async function getTwitchToken(env) {
 }
 
 async function fetchTwitchUsers(logins, token, clientId) {
-  // Twitch allows up to 100 logins per request
   const params = logins.map(l => `login=${encodeURIComponent(l)}`).join('&');
   const res = await fetch(`https://api.twitch.tv/helix/users?${params}`, {
     headers: {
@@ -70,7 +65,6 @@ export async function onRequestGet(context) {
   if (denied) return denied;
 
   try {
-    // Count creators missing avatars
     const missing = await env.DB.prepare(`
       SELECT COUNT(*) as count FROM creators
       WHERE avatar_url IS NULL
@@ -80,17 +74,9 @@ export async function onRequestGet(context) {
 
     const total = await env.DB.prepare('SELECT COUNT(*) as count FROM creators').first();
 
-    // Count Twitch creators specifically (we can only backfill Twitch)
-    const twitchMissing = await env.DB.prepare(`
-      SELECT COUNT(*) as count FROM creators
-      WHERE (avatar_url IS NULL OR avatar_url = '' OR avatar_url LIKE '%previews-ttv%')
-        AND primary_platform = 'twitch'
-    `).first();
-
     return new Response(JSON.stringify({
       total_creators: total.count,
       missing_avatars: missing.count,
-      twitch_missing: twitchMissing.count,
       message: 'POST to this endpoint to run the backfill',
     }), { headers: corsHeaders() });
   } catch (err) {
@@ -109,12 +95,13 @@ export async function onRequestPost(context) {
     const token = await getTwitchToken(env);
     const clientId = env.TWITCH_CLIENT_ID;
 
-    // Get all Twitch creators missing avatars
+    // Only use columns confirmed to exist: id, display_name, avatar_url
     const result = await env.DB.prepare(`
-      SELECT id, display_name, primary_handle
+      SELECT id, display_name, avatar_url
       FROM creators
-      WHERE (avatar_url IS NULL OR avatar_url = '' OR avatar_url LIKE '%previews-ttv%')
-        AND primary_platform = 'twitch'
+      WHERE avatar_url IS NULL
+         OR avatar_url = ''
+         OR avatar_url LIKE '%previews-ttv%'
       ORDER BY id
     `).all();
 
@@ -123,21 +110,20 @@ export async function onRequestPost(context) {
     if (creators.length === 0) {
       return new Response(JSON.stringify({
         success: true,
-        message: 'No creators need avatar backfill',
+        message: 'All creators already have avatars',
         updated: 0,
       }), { headers: corsHeaders() });
     }
 
     let updated = 0;
-    let failed = 0;
+    let notFound = 0;
     const errors = [];
 
     // Process in batches of 100 (Twitch API limit)
     for (let i = 0; i < creators.length; i += 100) {
       const batch = creators.slice(i, i + 100);
-      const logins = batch.map(c =>
-        (c.primary_handle || c.display_name || '').toLowerCase()
-      ).filter(Boolean);
+      // Use display_name lowercased as Twitch login
+      const logins = batch.map(c => (c.display_name || '').toLowerCase()).filter(Boolean);
 
       if (logins.length === 0) continue;
 
@@ -153,7 +139,7 @@ export async function onRequestPost(context) {
         // Update each creator
         const updateBatch = [];
         for (const creator of batch) {
-          const login = (creator.primary_handle || creator.display_name || '').toLowerCase();
+          const login = (creator.display_name || '').toLowerCase();
           const twitchUser = userMap[login];
 
           if (twitchUser && twitchUser.profile_image_url) {
@@ -163,24 +149,22 @@ export async function onRequestPost(context) {
             );
             updated++;
           } else {
-            failed++;
+            notFound++;
           }
         }
 
         if (updateBatch.length > 0) {
-          // D1 batch limit is ~100 statements
           for (let j = 0; j < updateBatch.length; j += 50) {
             await env.DB.batch(updateBatch.slice(j, j + 50));
           }
         }
 
-        // Small delay between Twitch API calls to avoid rate limits
+        // Delay between API calls
         if (i + 100 < creators.length) {
-          await new Promise(r => setTimeout(r, 200));
+          await new Promise(r => setTimeout(r, 250));
         }
       } catch (batchErr) {
-        errors.push(`Batch ${i}-${i + 100}: ${batchErr.message}`);
-        failed += batch.length;
+        errors.push(`Batch starting at ${i}: ${batchErr.message}`);
       }
     }
 
@@ -188,7 +172,7 @@ export async function onRequestPost(context) {
       success: true,
       total_processed: creators.length,
       updated,
-      failed,
+      not_found_on_twitch: notFound,
       errors: errors.length > 0 ? errors : undefined,
     }), { headers: corsHeaders() });
 
