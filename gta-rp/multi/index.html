@@ -225,8 +225,34 @@ body>*{position:relative;z-index:3}
 
 const MAX = 6;
 const PARENT = location.hostname;
-let streams = [];       // all streams from API (live + offline merged)
-let selected = [];       // keys of selected streams
+// UK GTA RP Allowlist
+const ALLOWLIST = [
+  {handle:'tyrone',platform:'twitch',name:'Tyrone'},
+  {handle:'lbmm',platform:'twitch',name:'LBMM'},
+  {handle:'reeclare',platform:'twitch',name:'Reeclare'},
+  {handle:'stoker',platform:'twitch',name:'Stoker'},
+  {handle:'samham',platform:'twitch',name:'SamHam'},
+  {handle:'deggyuk',platform:'twitch',name:'DeggyUK'},
+  {handle:'megsmary',platform:'twitch',name:'MegsMary'},
+  {handle:'tazzthegeeza',platform:'twitch',name:'TaZzTheGeeza'},
+  {handle:'wheelydev',platform:'twitch',name:'WheelyDev'},
+  {handle:'rexality',platform:'twitch',name:'RexaliTy'},
+  {handle:'steeel',platform:'twitch',name:'Steeel'},
+  {handle:'justj0hnnyhd',platform:'twitch',name:'JustJ0hnnyHD'},
+  {handle:'cherish_remedy',platform:'twitch',name:'Cherish_Remedy'},
+  {handle:'lorddorro',platform:'twitch',name:'LordDorro'},
+  {handle:'jck0__',platform:'twitch',name:'JCK0__'},
+  {handle:'absthename',platform:'twitch',name:'ABsTheName'},
+  {handle:'kavsual',platform:'kick',name:'Kavsual'},
+  {handle:'shammers',platform:'kick',name:'Shammers'},
+  {handle:'bags',platform:'kick',name:'Bags'},
+  {handle:'dynamoses',platform:'kick',name:'Dynamoses'},
+  {handle:'dcampion',platform:'kick',name:'DCampion'},
+  {handle:'elliewaller',platform:'kick',name:'EllieWaller'},
+];
+
+let streams = [];
+let selected = [];
 let activeChat = null;
 let autoMode = true;
 let audioFollow = false;
@@ -273,23 +299,15 @@ function avatarHtml(name, url, size, cls) {
 // === DATA ===
 async function loadData() {
   try {
-    const [liveRes, creatorsRes, recentRes] = await Promise.all([
+    const [liveRes, creatorsRes] = await Promise.all([
       fetch('/api/live-now'),
       fetch('/api/creators?limit=500'),
-      fetch('/api/recent-live').catch(() => ({json:()=>({})})),
     ]);
     const liveJson = await liveRes.json();
     const creatorsJson = await creatorsRes.json();
-    const recentJson = await recentRes.json();
 
     const live = (liveJson.ok && liveJson.live) ? liveJson.live : [];
     const creators = (creatorsJson.ok && creatorsJson.creators) ? creatorsJson.creators : [];
-    const recentSessions = recentJson.sessions || recentJson.recent || [];
-
-    // Build set of recently active creator names
-    const recentNames = new Set();
-    live.forEach(s => recentNames.add((s.display_name||s.handle||'').toLowerCase()));
-    recentSessions.forEach(s => recentNames.add((s.creator_name||s.display_name||s.name||'').toLowerCase()));
 
     // Build avatar lookup
     creatorAvatars = {};
@@ -300,34 +318,25 @@ async function loadData() {
       }
     });
 
-    // Build merged stream list
+    // Build merged stream list from ALLOWLIST + live
     const liveMap = {};
     live.forEach(s => {
       s.is_live = true;
       s.handle = s.handle || s.display_name.toLowerCase();
       liveMap[s.handle.toLowerCase()] = s;
+      liveMap[(s.display_name||'').toLowerCase()] = s;
     });
 
-    streams = creators
-      .filter(c => {
-        // Only show creators who are live or recently active
-        const name = (c.display_name||'').toLowerCase();
-        const handle = (c.primary_handle||'').toLowerCase();
-        return recentNames.has(name) || recentNames.has(handle);
-      })
-      .map(c => {
-      const handle = (c.primary_handle || c.display_name || '').toLowerCase();
-      const liveS = liveMap[handle] || liveMap[(c.display_name||'').toLowerCase()];
+    streams = ALLOWLIST.map(c => {
+      const liveS = liveMap[c.handle] || liveMap[c.name.toLowerCase()];
       if (liveS) {
-        delete liveMap[handle];
-        delete liveMap[(c.display_name||'').toLowerCase()];
-        return { ...liveS, avatar_url: c.avatar_url || liveS.avatar_url };
+        return { ...liveS, avatar_url: creatorAvatars[c.handle] || creatorAvatars[c.name.toLowerCase()] || liveS.avatar_url };
       }
       return {
-        handle,
-        platform: c.primary_platform || 'twitch',
-        display_name: c.display_name || handle,
-        avatar_url: c.avatar_url,
+        handle: c.handle,
+        platform: c.platform,
+        display_name: c.name,
+        avatar_url: creatorAvatars[c.handle] || creatorAvatars[c.name.toLowerCase()] || null,
         is_live: false,
         viewers: null,
         stream_title: null,
@@ -336,8 +345,14 @@ async function loadData() {
       };
     });
 
-    // Add any live streams not in creators
-    Object.values(liveMap).forEach(s => streams.unshift(s));
+    // Also add any live creators NOT in allowlist
+    live.forEach(s => {
+      const h = (s.handle||s.display_name||'').toLowerCase();
+      if (!ALLOWLIST.some(c => c.handle === h || c.name.toLowerCase() === h)) {
+        s.avatar_url = creatorAvatars[h] || s.avatar_url;
+        streams.push(s);
+      }
+    });
 
     // Sort: live first by viewers, then alpha
     streams.sort((a,b) => {
