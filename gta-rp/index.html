@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ContentLore — UK GTA RP Intelligence</title>
-<meta name="description" content="The UK GTA RP streaming intelligence platform. Live tracking, scene detection, beef and lore editorial across every UK RP server.">
+<title>ContentLore — UK GTA RP Live</title>
+<meta name="description" content="UK GTA RP streaming intelligence. See who's live, what they're playing, why it matters.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -16,7 +16,7 @@
   --mag:#FF2D6B;--mag-g:rgba(255,45,107,.3);--mag-dim:rgba(255,45,107,.12);
   --cyan:#00E5FF;--cyan-g:rgba(0,229,255,.25);--cyan-dim:rgba(0,229,255,.1);
   --green:#00FF85;--green-dim:rgba(0,255,133,.12);
-  --orange:#FF8A00;--red:#FF3B3B;
+  --orange:#FF8A00;--red:#FF3B3B;--yellow:#FFD600;
   --font-d:'Oswald',sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:system-ui,-apple-system,sans-serif;
   --clip:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
   --clip-sm:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
@@ -32,85 +32,106 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:1
 .nav-link{font-family:var(--font-d);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);text-decoration:none;padding:14px 14px;border-bottom:2px solid transparent;transition:all .2s}
 .nav-link:hover{color:var(--t2)}
 .nav-link.active{color:var(--mag);border-bottom-color:var(--mag)}
-.nav-link.coming{opacity:.35;pointer-events:none}
-.nav-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.nav-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:4px;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
 
 /* HERO */
-.hero{padding:60px 24px 40px;max-width:1200px;margin:0 auto;text-align:center;position:relative}
-.hero::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--mag),transparent)}
-.hero-title{font-family:var(--font-d);font-size:64px;font-weight:700;text-transform:uppercase;letter-spacing:6px;line-height:1}
-.hero-title .line1{display:block;color:var(--t1)}
-.hero-title .line2{display:block;background:linear-gradient(135deg,var(--mag),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-sub{font-family:var(--font-m);font-size:14px;color:var(--t3);margin-top:16px;letter-spacing:1px}
-.hero-badges{display:flex;justify-content:center;gap:12px;margin-top:20px;flex-wrap:wrap}
-.hero-badge{font-family:var(--font-m);font-size:11px;padding:6px 14px;clip-path:var(--clip-sm);display:flex;align-items:center;gap:6px}
-.hero-badge.live{background:var(--green-dim);border:1px solid var(--green);color:var(--green)}
-.hero-badge.data{background:var(--cyan-dim);border:1px solid var(--cyan);color:var(--cyan)}
-.hero-badge.mag{background:var(--mag-dim);border:1px solid rgba(255,45,107,.3);color:var(--mag)}
+.hero{padding:40px 0 16px}
+.hero-eyebrow{font-family:var(--font-m);font-size:11px;color:var(--mag);text-transform:uppercase;letter-spacing:2px;display:flex;align-items:center;gap:8px}
+.hero-eyebrow::before{content:'';width:20px;height:2px;background:var(--mag)}
+.hero h1{font-family:var(--font-d);font-size:44px;font-weight:700;text-transform:uppercase;letter-spacing:3px;line-height:1;margin-top:6px}
+.hero h1 .accent{color:var(--mag);text-shadow:0 0 30px var(--mag-g)}
+.hero-sub{font-family:var(--font-b);font-size:14px;color:var(--t3);margin-top:8px;line-height:1.5;max-width:600px}
 
-/* LIVE DASHBOARD */
-.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:40px 24px;max-width:1200px;margin:0 auto}
-.dash-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:20px;text-align:center;transition:all .2s}
-.dash-card:hover{border-color:var(--border-a);transform:translateY(-2px)}
-.dash-val{font-family:var(--font-d);font-size:36px;font-weight:700}
-.dash-label{font-family:var(--font-m);font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px}
-.dash-sub{font-family:var(--font-m);font-size:11px;color:var(--t3);margin-top:6px}
+/* STAT ROW */
+.stats{display:flex;gap:12px;margin:20px 0 28px;flex-wrap:wrap}
+.stat{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:12px 18px;display:flex;align-items:baseline;gap:8px}
+.stat-val{font-family:var(--font-d);font-size:28px;font-weight:700}
+.stat-label{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px}
 
-/* SCOREBOARD */
-.section{max-width:1200px;margin:0 auto;padding:40px 24px}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.section-title{font-family:var(--font-d);font-size:28px;font-weight:600;text-transform:uppercase;letter-spacing:3px}
-.section-line{flex:1;height:1px;background:var(--border);margin-left:20px}
-.section-link{font-family:var(--font-m);font-size:11px;color:var(--cyan);text-decoration:none;text-transform:uppercase;letter-spacing:1px}
+/* SECTION */
+.section{margin-bottom:36px}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.section-title{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
+.section-count{font-family:var(--font-m);font-size:11px;color:var(--mag);background:var(--mag-dim);padding:2px 8px;clip-path:var(--clip-sm)}
+.section-line{flex:1;height:1px;background:var(--border)}
+.section-link{font-family:var(--font-m);font-size:11px;color:var(--cyan);text-decoration:none;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
 .section-link:hover{text-decoration:underline}
 
-/* SERVER TABLE */
-.scoreboard{width:100%;border-collapse:collapse}
-.scoreboard th{font-family:var(--font-m);font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)}
-.scoreboard td{padding:12px 14px;border-bottom:1px solid var(--border);font-family:var(--font-b);font-size:14px;transition:background .15s}
-.scoreboard tr:hover td{background:var(--bg2)}
-.scoreboard .rank{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--t3);width:40px;text-align:center}
-.scoreboard .rank.top{color:var(--mag)}
-.scoreboard .server-name{font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:1px}
-.scoreboard .viewers{font-family:var(--font-m);font-size:13px;color:var(--green)}
-.scoreboard .streamers{font-family:var(--font-m);font-size:13px;color:var(--cyan)}
-.scoreboard .activity{width:80px}
-.activity-bar{height:6px;background:var(--bg3);border-radius:0;overflow:hidden}
-.activity-bar .fill{height:100%;transition:width .3s}
+/* LIVE CARDS */
+.live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}
+.live-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);overflow:hidden;transition:all .25s;cursor:pointer;position:relative}
+.live-card:hover{border-color:var(--mag);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.live-card.top-stream{border-color:var(--mag);box-shadow:0 0 20px var(--mag-g)}
+.live-card.top-stream::after{content:'TOP STREAM';position:absolute;top:12px;right:0;background:var(--mag);color:#fff;font-family:var(--font-m);font-size:8px;letter-spacing:1px;padding:3px 10px 3px 8px;clip-path:polygon(6px 0,100% 0,100% 100%,0 100%);z-index:5}
 
-/* QUICK NAV CARDS */
-.nav-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:16px}
-.nav-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:20px;cursor:pointer;transition:all .25s;text-decoration:none;color:var(--t1);display:block}
-.nav-card:hover{border-color:var(--mag);transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
-.nav-card .nc-icon{font-size:24px;margin-bottom:8px}
-.nav-card .nc-title{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:1.5px}
-.nav-card .nc-desc{font-family:var(--font-m);font-size:11px;color:var(--t3);margin-top:6px;line-height:1.5}
+.lc-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.lc-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--bg3);flex-shrink:0}
+.lc-avatar-ph{width:44px;height:44px;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:18px;color:var(--t3);flex-shrink:0}
+.lc-info{flex:1;min-width:0}
+.lc-name-row{display:flex;align-items:center;gap:8px}
+.lc-name{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc-platform{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:2px 6px;clip-path:var(--clip-sm)}
+.lc-platform.twitch{background:rgba(145,70,255,.15);color:#9146FF;border:1px solid rgba(145,70,255,.3)}
+.lc-platform.kick{background:rgba(83,252,24,.1);color:#53FC18;border:1px solid rgba(83,252,24,.3)}
+.lc-title{font-family:var(--font-b);font-size:12px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.lc-game{font-family:var(--font-m);font-size:10px;color:var(--t3);margin-top:2px}
 
-/* METHODOLOGY */
-.method{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:24px;margin-top:20px}
-.method h3{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;color:var(--t2)}
-.method p{font-family:var(--font-b);font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:12px}
-.method .stat-row{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px}
-.method .stat-box{display:flex;align-items:baseline;gap:6px}
-.method .stat-box .val{font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--cyan)}
-.method .stat-box .lbl{font-family:var(--font-m);font-size:11px;color:var(--t3);text-transform:uppercase}
+.lc-footer{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg3)}
+.lc-live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;flex-shrink:0;animation:blink 2s infinite;box-shadow:0 0 8px rgba(0,255,133,.5)}
+.lc-live-text{font-family:var(--font-m);font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:1px}
+.lc-viewers{font-family:var(--font-d);font-size:16px;font-weight:600;color:var(--green);margin-left:auto;display:flex;align-items:baseline;gap:4px}
+.lc-viewers span{font-family:var(--font-m);font-size:9px;color:var(--t3);font-weight:400}
+.lc-duration{font-family:var(--font-m);font-size:10px;color:var(--t3)}
+.lc-server{font-family:var(--font-m);font-size:9px;color:var(--mag);text-transform:uppercase;letter-spacing:.5px;padding:2px 6px;background:var(--mag-dim);clip-path:var(--clip-sm)}
 
-/* FOOTER */
-.footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-family:var(--font-m);font-size:11px;color:var(--t3);margin-top:40px}
+/* NO LIVE */
+.no-live{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:40px;text-align:center}
+.no-live p{font-family:var(--font-m);font-size:13px;color:var(--t3)}
+.no-live .big{font-family:var(--font-d);font-size:24px;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:2px}
+
+/* ROSTER */
+.roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.roster-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;transition:all .15s;cursor:pointer}
+.roster-card:hover{border-color:var(--border-a);background:var(--bg3)}
+.roster-card.is-live{border-color:rgba(0,255,133,.2)}
+.rc-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--bg3);flex-shrink:0}
+.rc-avatar-ph{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:13px;color:var(--t3);flex-shrink:0}
+.rc-avatar-wrap{position:relative;flex-shrink:0}
+.rc-dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--bg2);position:absolute;bottom:-1px;right:-1px}
+.rc-dot.live{background:var(--green);box-shadow:0 0 6px var(--green)}
+.rc-dot.off{background:var(--border)}
+.rc-info{flex:1;min-width:0}
+.rc-name{font-family:var(--font-d);font-size:13px;text-transform:uppercase;letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-meta{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.rc-on-stage{font-family:var(--font-m);font-size:8px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:3px}
+.rc-on-stage::before{content:'✓'}
+.rc-viewers{font-family:var(--font-m);font-size:11px;color:var(--green);margin-left:auto;flex-shrink:0}
+
+/* QUICK NAV */
+.quick-nav{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:28px 0 40px}
+.qn{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:14px 16px;text-decoration:none;color:var(--t1);transition:all .2s;display:block}
+.qn:hover{border-color:var(--mag);transform:translateY(-2px)}
+.qn-icon{font-size:20px;margin-bottom:6px}
+.qn-title{font-family:var(--font-d);font-size:13px;text-transform:uppercase;letter-spacing:1px}
+.qn-desc{font-family:var(--font-m);font-size:9px;color:var(--t3);margin-top:3px}
+
+.footer{border-top:1px solid var(--border);padding:20px 24px;text-align:center;font-family:var(--font-m);font-size:10px;color:var(--t3)}
 
 body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
 *{position:relative;z-index:1}.nav{z-index:100}
 
-@media(max-width:800px){
-  .hero-title{font-size:40px}
-  .dashboard{grid-template-columns:1fr 1fr;gap:8px}
-  .scoreboard{font-size:12px}
-  .nav-cards{grid-template-columns:1fr}
-}
-@media(max-width:500px){
-  .dashboard{grid-template-columns:1fr}
-  .hero-title{font-size:32px;letter-spacing:3px}
+@media(max-width:600px){
+  .hero h1{font-size:32px}
+  .live-grid{grid-template-columns:1fr}
+  .roster-grid{grid-template-columns:1fr 1fr}
+  .stats{gap:8px}
+  .stat{padding:10px 14px}
+  .stat-val{font-size:22px}
+  .quick-nav{grid-template-columns:1fr 1fr}
+  .nav-links{overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
 </style>
 </head>
@@ -127,169 +148,218 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
   </div>
 </nav>
 
-<div class="hero">
-  <div class="hero-title">
-    <span class="line1">Content</span>
-    <span class="line2">Lore</span>
+<div class="container">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">Live Now</div>
+    <h1>UK GTA RP, <span class="accent">live.</span></h1>
+    <p class="hero-sub">Who's live, what they're playing, why it matters. ContentLore tracks every UK creator worth watching — across Twitch and Kick — so you never miss the storyline.</p>
   </div>
-  <p class="hero-sub">UK GTA RP Streaming Intelligence Platform</p>
-  <div class="hero-badges">
-    <span class="hero-badge live">⬤ Live Tracking</span>
-    <span class="hero-badge data">Scene Detection</span>
-    <span class="hero-badge mag">Editorial Coverage</span>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><span class="stat-val" style="color:var(--green)" id="s-live">—</span><span class="stat-label">creators on</span></div>
+    <div class="stat"><span class="stat-val" style="color:var(--mag)" id="s-viewers">—</span><span class="stat-label">watching</span></div>
+    <div class="stat"><span class="stat-val" style="color:var(--cyan)" id="s-scene">—</span><span class="stat-label">in scene</span></div>
+    <div class="stat"><span class="stat-val" style="color:var(--orange)" id="s-platforms">—</span><span class="stat-label">platforms</span></div>
+  </div>
+
+  <!-- LIVE NOW -->
+  <div class="section">
+    <div class="section-header">
+      <h2 class="section-title">Live Right Now</h2>
+      <span class="section-count" id="live-count">0 on now</span>
+      <div class="section-line"></div>
+      <a href="/gta-rp/multi/" class="section-link">Multi-View →</a>
+    </div>
+    <div class="live-grid" id="live-grid">
+      <div class="no-live"><div class="big">Scanning…</div><p>Checking streams</p></div>
+    </div>
+  </div>
+
+  <!-- ROSTER -->
+  <div class="section">
+    <div class="section-header">
+      <h2 class="section-title">The Roster</h2>
+      <span class="section-count" id="roster-count">—</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="roster-grid" id="roster-grid"></div>
+  </div>
+
+  <!-- QUICK NAV -->
+  <div class="quick-nav">
+    <a href="/gta-rp/now/" class="qn"><div class="qn-icon">📡</div><div class="qn-title">Now</div><div class="qn-desc">Command centre</div></a>
+    <a href="/gta-rp/multi/" class="qn"><div class="qn-icon">📺</div><div class="qn-title">Multi-View</div><div class="qn-desc">Watch together</div></a>
+    <a href="/gta-rp/beef/" class="qn"><div class="qn-icon">🥩</div><div class="qn-title">Beef</div><div class="qn-desc">Rivalries</div></a>
+    <a href="/gta-rp/lore/" class="qn"><div class="qn-icon">📖</div><div class="qn-title">Lore</div><div class="qn-desc">Story arcs</div></a>
+    <a href="/gta-rp/servers/" class="qn"><div class="qn-icon">🖥</div><div class="qn-title">Servers</div><div class="qn-desc">Directory</div></a>
+    <a href="/gta-rp/fivem-enhanced/" class="qn"><div class="qn-icon">⚡</div><div class="qn-title">FiveM</div><div class="qn-desc">Migration</div></a>
   </div>
 </div>
 
-<!-- DASHBOARD -->
-<div class="dashboard" id="dashboard">
-  <div class="dash-card"><div class="dash-val" style="color:var(--green)" id="d-live">—</div><div class="dash-label">Streaming Now</div></div>
-  <div class="dash-card"><div class="dash-val" style="color:var(--mag)" id="d-viewers">—</div><div class="dash-label">Total Viewers</div></div>
-  <div class="dash-card"><div class="dash-val" style="color:var(--cyan)" id="d-creators">—</div><div class="dash-label">Creators Tracked</div></div>
-  <div class="dash-card"><div class="dash-val" style="color:var(--orange)" id="d-servers">—</div><div class="dash-label">Servers</div></div>
-</div>
-
-<!-- SCOREBOARD -->
-<div class="section">
-  <div class="section-header">
-    <h2 class="section-title">Server Scoreboard</h2>
-    <div class="section-line"></div>
-    <a href="/gta-rp/servers/" class="section-link">All Servers →</a>
-  </div>
-  <table class="scoreboard">
-    <thead><tr><th>#</th><th>Server</th><th>Live</th><th>Viewers</th><th>Activity</th></tr></thead>
-    <tbody id="scoreboard-body"><tr><td colspan="5" style="text-align:center;color:var(--t3);padding:30px">Loading…</td></tr></tbody>
-  </table>
-</div>
-
-<!-- QUICK NAV -->
-<div class="section">
-  <div class="section-header">
-    <h2 class="section-title">Explore</h2>
-    <div class="section-line"></div>
-  </div>
-  <div class="nav-cards">
-    <a href="/gta-rp/multi/" class="nav-card">
-      <div class="nc-icon">📺</div>
-      <div class="nc-title">Multi-View</div>
-      <div class="nc-desc">Watch up to 6 streams simultaneously with scene detection and live chat.</div>
-    </a>
-    <a href="/gta-rp/beef/" class="nav-card">
-      <div class="nc-icon">🥩</div>
-      <div class="nc-title">Beef Tracker</div>
-      <div class="nc-desc">Every rivalry, grudge match and score to settle with heat ratings and beat timelines.</div>
-    </a>
-    <a href="/gta-rp/lore/" class="nav-card">
-      <div class="nc-icon">📖</div>
-      <div class="nc-title">Lore Arcs</div>
-      <div class="nc-desc">Track story arcs, gang wars, heists and sagas chapter by chapter across servers.</div>
-    </a>
-    <a href="/gta-rp/servers/" class="nav-card">
-      <div class="nc-icon">🖥</div>
-      <div class="nc-title">Server Directory</div>
-      <div class="nc-desc">Complete registry of UK RP servers with live activity overlay and creator counts.</div>
-    </a>
-    <a href="/gta-rp/fivem-enhanced/" class="nav-card">
-      <div class="nc-icon">⚡</div>
-      <div class="nc-title">FiveM Enhanced</div>
-      <div class="nc-desc">Track the FiveM Enhanced platform transition. Server readiness, migration status and technical impact.</div>
-    </a>
-    <a href="/gta-rp/gta-6/" class="nav-card">
-      <div class="nc-icon">🔮</div>
-      <div class="nc-title">GTA 6 Intelligence</div>
-      <div class="nc-desc">Strategic briefing on GTA 6's impact on UK RP. Scenarios, timelines and community preparedness.</div>
-    </a>
-  </div>
-</div>
-
-<!-- METHODOLOGY -->
-<div class="section">
-  <div class="section-header">
-    <h2 class="section-title">Methodology</h2>
-    <div class="section-line"></div>
-  </div>
-  <div class="method">
-    <h3>How We Track</h3>
-    <p>ContentLore polls Twitch Helix and Kick every 15 minutes via a Cloudflare Worker scheduler, capturing live status, viewer counts, titles, and tags for every tracked creator. Snapshots are stitched into stream sessions for historical analysis.</p>
-    <p>Scene detection groups concurrent streams by server using title keyword matching against our UK server registry. The beef and lore editorial layers are manually curated with beat-by-beat timelines and chapter breakdowns.</p>
-    <div class="stat-row" id="method-stats"></div>
-  </div>
-</div>
-
-<div class="footer">
-  ContentLore © 2025 — UK GTA RP Streaming Intelligence
-</div>
+<div class="footer">ContentLore · UK GTA RP Streaming Intelligence · 2025</div>
 
 <script>
-async function loadDashboard() {
+let liveCreators = [];
+let allCreators = [];
+
+async function loadAll() {
   try {
-    const [liveRes, serverRes] = await Promise.all([
-      fetch('/api/live-now').catch(() => ({json: () => ({})})),
-      fetch('/api/servers').catch(() => ({json: () => ({})}))
+    const [liveRes, creatorsRes, scenesRes] = await Promise.all([
+      fetch('/api/live-now').catch(() => ({json:()=>({})})),
+      fetch('/api/creators?limit=200').catch(() => ({json:()=>({})})),
+      fetch('/api/scenes').catch(() => ({json:()=>({})})),
     ]);
-    const lData = await liveRes.json();
-    const sData = await serverRes.json();
-    const live = lData.live || lData.creators || [];
-    const servers = sData.servers || sData || [];
 
-    // Dashboard
-    const totalViewers = live.reduce((s, c) => s + (c.viewers || 0), 0);
-    document.getElementById('d-live').textContent = live.length;
-    document.getElementById('d-viewers').textContent = fmtN(totalViewers);
-    document.getElementById('d-servers').textContent = servers.length;
+    const liveData = await liveRes.json();
+    const creatorsData = await creatorsRes.json();
+    const scenesData = await scenesRes.json();
 
-    // Creator count from DB
-    try {
-      const cRes = await fetch('/api/creators');
-      const cData = await cRes.json();
-      const count = cData.total || (Array.isArray(cData) ? cData.length : (cData.creators || []).length);
-      document.getElementById('d-creators').textContent = fmtN(count);
-    } catch(e) {
-      document.getElementById('d-creators').textContent = '7,770+';
-    }
+    liveCreators = liveData.live || liveData.creators || [];
+    allCreators = creatorsData.creators || creatorsData || [];
+    const scenes = scenesData.scenes || scenesData || [];
 
-    // Scoreboard
-    const serverMap = {};
-    servers.forEach(s => {
-      const name = s.name || s.server_name || '';
-      serverMap[name.toLowerCase()] = {name, live: 0, viewers: 0};
-    });
-    live.forEach(c => {
-      const srv = (c.server || '').toLowerCase();
-      if (serverMap[srv]) {
-        serverMap[srv].live++;
-        serverMap[srv].viewers += (c.viewers || 0);
-      }
-    });
-    const ranked = Object.values(serverMap).sort((a,b) => b.viewers - a.viewers || b.live - a.live);
-    const maxViewers = ranked[0]?.viewers || 1;
+    // Stats
+    const totalViewers = liveCreators.reduce((s,c) => s + (c.viewers || 0), 0);
+    const inScene = scenes.reduce((s,sc) => s + (sc.streamers?.length || sc.streamer_count || 0), 0);
+    const platforms = new Set(liveCreators.map(c => c.platform || 'twitch'));
 
-    const tbody = document.getElementById('scoreboard-body');
-    if (!ranked.length || !ranked.some(s => s.live > 0)) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:30px">No live activity right now</td></tr>';
-    } else {
-      tbody.innerHTML = ranked.filter(s => s.live > 0).slice(0, 10).map((s, i) => {
-        const pct = Math.round((s.viewers / maxViewers) * 100);
-        const color = i === 0 ? 'var(--mag)' : i < 3 ? 'var(--cyan)' : 'var(--t3)';
-        return `<tr>
-          <td class="rank${i < 3 ? ' top' : ''}">${i+1}</td>
-          <td class="server-name">${s.name}</td>
-          <td class="streamers">${s.live}</td>
-          <td class="viewers">${fmtN(s.viewers)}</td>
-          <td class="activity"><div class="activity-bar"><div class="fill" style="width:${pct}%;background:${color}"></div></div></td>
-        </tr>`;
-      }).join('');
-    }
+    document.getElementById('s-live').textContent = liveCreators.length;
+    document.getElementById('s-viewers').textContent = fmtN(totalViewers);
+    document.getElementById('s-scene').textContent = inScene || liveCreators.length;
+    document.getElementById('s-platforms').textContent = platforms.size || '—';
+    document.getElementById('live-count').textContent = `${liveCreators.length} on now`;
 
-    // Methodology stats
-    document.getElementById('method-stats').innerHTML = `
-      <div class="stat-box"><span class="val">7,770+</span><span class="lbl">Creators</span></div>
-      <div class="stat-box"><span class="val">25,950+</span><span class="lbl">Snapshots</span></div>
-      <div class="stat-box"><span class="val">15</span><span class="lbl">Min Interval</span></div>
-      <div class="stat-box"><span class="val">${servers.length}</span><span class="lbl">Servers</span></div>`;
-
+    renderLive();
+    renderRoster();
   } catch(e) {
-    console.error('Dashboard load failed:', e);
+    console.error('Load failed:', e);
   }
+}
+
+function renderLive() {
+  const grid = document.getElementById('live-grid');
+
+  if (!liveCreators.length) {
+    grid.innerHTML = `<div class="no-live"><div class="big">Nobody Live</div><p>No UK RP creators streaming right now · check back later</p></div>`;
+    return;
+  }
+
+  // Sort by viewers desc
+  const sorted = [...liveCreators].sort((a,b) => (b.viewers||0) - (a.viewers||0));
+  const topViewers = sorted[0]?.viewers || 0;
+
+  grid.innerHTML = sorted.map((c, i) => {
+    const name = c.name || c.creator_name || c.channel || '?';
+    const platform = (c.platform || 'twitch').toLowerCase();
+    const title = c.title || c.stream_title || '';
+    const game = c.game || c.game_name || 'Grand Theft Auto V';
+    const viewers = c.viewers || 0;
+    const server = c.server || '';
+    const avatar = c.profile_image_url || c.profile_image || c.avatar_url || '';
+    const isTop = i === 0 && viewers > 0;
+
+    // Duration
+    let durStr = '';
+    if (c.started_at || c.session_start) {
+      const start = new Date(c.started_at || c.session_start);
+      const mins = Math.floor((Date.now() - start) / 60000);
+      if (mins >= 60) {
+        durStr = Math.floor(mins/60) + 'h ' + (mins%60) + 'm';
+      } else {
+        durStr = mins + 'm';
+      }
+    }
+
+    const avatarHtml = avatar
+      ? `<img class="lc-avatar" src="${avatar}" alt="" loading="lazy" onerror="this.className='lc-avatar-ph';this.outerHTML='<div class=\\'lc-avatar-ph\\'>${name.charAt(0).toUpperCase()}</div>'">`
+      : `<div class="lc-avatar-ph">${name.charAt(0).toUpperCase()}</div>`;
+
+    const profileUrl = platform === 'kick' ? `https://kick.com/${name}` : `https://twitch.tv/${name.toLowerCase()}`;
+
+    return `<div class="live-card${isTop ? ' top-stream' : ''}" onclick="window.open('${profileUrl}','_blank')">
+      <div class="lc-header">
+        ${avatarHtml}
+        <div class="lc-info">
+          <div class="lc-name-row">
+            <span class="lc-name">${name}</span>
+            <span class="lc-platform ${platform}">${platform}</span>
+          </div>
+          ${title ? `<div class="lc-title" title="${title.replace(/"/g,'&quot;')}">${title}</div>` : ''}
+          <div class="lc-game">${game}</div>
+        </div>
+      </div>
+      <div class="lc-footer">
+        <div class="lc-live-dot"></div>
+        <span class="lc-live-text">Live</span>
+        ${server ? `<span class="lc-server">${server}</span>` : ''}
+        ${durStr ? `<span class="lc-duration">${durStr}</span>` : ''}
+        <div class="lc-viewers">${fmtN(viewers)} <span>watching</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderRoster() {
+  const grid = document.getElementById('roster-grid');
+
+  // Build live lookup
+  const liveMap = {};
+  liveCreators.forEach(c => {
+    const name = (c.name || c.creator_name || c.channel || '').toLowerCase();
+    liveMap[name] = c;
+  });
+
+  // Merge all creators with live status
+  const merged = allCreators.map(c => {
+    const name = (c.creator_name || c.name || '').toLowerCase();
+    const live = liveMap[name];
+    return {
+      ...c,
+      displayName: c.creator_name || c.name || '?',
+      isLive: !!live,
+      viewers: live?.viewers || 0,
+      livePlatform: live?.platform || c.primary_platform || 'twitch',
+      server: live?.server || '',
+      avatar: c.profile_image_url || c.profile_image || c.avatar_url || '',
+    };
+  });
+
+  // Sort: live first (by viewers), then alphabetical
+  merged.sort((a,b) => {
+    if (a.isLive && !b.isLive) return -1;
+    if (!a.isLive && b.isLive) return 1;
+    if (a.isLive && b.isLive) return b.viewers - a.viewers;
+    return a.displayName.localeCompare(b.displayName);
+  });
+
+  // Count
+  const offlineCount = merged.filter(c => !c.isLive).length;
+  document.getElementById('roster-count').textContent = `${offlineCount} creators · ${liveCreators.length} live`;
+
+  grid.innerHTML = merged.map(c => {
+    const platform = (c.livePlatform || c.primary_platform || 'twitch').toLowerCase();
+    const profileUrl = platform === 'kick' ? `https://kick.com/${c.displayName}` : `https://twitch.tv/${c.displayName.toLowerCase()}`;
+    const avatarHtml = c.avatar
+      ? `<img class="rc-avatar" src="${c.avatar}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'rc-avatar-ph\\'>${c.displayName.charAt(0).toUpperCase()}</div>'">`
+      : `<div class="rc-avatar-ph">${c.displayName.charAt(0).toUpperCase()}</div>`;
+
+    return `<div class="roster-card${c.isLive ? ' is-live' : ''}" onclick="window.open('${profileUrl}','_blank')">
+      <div class="rc-avatar-wrap">
+        ${avatarHtml}
+        <div class="rc-dot ${c.isLive ? 'live' : 'off'}"></div>
+      </div>
+      <div class="rc-info">
+        <div class="rc-name">${c.displayName}</div>
+        <div class="rc-meta">
+          <span>${platform}</span>
+          ${c.isLive ? `<span class="rc-on-stage">on stage</span>` : ''}
+        </div>
+      </div>
+      ${c.isLive && c.viewers ? `<span class="rc-viewers">${fmtN(c.viewers)}</span>` : ''}
+    </div>`;
+  }).join('');
 }
 
 function fmtN(n) {
@@ -299,8 +369,9 @@ function fmtN(n) {
   return n.toLocaleString();
 }
 
-loadDashboard();
-setInterval(loadDashboard, 60000);
+// Init + auto-refresh
+loadAll();
+setInterval(loadAll, 30000);
 </script>
 </body>
 </html>
