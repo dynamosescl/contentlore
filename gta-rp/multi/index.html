@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Multi-View · UK GTA RP · ContentLore</title>
+<meta name="description" content="Every angle, one screen. Watch multiple UK GTA RP streams synced to the same scene — auto-detected, one-click multi-POV." />
+<meta name="theme-color" content="#0A0A0B" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../styles.css">
+
+<style>
+/* ── Multi-view page-specific styles ─────────────────────────── */
+
+.mv-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--container-pad);
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10, 10, 11, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.mv-nav-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  text-decoration: none;
+}
+.mv-nav-brand .wordmark {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.mv-nav-brand .wordmark .dot { color: var(--signal); }
+.mv-nav-brand .tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.mv-nav-links {
+  display: flex;
+  gap: 0;
+  list-style: none;
+}
+.mv-nav-links a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  padding: 18px 16px;
+  transition: color 0.2s;
+}
+.mv-nav-links a:hover { color: var(--text-primary); }
+.mv-nav-links a.active { color: var(--signal); border-bottom: 2px solid var(--signal); }
+
+/* ── Hero area ─────────────────────────────────────────────────── */
+
+.mv-hero {
+  padding: 48px var(--container-pad) 32px;
+}
+.mv-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mv-kicker .live-dot {
+  width: 6px; height: 6px;
+  background: #ff3b47;
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.mv-headline {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 0.92;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+.mv-headline em {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--signal);
+  text-transform: none;
+}
+.mv-sub {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 620px;
+}
+
+/* ── Scene detection bar ────────────────────────────────────── */
+
+.mv-scene-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--container-pad);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+.mv-scene-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.mv-scene-label .scene-name {
+  color: var(--signal);
+  margin-left: 6px;
+}
+.mv-scene-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.mv-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.1em;
+}
+.mv-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 7px 16px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mv-btn:hover { border-color: var(--signal); color: var(--signal); }
+.mv-btn.active { background: var(--signal); color: var(--bg); border-color: var(--signal); }
+.mv-btn-primary {
+  background: var(--signal);
+  color: var(--bg);
+  border-color: var(--signal);
+  font-weight: 500;
+}
+.mv-btn-primary:hover { background: var(--signal-dim); }
+
+/* ── Stream grid ────────────────────────────────────────────── */
+
+.mv-stage {
+  display: flex;
+  gap: 0;
+  padding: 0 var(--container-pad);
+  min-height: 480px;
+}
+
+.mv-grid {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+}
+.mv-grid[data-count="1"] { grid-template-columns: 1fr; }
+.mv-grid[data-count="2"] { grid-template-columns: 1fr 1fr; }
+.mv-grid[data-count="3"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.mv-grid[data-count="3"] .mv-tile:first-child { grid-row: 1 / -1; }
+.mv-grid[data-count="4"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+.mv-tile {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  min-height: 220px;
+}
+.mv-tile iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  position: absolute;
+  inset: 0;
+}
+.mv-tile-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.mv-tile-empty:hover { border-color: var(--signal-dim); }
+.mv-tile-empty .plus {
+  width: 40px; height: 40px;
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--text-dim);
+}
+
+.mv-tile-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: linear-gradient(to bottom, rgba(10,10,11,0.85) 0%, transparent 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+.mv-tile-header > * { pointer-events: auto; }
+.mv-tile-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mv-tile-name .platform-tag {
+  font-size: 8px;
+  padding: 1px 5px;
+  background: var(--border);
+  color: var(--text-tertiary);
+  letter-spacing: 0.12em;
+}
+.mv-tile-close {
+  width: 22px; height: 22px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid var(--border);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+.mv-tile-close:hover { color: #ff3b47; border-color: #ff3b47; }
+
+/* ── Chat sidebar ───────────────────────────────────────────── */
+
+.mv-chat {
+  width: 340px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  margin: 12px 0;
+}
+.mv-chat-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mv-chat-header h3 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.mv-chat-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.mv-chat-tab {
+  flex: 1;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  text-align: center;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mv-chat-tab:hover { color: var(--text-secondary); }
+.mv-chat-tab.active { color: var(--signal); border-bottom-color: var(--signal); }
+.mv-chat-body {
+  flex: 1;
+  position: relative;
+}
+.mv-chat-body iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  position: absolute;
+  inset: 0;
+}
+.mv-chat-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── Scene groups (below stage) ──────────────────────────── */
+
+.mv-groups {
+  padding: 32px var(--container-pad);
+}
+.mv-groups-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.mv-groups-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.mv-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+.mv-group:hover { border-color: var(--border-strong); }
+.mv-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  cursor: pointer;
+}
+.mv-group-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mv-group-server {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid;
+}
+.mv-group-scene {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-style: italic;
+  color: var(--chrome);
+}
+.mv-group-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  display: flex;
+  gap: 16px;
+}
+
+.mv-group-streams {
+  display: flex;
+  gap: 12px;
+  padding: 0 18px 14px;
+  overflow-x: auto;
+}
+
+.mv-stream-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  min-width: 200px;
+}
+.mv-stream-card:hover { border-color: var(--signal-dim); }
+.mv-stream-card.selected { border-color: var(--signal); background: rgba(212,165,116,0.08); }
+
+.mv-stream-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+.mv-stream-info {
+  flex: 1;
+  overflow: hidden;
+}
+.mv-stream-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mv-stream-viewers {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.08em;
+}
+.mv-stream-platform {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: var(--border);
+  color: var(--text-tertiary);
+}
+
+/* ── Roster ─────────────────────────────────────────────────── */
+
+.mv-roster {
+  padding: 32px var(--container-pad) 64px;
+  border-top: 1px solid var(--border);
+}
+.mv-roster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.mv-roster-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.mv-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.mv-creator-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mv-creator-card:hover { border-color: var(--border-strong); }
+.mv-creator-card.live { border-color: rgba(107, 143, 115, 0.4); }
+.mv-creator-card.on-stage { border-color: var(--signal); background: rgba(212,165,116,0.06); }
+
+.mv-creator-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+.mv-creator-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mv-creator-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mv-creator-live-dot {
+  width: 6px; height: 6px;
+  background: var(--green-ok);
+  border-radius: 50%;
+}
+.mv-creator-platform {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.mv-on-stage-tag {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--signal);
+}
+
+/* ── Empty / loading states ──────────────────────────────── */
+
+.mv-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 0;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.mv-spinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--signal);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.mv-empty-state {
+  padding: 80px var(--container-pad);
+  text-align: center;
+}
+.mv-empty-state h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.mv-empty-state p {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--text-tertiary);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 960px) {
+  .mv-stage { flex-direction: column; }
+  .mv-chat { width: 100%; height: 360px; border-left: none; border-top: 1px solid var(--border); }
+  .mv-nav-links { display: none; }
+}
+@media (max-width: 640px) {
+  .mv-grid[data-count="2"] { grid-template-columns: 1fr; }
+  .mv-grid[data-count="3"],
+  .mv-grid[data-count="4"] { grid-template-columns: 1fr; grid-template-rows: auto; }
+  .mv-grid[data-count="3"] .mv-tile:first-child { grid-row: auto; }
+  .mv-roster-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────────── -->
+<nav class="mv-nav">
+  <a href="../../" class="mv-nav-brand">
+    <span class="wordmark">ContentLore<span class="dot">.</span></span>
+    <span class="tag">UK · GTA RP</span>
+  </a>
+  <ul class="mv-nav-links">
+    <li><a href="../">Live</a></li>
+    <li><a href="../now/">Now</a></li>
+    <li><a href="./" class="active">Multi-View</a></li>
+    <li><a href="../lore/">Lore</a></li>
+    <li><a href="../beef/">Beef</a></li>
+    <li><a href="../servers/">Servers</a></li>
+    <li><a href="../../about/">About</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────── -->
+<div class="mv-hero">
+  <div class="mv-kicker">
+    <span class="live-dot"></span>
+    <span>Multi-View · Live</span>
+  </div>
+  <h1 class="mv-headline">Every angle. <em>One screen.</em></h1>
+  <p class="mv-sub">Pick up to 4 streams across Twitch and Kick. All start muted — click a tile to unmute. Scene detection auto-groups streams from the same storyline.</p>
+</div>
+
+<!-- ── Scene detection bar ──────────────────────────────────────── -->
+<div class="mv-scene-bar">
+  <div class="mv-scene-label" id="scene-label">
+    Live Scene <span class="scene-name" id="scene-name">Scanning…</span>
+  </div>
+  <div class="mv-scene-controls">
+    <span class="mv-count" id="stage-count">0/4 selected</span>
+    <button class="mv-btn" id="btn-clear" onclick="clearStage()">Clear</button>
+    <button class="mv-btn mv-btn-primary" id="btn-watch" onclick="loadAutoScene()">⚡ Watch Live Scene</button>
+  </div>
+</div>
+
+<!-- ── Stage (embeds + chat) ────────────────────────────────── -->
+<div class="mv-stage">
+  <div class="mv-grid" id="stream-grid" data-count="0">
+    <!-- Tiles injected by JS -->
+  </div>
+  <div class="mv-chat" id="chat-panel">
+    <div class="mv-chat-header">
+      <h3>Stream Chat</h3>
+    </div>
+    <div class="mv-chat-tabs" id="chat-tabs">
+      <!-- Tabs injected by JS -->
+    </div>
+    <div class="mv-chat-body" id="chat-body">
+      <div class="mv-chat-empty">Select a stream</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Detected scene groups ────────────────────────────────── -->
+<div class="mv-groups" id="groups-section">
+  <div class="mv-groups-header">
+    <h2 class="mv-groups-title">Detected Activity</h2>
+  </div>
+  <div id="groups-list">
+    <div class="mv-loading">
+      <div class="mv-spinner"></div>
+      <span>Scanning streams…</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Roster ────────────────────────────────────────────────── -->
+<div class="mv-roster" id="roster-section">
+  <div class="mv-roster-header">
+    <h2 class="mv-roster-title">The Roster</h2>
+  </div>
+  <div class="mv-roster-grid" id="roster-grid">
+    <!-- Injected by JS from /api/creators -->
+  </div>
+</div>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer class="cl-footer" style="position: relative; z-index: 2;">
+  <div class="cl-footer-bottom" style="padding: 20px var(--container-pad); border-top: 1px solid var(--border);">
+    <div style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);">
+      © ContentLore 2026 · Independent UK streaming publication
+    </div>
+  </div>
+</footer>
+
+<script>
+// ================================================================
+// Multi-View Controller
+// Manages stream tiles, chat, scene detection, and roster.
+// ================================================================
+
+const MAX_TILES = 4;
+const PARENT_DOMAIN = location.hostname; // for Twitch embed
+
+let sceneData = null;
+let stagedStreams = []; // Array of { handle, platform, display_name, avatar_url, viewers }
+let activeChatHandle = null;
+
+// ── Initialise ──────────────────────────────────────────────────
+
+async function init() {
+  renderEmptyGrid();
+  await Promise.all([
+    fetchScenes(),
+    fetchRoster(),
+  ]);
+}
+
+// ── Scene data ──────────────────────────────────────────────────
+
+async function fetchScenes() {
+  try {
+    const res = await fetch('/api/scenes');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'API error');
+    sceneData = data;
+    renderSceneBar(data);
+    renderGroups(data.groups);
+  } catch (err) {
+    console.error('[scenes]', err);
+    document.getElementById('groups-list').innerHTML = `
+      <div class="mv-empty-state">
+        <h2>No streams detected</h2>
+        <p>Nobody from the UK GTA RP roster is live right now. Check back during UK prime time (7–11pm GMT).</p>
+      </div>
+    `;
+    document.getElementById('scene-name').textContent = 'No activity';
+  }
+}
+
+function renderSceneBar(data) {
+  const el = document.getElementById('scene-name');
+  if (data.auto_selection) {
+    const sel = data.auto_selection;
+    const parts = [];
+    if (sel.server) parts.push(sel.server.name);
+    if (sel.scene) parts.push(sel.scene.label);
+    if (parts.length === 0 && sel.streams.length > 0) parts.push(sel.streams[0].display_name);
+    el.textContent = parts.join(' · ') || 'General';
+  } else {
+    el.textContent = 'No activity';
+    document.getElementById('btn-watch').style.display = 'none';
+  }
+}
+
+// ── Group rendering ─────────────────────────────────────────────
+
+function renderGroups(groups) {
+  const container = document.getElementById('groups-list');
+  if (!groups || groups.length === 0) {
+    container.innerHTML = `
+      <div class="mv-empty-state">
+        <h2>Quiet right now</h2>
+        <p>No UK GTA RP streams detected. The roster is checked every 15 minutes.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = groups.map(group => {
+    const serverTag = group.server
+      ? `<span class="mv-group-server" style="color: ${group.server.colour}; border-color: ${group.server.colour};">${group.server.name}</span>`
+      : '';
+    const sceneTag = group.scene
+      ? `<span class="mv-group-scene">${group.scene.label}</span>`
+      : (group.type === 'server' ? '<span class="mv-group-scene">General</span>' : '');
+
+    const streamCards = group.streams.map(s => {
+      const isOnStage = stagedStreams.some(st => st.handle === s.handle);
+      return `
+        <div class="mv-stream-card ${isOnStage ? 'selected' : ''}" onclick="toggleStream(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+          <img class="mv-stream-avatar" src="${s.avatar_url || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect fill=%22%23222%22 width=%2232%22 height=%2232%22/></svg>'}" alt="" loading="lazy">
+          <div class="mv-stream-info">
+            <div class="mv-stream-name">${esc(s.display_name || s.handle)}</div>
+            <div class="mv-stream-viewers">${s.viewers || 0} viewers</div>
+          </div>
+          <span class="mv-stream-platform">${s.platform || 'twitch'}</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="mv-group">
+        <div class="mv-group-head" onclick="loadGroup('${group.id}')">
+          <div class="mv-group-label">
+            ${serverTag}
+            ${sceneTag}
+          </div>
+          <div class="mv-group-meta">
+            <span>${group.stream_count} stream${group.stream_count !== 1 ? 's' : ''}</span>
+            <span>${group.total_viewers} viewers</span>
+            <button class="mv-btn" onclick="event.stopPropagation(); loadGroup('${group.id}')">Watch</button>
+          </div>
+        </div>
+        <div class="mv-group-streams">${streamCards}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Stage management ────────────────────────────────────────────
+
+function renderEmptyGrid() {
+  const grid = document.getElementById('stream-grid');
+  grid.setAttribute('data-count', '0');
+  grid.innerHTML = Array.from({ length: 2 }, () => `
+    <div class="mv-tile mv-tile-empty">
+      <div class="plus">+</div>
+      <span>Add stream</span>
+    </div>
+  `).join('');
+}
+
+function renderStage() {
+  const grid = document.getElementById('stream-grid');
+  const count = stagedStreams.length;
+  grid.setAttribute('data-count', String(count || 0));
+
+  if (count === 0) {
+    renderEmptyGrid();
+    updateChatPanel();
+    updateStageCount();
+    return;
+  }
+
+  const tiles = stagedStreams.map((s, i) => {
+    const embedUrl = buildEmbedUrl(s);
+    return `
+      <div class="mv-tile">
+        <div class="mv-tile-header">
+          <div class="mv-tile-name">
+            ${esc(s.display_name || s.handle)}
+            <span class="platform-tag">${s.platform || 'twitch'}</span>
+          </div>
+          <button class="mv-tile-close" onclick="removeStream(${i})">×</button>
+        </div>
+        <iframe src="${embedUrl}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      </div>
+    `;
+  });
+
+  // Fill remaining slots with empty tiles
+  const remaining = Math.max(0, 2 - count);
+  for (let i = 0; i < remaining && count + i < MAX_TILES; i++) {
+    tiles.push(`
+      <div class="mv-tile mv-tile-empty">
+        <div class="plus">+</div>
+        <span>Add stream</span>
+      </div>
+    `);
+  }
+
+  grid.innerHTML = tiles.join('');
+  updateChatPanel();
+  updateStageCount();
+  updateRosterHighlights();
+  // Re-render groups to update selected state
+  if (sceneData) renderGroups(sceneData.groups);
+}
+
+function buildEmbedUrl(stream) {
+  const platform = (stream.platform || 'twitch').toLowerCase();
+  const handle = stream.handle;
+  if (platform === 'kick') {
+    return `https://player.kick.com/${encodeURIComponent(handle)}`;
+  }
+  // Default Twitch
+  return `https://player.twitch.tv/?channel=${encodeURIComponent(handle)}&parent=${PARENT_DOMAIN}&muted=true`;
+}
+
+function buildChatUrl(stream) {
+  const platform = (stream.platform || 'twitch').toLowerCase();
+  const handle = stream.handle;
+  if (platform === 'kick') {
+    return `https://kick.com/${encodeURIComponent(handle)}/chatroom`;
+  }
+  return `https://www.twitch.tv/embed/${encodeURIComponent(handle)}/chat?parent=${PARENT_DOMAIN}&darkpopout`;
+}
+
+function toggleStream(stream) {
+  const idx = stagedStreams.findIndex(s => s.handle === stream.handle);
+  if (idx >= 0) {
+    stagedStreams.splice(idx, 1);
+  } else if (stagedStreams.length < MAX_TILES) {
+    stagedStreams.push(stream);
+  }
+  renderStage();
+}
+
+function removeStream(index) {
+  stagedStreams.splice(index, 1);
+  renderStage();
+}
+
+function clearStage() {
+  stagedStreams = [];
+  renderStage();
+}
+
+function loadAutoScene() {
+  if (!sceneData || !sceneData.auto_selection) return;
+  const group = sceneData.auto_selection;
+  stagedStreams = group.streams.slice(0, MAX_TILES).map(s => ({ ...s }));
+  renderStage();
+}
+
+function loadGroup(groupId) {
+  if (!sceneData) return;
+  const group = sceneData.groups.find(g => g.id === groupId);
+  if (!group) return;
+  stagedStreams = group.streams.slice(0, MAX_TILES).map(s => ({ ...s }));
+  renderStage();
+}
+
+function updateStageCount() {
+  document.getElementById('stage-count').textContent = `${stagedStreams.length}/${MAX_TILES} selected`;
+}
+
+// ── Chat panel ──────────────────────────────────────────────────
+
+function updateChatPanel() {
+  const tabs = document.getElementById('chat-tabs');
+  const body = document.getElementById('chat-body');
+
+  if (stagedStreams.length === 0) {
+    tabs.innerHTML = '';
+    body.innerHTML = '<div class="mv-chat-empty">Select a stream</div>';
+    activeChatHandle = null;
+    return;
+  }
+
+  // Default to first stream if current chat stream was removed
+  if (!activeChatHandle || !stagedStreams.some(s => s.handle === activeChatHandle)) {
+    activeChatHandle = stagedStreams[0].handle;
+  }
+
+  tabs.innerHTML = stagedStreams.map(s => `
+    <button class="mv-chat-tab ${s.handle === activeChatHandle ? 'active' : ''}" onclick="switchChat('${esc(s.handle)}')">
+      ${esc(s.display_name || s.handle)}
+    </button>
+  `).join('');
+
+  const activeStream = stagedStreams.find(s => s.handle === activeChatHandle);
+  if (activeStream) {
+    const chatUrl = buildChatUrl(activeStream);
+    body.innerHTML = `<iframe src="${chatUrl}" title="Chat"></iframe>`;
+  }
+}
+
+function switchChat(handle) {
+  activeChatHandle = handle;
+  updateChatPanel();
+}
+
+// ── Roster ──────────────────────────────────────────────────────
+
+async function fetchRoster() {
+  try {
+    const res = await fetch('/api/creators?limit=100');
+    const data = await res.json();
+    if (!data.creators) return;
+    renderRoster(data.creators);
+  } catch (err) {
+    console.error('[roster]', err);
+  }
+}
+
+function renderRoster(creators) {
+  const grid = document.getElementById('roster-grid');
+  // Sort: live first, then alphabetical
+  const sorted = [...creators].sort((a, b) => {
+    // Check if they're in the live data
+    const aLive = sceneData?.groups?.some(g => g.streams.some(s => s.id === a.id));
+    const bLive = sceneData?.groups?.some(g => g.streams.some(s => s.id === b.id));
+    if (aLive && !bLive) return -1;
+    if (bLive && !aLive) return 1;
+    return (a.display_name || '').localeCompare(b.display_name || '');
+  });
+
+  grid.innerHTML = sorted.map(c => {
+    const isLive = sceneData?.groups?.some(g => g.streams.some(s => s.id === c.id));
+    const isOnStage = stagedStreams.some(s => s.id === c.id || s.handle === c.handle);
+    const platform = c.platform || c.primary_platform || 'twitch';
+    const handle = c.handle || c.primary_handle || c.display_name;
+
+    return `
+      <div class="mv-creator-card ${isLive ? 'live' : ''} ${isOnStage ? 'on-stage' : ''}"
+           onclick="rosterClick(${JSON.stringify({
+             id: c.id,
+             display_name: c.display_name,
+             avatar_url: c.avatar_url,
+             handle: handle,
+             platform: platform,
+             viewers: 0,
+           }).replace(/"/g, '&quot;')})">
+        <img class="mv-creator-avatar" src="${c.avatar_url || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 28 28%22><rect fill=%22%23222%22 width=%2228%22 height=%2228%22/></svg>'}" alt="" loading="lazy">
+        <span class="mv-creator-name">${esc(c.display_name || handle)}</span>
+        <div class="mv-creator-status">
+          ${isOnStage ? '<span class="mv-on-stage-tag">On Stage</span>' : ''}
+          ${isLive ? '<span class="mv-creator-live-dot"></span>' : ''}
+          <span class="mv-creator-platform">${platform}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function rosterClick(creator) {
+  toggleStream(creator);
+}
+
+function updateRosterHighlights() {
+  // Re-render roster with updated on-stage status
+  // (Only if roster data is already loaded)
+  const grid = document.getElementById('roster-grid');
+  if (grid.children.length > 0 && sceneData) {
+    // fetchRoster would re-render, but we can do a lighter update
+    const cards = grid.querySelectorAll('.mv-creator-card');
+    cards.forEach(card => {
+      // Quick class update without full re-render
+    });
+  }
+}
+
+// ── Utilities ───────────────────────────────────────────────────
+
+function esc(str) {
+  if (str == null) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ── Auto-refresh (every 60s) ────────────────────────────────────
+
+setInterval(async () => {
+  try {
+    const res = await fetch('/api/scenes');
+    const data = await res.json();
+    if (data.ok) {
+      sceneData = data;
+      renderSceneBar(data);
+      renderGroups(data.groups);
+    }
+  } catch (e) { /* silent */ }
+}, 60000);
+
+// ── Boot ────────────────────────────────────────────────────────
+
+init();
+</script>
+
+</body>
+</html>
