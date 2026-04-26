@@ -110,8 +110,6 @@ body>*{position:relative;z-index:3}
 <nav class="nav">
   <a href="/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:40px;filter:brightness(1.1)" loading="eager"></a>
   <a href="/gta-rp/" class="link hub">GTA RP Hub</a>
-  <a href="/the-platform/" class="link">Platform</a>
-  <a href="/about/" class="link">About</a>
 </nav>
 
 <div class="hero">
@@ -169,7 +167,7 @@ async function loadPulse() {
       const s = await fetch('/api/stats');
       const sd = await s.json();
       document.getElementById('p-tracked').textContent = (sd.total_creators||7770).toLocaleString();
-    } catch(e) { document.getElementById('p-tracked').textContent = '7,770'; }
+    } catch(e) { document.getElementById('p-tracked').textContent = '22'; }
   } catch(e) { console.error(e); }
 }
 loadPulse();

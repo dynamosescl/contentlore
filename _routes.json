@@ -1,15 +1,8 @@
 {
   "version": 1,
-  "description": "Route dynamic paths through Functions; everything else served as static.",
+  "description": "Route /api/* through Pages Functions; everything else served as static.",
   "include": [
-    "/api/*",
-    "/creator/*",
-    "/people",
-    "/people/*",
-    "/discover",
-    "/discover/*",
-    "/claim",
-    "/admin"
+    "/api/*"
   ],
   "exclude": []
 }

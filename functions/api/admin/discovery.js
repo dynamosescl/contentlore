@@ -115,10 +115,15 @@ export async function onRequestPost(context) {
     const now = new Date().toISOString();
 
     if (action === 'approve') {
-      // Insert into creators table
+      const platform = (pending.platform || 'twitch').toLowerCase();
+      const handle = pending.name.toLowerCase();
+      const creatorId = `${platform}-${handle}`;
+      const nowSec = Math.floor(Date.now() / 1000);
+
+      // Check if already in creators table (by constructed id or by handle)
       const existingCreator = await env.DB.prepare(
-        'SELECT id FROM creators WHERE LOWER(creator_name) = ?'
-      ).bind(pending.name.toLowerCase()).first();
+        'SELECT id FROM creators WHERE id = ? OR LOWER(display_name) = ?'
+      ).bind(creatorId, handle).first();
 
       if (existingCreator) {
         // Already exists — just update pending status
@@ -134,31 +139,23 @@ export async function onRequestPost(context) {
         }), { headers: corsHeaders() });
       }
 
-      // Insert new creator
-      const insertResult = await env.DB.prepare(`
-        INSERT INTO creators (creator_name, primary_platform, twitch_username, status, created_at)
-        VALUES (?, ?, ?, 'active', ?)
+      // Insert new creator (real schema: id, display_name, role, avatar_url, created_at, updated_at)
+      await env.DB.prepare(`
+        INSERT INTO creators (id, display_name, role, avatar_url, created_at, updated_at)
+        VALUES (?, ?, 'creator', ?, ?, ?)
       `).bind(
+        creatorId,
         pending.name,
-        pending.platform || 'twitch',
-        pending.platform === 'twitch' ? pending.name : null,
-        now
+        pending.profile_image || null,
+        nowSec,
+        nowSec
       ).run();
 
-      const creatorId = insertResult.meta.last_row_id;
-
-      // Insert into creator_platforms if channel_id available
-      if (pending.channel_id) {
-        await env.DB.prepare(`
-          INSERT OR IGNORE INTO creator_platforms (creator_name, platform, platform_id, username)
-          VALUES (?, ?, ?, ?)
-        `).bind(
-          pending.name,
-          pending.platform || 'twitch',
-          pending.channel_id,
-          pending.name
-        ).run();
-      }
+      // Insert into creator_platforms (real schema: creator_id, platform, handle, is_primary)
+      await env.DB.prepare(`
+        INSERT OR IGNORE INTO creator_platforms (creator_id, platform, handle, is_primary)
+        VALUES (?, ?, ?, 1)
+      `).bind(creatorId, platform, handle).run();
 
       // Update pending status
       await env.DB.prepare(
