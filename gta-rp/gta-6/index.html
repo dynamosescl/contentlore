@@ -3,302 +3,116 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ContentLore — GTA 6 Intelligence | UK GTA RP</title>
-<meta name="description" content="GTA 6 intelligence briefing for the UK RP community. What we know, impact analysis, and how UK servers are preparing.">
+<title>GTA 6 Intelligence — ContentLore</title>
+<meta name="description" content="Strategic briefing on GTA 6's impact on the UK GTA RP ecosystem.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0A0A0B;--bg2:#111113;--bg3:#161618;--bg4:#1C1C1F;
-  --border:#2A2A2E;--border-a:#3A3A3F;
-  --t1:#E8E8EC;--t2:#9898A0;--t3:#5A5A65;
-  --mag:#FF2D6B;--mag-g:rgba(255,45,107,.3);--mag-dim:rgba(255,45,107,.12);
-  --cyan:#00E5FF;--cyan-g:rgba(0,229,255,.25);--cyan-dim:rgba(0,229,255,.1);
-  --green:#00FF85;--green-dim:rgba(0,255,133,.12);
-  --orange:#FF8A00;--red:#FF3B3B;--yellow:#FFD600;
-  --gold:#D4A017;--gold-dim:rgba(212,160,23,.12);
-  --font-d:'Oswald',sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:system-ui,-apple-system,sans-serif;
-  --clip:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
-  --clip-sm:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
-}
-body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:100vh}
-
-.nav{height:48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
-.nav-brand{font-family:var(--font-d);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:3px;margin-right:24px;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--t1)}
-.nav-brand .cl{color:var(--mag)}
-.nav-brand .gta{font-size:11px;color:var(--t3);letter-spacing:1px;background:var(--mag-dim);padding:2px 6px;clip-path:var(--clip-sm)}
-.nav-links{display:flex;gap:0}
-.nav-link{font-family:var(--font-d);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);text-decoration:none;padding:14px 14px;border-bottom:2px solid transparent;transition:all .2s}
-.nav-link:hover{color:var(--t2)}
-.nav-link.active{color:var(--mag);border-bottom-color:var(--mag)}
-.nav-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-
-.container{max-width:1200px;margin:0 auto;padding:0 24px}
-
-/* HERO */
-.hero{padding:48px 0 32px;position:relative}
-.hero-eyebrow{font-family:var(--font-m);font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:2px;display:flex;align-items:center;gap:8px}
-.hero-eyebrow::before{content:'';width:20px;height:2px;background:var(--gold)}
-.hero h1{font-family:var(--font-d);font-size:56px;font-weight:700;text-transform:uppercase;letter-spacing:5px;line-height:1;margin-top:8px}
-.hero h1 .six{font-size:72px;background:linear-gradient(135deg,var(--gold),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-sub{font-family:var(--font-b);font-size:15px;color:var(--t2);margin-top:12px;line-height:1.6;max-width:700px}
-
-/* CLASSIFIED BOX */
-.classified{background:var(--bg2);border:1px solid var(--gold);border-left:3px solid var(--gold);padding:20px 24px;margin:24px 0;position:relative}
-.classified::before{content:'CLASSIFIED BRIEFING';position:absolute;top:-10px;left:16px;background:var(--bg);padding:0 8px;font-family:var(--font-m);font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px}
-.classified p{font-family:var(--font-b);font-size:14px;color:var(--t2);line-height:1.7}
-
-/* QUESTION CARDS */
-.question-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0}
-.q-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:20px;transition:all .25s}
-.q-card:hover{border-color:var(--gold);transform:translateY(-2px)}
-.q-card h3{font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.q-card p{font-family:var(--font-b);font-size:13px;color:var(--t2);line-height:1.6}
-.q-num{font-family:var(--font-d);font-size:28px;font-weight:700;color:rgba(212,160,23,.2);position:absolute;top:12px;right:16px}
-
-/* IMPACT MATRIX */
-.section{margin:36px 0}
-.section-header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
-.section-title{font-family:var(--font-d);font-size:22px;font-weight:600;text-transform:uppercase;letter-spacing:2px}
-.section-line{flex:1;height:1px;background:var(--border)}
-
-.impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.impact-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:18px;text-align:center}
-.impact-icon{font-size:28px;margin-bottom:8px}
-.impact-title{font-family:var(--font-d);font-size:15px;text-transform:uppercase;letter-spacing:1px}
-.impact-level{font-family:var(--font-m);font-size:11px;margin-top:6px;padding:3px 10px;display:inline-block;clip-path:var(--clip-sm)}
-.impact-level.high{background:var(--mag-dim);color:var(--mag);border:1px solid rgba(255,45,107,.3)}
-.impact-level.medium{background:rgba(255,138,0,.12);color:var(--orange);border:1px solid rgba(255,138,0,.3)}
-.impact-level.low{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,133,.3)}
-.impact-desc{font-family:var(--font-b);font-size:12px;color:var(--t3);margin-top:8px;line-height:1.5}
-
-/* SCENARIOS */
-.scenario-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-.scenario{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:20px;transition:border-color .2s}
-.scenario:hover{border-color:var(--border-a)}
-.scenario-label{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;padding:3px 10px;clip-path:var(--clip-sm);display:inline-block;margin-bottom:10px}
-.scenario-label.best{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,133,.3)}
-.scenario-label.likely{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(212,160,23,.3)}
-.scenario-label.worst{background:var(--mag-dim);color:var(--mag);border:1px solid rgba(255,45,107,.3)}
-.scenario h4{font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.scenario p{font-family:var(--font-b);font-size:13px;color:var(--t2);line-height:1.6}
-
-/* SERVER PREP TABLE */
-.prep-table{width:100%;border-collapse:collapse;margin-top:12px}
-.prep-table th{font-family:var(--font-m);font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)}
-.prep-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;transition:background .15s}
-.prep-table tr:hover td{background:var(--bg2)}
-
-/* LINKS */
-.link-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
-.link-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:16px;text-decoration:none;color:var(--t1);display:block;transition:all .2s}
-.link-card:hover{border-color:var(--gold);transform:translateY(-2px)}
-.link-card .lc-title{font-family:var(--font-d);font-size:14px;text-transform:uppercase;letter-spacing:1px}
-.link-card .lc-desc{font-family:var(--font-m);font-size:11px;color:var(--t3);margin-top:4px}
-
-.footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-family:var(--font-m);font-size:11px;color:var(--t3);margin-top:40px}
-
-body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
-*{position:relative;z-index:1}.nav{z-index:100}
-
-@media(max-width:800px){
-  .hero h1{font-size:36px}
-  .hero h1 .six{font-size:48px}
-  .question-grid,.impact-grid,.scenario-grid{grid-template-columns:1fr}
-  .link-cards{grid-template-columns:1fr}
-}
+:root{--bg:oklch(0.09 0.04 295);--fg:oklch(0.97 0.02 320);--card:oklch(0.13 0.05 295);--card2:oklch(0.18 0.06 295);--ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);--signal:oklch(0.72 0.30 350);--signal-dim:oklch(0.58 0.24 350);--signal-cyan:oklch(0.85 0.18 200);--border:oklch(0.28 0.08 295);--font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;--cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
+html{background:var(--bg);color-scheme:dark}body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.72 0.30 350/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2;background:oklch(0.85 0.18 200/.015);animation:crt 7s steps(1,end) infinite}
+@keyframes crt{0%,92%,94%,96%,100%{opacity:0}93%{opacity:1}95%{opacity:.6}97%{opacity:.9}}
+body>*{position:relative;z-index:3}
+.nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
+.nav-brand .cl{color:var(--signal)}.nav-brand .tag{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:1px;background:oklch(0.72 0.30 350/.1);padding:2px 6px}
+.nav-links{display:flex}.nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s}.nav-link:hover{color:var(--ink-dim)}
+@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.72 0.30 350/.8)}70%{box-shadow:0 0 0 8px oklch(0.72 0.30 350/0)}}
+.ldot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;background:oklch(0.72 0.30 350);animation:lp 2s infinite}
+.hero{border-bottom:1px solid var(--border);padding:36px 24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
+.hero-inner{max-width:960px;margin:0 auto}
+.kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px;text-shadow:0 0 6px oklch(0.72 0.30 350/.5)}
+.hero h1{font-family:var(--font-d);font-size:clamp(36px,6vw,56px);line-height:.95}
+.hero h1 .neon{color:var(--signal);animation:flicker 4.5s steps(1,end) infinite}
+@keyframes flicker{0%,19%,21%,23%,100%{opacity:1;text-shadow:0 0 6px oklch(0.72 0.30 350/.7),0 0 18px oklch(0.72 0.30 350/.45)}20%,22%{opacity:.85;text-shadow:none}}
+.hero-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;max-width:640px;line-height:1.6}
+.mx{max-width:960px;margin:0 auto;padding:28px 24px}
+.sh{font-family:var(--font-d);font-size:26px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}.sh::after{content:'';flex:1;height:1px;background:var(--border)}
+.faq{margin-bottom:28px}
+.faq-item{border:1px solid var(--border);background:var(--card);padding:16px 20px;margin-bottom:8px;clip-path:var(--cut)}
+.faq-q{font-family:var(--font-d);font-size:20px;color:var(--fg);margin-bottom:6px}
+.faq-a{font-size:13px;color:var(--ink-dim);line-height:1.6}
+.impact{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+@media(max-width:700px){.impact{grid-template-columns:1fr}}
+.imp{background:var(--card);border:1px solid var(--border);padding:16px;text-align:center;clip-path:var(--cut)}
+.imp-icon{font-size:24px;margin-bottom:6px}
+.imp-title{font-family:var(--font-d);font-size:18px;margin-bottom:4px}
+.imp-level{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;padding:2px 8px;display:inline-block;margin-bottom:6px}
+.imp-level.high{color:var(--signal);background:oklch(0.72 0.30 350/.1);border:1px solid oklch(0.72 0.30 350/.3)}
+.imp-level.med{color:oklch(0.78 0.20 60);background:oklch(0.78 0.20 60/.1);border:1px solid oklch(0.78 0.20 60/.3)}
+.imp-level.low{color:oklch(0.82 0.22 145);background:oklch(0.82 0.22 145/.1);border:1px solid oklch(0.82 0.22 145/.3)}
+.imp-desc{font-size:12px;color:var(--ink-dim);line-height:1.5}
+.scenarios{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+@media(max-width:700px){.scenarios{grid-template-columns:1fr}}
+.sc{background:var(--card);border:1px solid var(--border);padding:20px;clip-path:var(--cut)}
+.sc-badge{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;padding:3px 8px;display:inline-block;margin-bottom:8px}
+.sc-badge.best{color:oklch(0.82 0.22 145);background:oklch(0.82 0.22 145/.1);border:1px solid oklch(0.82 0.22 145/.3)}
+.sc-badge.likely{color:oklch(0.78 0.20 60);background:oklch(0.78 0.20 60/.1);border:1px solid oklch(0.78 0.20 60/.3)}
+.sc-badge.worst{color:var(--signal);background:oklch(0.72 0.30 350/.1);border:1px solid oklch(0.72 0.30 350/.3)}
+.sc h3{font-family:var(--font-d);font-size:22px;margin-bottom:8px}
+.sc p{font-size:13px;color:var(--ink-dim);line-height:1.5}
+.table{width:100%;border-collapse:collapse;margin-bottom:28px}
+.table th{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border)}
+.table td{padding:10px 12px;border-bottom:1px solid oklch(0.28 0.08 295/.4);font-size:13px;color:var(--ink-dim)}
+.table td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
+.badge{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;display:inline-block}
+.badge.monitoring{color:var(--signal-cyan);background:oklch(0.85 0.18 200/.1);border:1px solid oklch(0.85 0.18 200/.3)}
+.related{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:600px){.related{grid-template-columns:1fr}}
+.rel{background:var(--card);border:1px solid var(--border);padding:16px;text-decoration:none;color:var(--fg);clip-path:var(--cut);transition:all .2s;display:block}
+.rel:hover{border-color:var(--signal)}.rel .rt{font-family:var(--font-d);font-size:16px}.rel .rs{font-family:var(--font-m);font-size:10px;color:var(--ink-dim);margin-top:4px}
+.footer{border-top:1px solid var(--border);padding:20px;text-align:center;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:20px}
+::selection{background:var(--signal);color:var(--bg)}
 </style>
 </head>
 <body>
-<nav class="nav">
-  <a href="/gta-rp/" class="nav-brand"><span class="cl">Content</span>Lore<span class="gta">GTA RP</span></a>
-  <div class="nav-links">
-    <a href="/gta-rp/" class="nav-link nav-live">Live</a>
-    <a href="/gta-rp/now/" class="nav-link">Now</a>
-    <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
-    <a href="/gta-rp/servers/" class="nav-link">Servers</a>
-  </div>
-</nav>
-
-<div class="container">
-  <div class="hero">
-    <div class="hero-eyebrow">Strategic Intelligence</div>
-    <h1>GTA <span class="six">6</span></h1>
-    <p class="hero-sub">How the next generation of Grand Theft Auto will reshape the UK RP ecosystem. What we know, what it means, and how servers and creators are preparing.</p>
+<nav class="nav"><a href="/gta-rp/" class="nav-brand"><span class="cl">ContentLore</span><span class="tag">UK</span></a><div class="nav-links"><a href="/gta-rp/" class="nav-link"><span class="ldot"></span>Live</a><a href="/gta-rp/now/" class="nav-link">Now</a><a href="/gta-rp/multi/" class="nav-link">Multi-View</a><a href="/gta-rp/servers/" class="nav-link">Servers</a></div></nav>
+<div class="hero"><div class="hero-inner"><div class="kicker">Intelligence Report</div><h1>GTA <span class="neon">6</span></h1><div class="hero-sub">Strategic briefing on GTA 6's impact on the UK GTA RP ecosystem. Scenarios, community preparedness, and transition planning.</div></div></div>
+<div class="mx">
+  <div class="sh">Key Questions</div>
+  <div class="faq">
+    <div class="faq-item"><div class="faq-q">Will FiveM Work with GTA 6?</div><div class="faq-a">Rockstar's acquisition of Cfx.re (FiveM's parent company) in 2023 signals official RP support may come natively. However, no formal announcement has been made regarding GTA 6 mod support. The community expects a wait of 12-24 months post-launch before any RP framework emerges.</div></div>
+    <div class="faq-item"><div class="faq-q">What Happens to GTA 5 RP?</div><div class="faq-a">GTA 5 RP will likely continue for 1-3 years after GTA 6 launches. The FiveM ecosystem is mature with thousands of servers and scripts. A gradual migration rather than a sudden switch is the most probable outcome.</div></div>
+    <div class="faq-item"><div class="faq-q">How Will Viewership Shift?</div><div class="faq-a">Initial GTA 6 launch will pull significant viewership to vanilla content. RP viewership may dip 30-50% temporarily. UK creators with diversified content strategies are better positioned to navigate the transition.</div></div>
+    <div class="faq-item"><div class="faq-q">Should UK Servers Prepare Now?</div><div class="faq-a">Yes. Server owners should focus on community retention, diversified revenue streams, and maintaining creator relationships. Technical preparation can wait until a modding framework is confirmed.</div></div>
   </div>
 
-  <div class="classified">
-    <p>GTA 6 is confirmed and will fundamentally change the RP landscape. The core question for the UK community isn't whether GTA 5 RP will survive — it's how the transition plays out. This page tracks developments and analyses impact through a UK RP lens.</p>
+  <div class="sh">Impact Matrix</div>
+  <div class="impact">
+    <div class="imp"><div class="imp-icon">📺</div><div class="imp-title">Viewership</div><span class="imp-level high">High Impact</span><div class="imp-desc">Initial exodus to GTA 6 content. UK RP viewers may drop significantly at launch before partial recovery.</div></div>
+    <div class="imp"><div class="imp-icon">🖥</div><div class="imp-title">Server Infrastructure</div><span class="imp-level med">Medium Impact</span><div class="imp-desc">No immediate technical impact. Servers continue on FiveM. Long-term platform uncertainty drives planning.</div></div>
+    <div class="imp"><div class="imp-icon">🎭</div><div class="imp-title">Creator Ecosystem</div><span class="imp-level high">High Impact</span><div class="imp-desc">Creators face content strategy decisions. Some will pivot to GTA 6, splitting the community temporarily.</div></div>
+    <div class="imp"><div class="imp-icon">💰</div><div class="imp-title">Revenue & Donations</div><span class="imp-level med">Medium Impact</span><div class="imp-desc">Server donation revenue may dip during transition. Creators with diversified income streams are more resilient.</div></div>
+    <div class="imp"><div class="imp-icon">🔧</div><div class="imp-title">Dev Investment</div><span class="imp-level med">Medium Impact</span><div class="imp-desc">Server developers face uncertainty about continued FiveM investment vs waiting for GTA 6 modding tools.</div></div>
+    <div class="imp"><div class="imp-icon">💛</div><div class="imp-title">Community Bonds</div><span class="imp-level low">Low Impact</span><div class="imp-desc">Established UK RP communities have strong social bonds that transcend any single game platform.</div></div>
   </div>
 
-  <!-- KEY QUESTIONS -->
-  <div class="question-grid">
-    <div class="q-card" style="position:relative">
-      <div class="q-num">01</div>
-      <h3>Will FiveM Work with GTA 6?</h3>
-      <p>No official confirmation. Cfx.re (FiveM's parent) has not announced GTA 6 mod framework support. The community expects a significant gap between GTA 6 launch and any RP mod framework. Historical precedent: FiveM took years to mature after GTA 5.</p>
-    </div>
-    <div class="q-card" style="position:relative">
-      <div class="q-num">02</div>
-      <h3>What Happens to GTA 5 RP?</h3>
-      <p>GTA 5 RP will likely continue for 12–24+ months after GTA 6 launches. Server investments, established communities, and the absence of a GTA 6 mod framework mean the transition will be gradual, not overnight.</p>
-    </div>
-    <div class="q-card" style="position:relative">
-      <div class="q-num">03</div>
-      <h3>How Will Viewership Shift?</h3>
-      <p>Expect a major viewership spike for GTA 6 content at launch, pulling viewers from GTA 5 RP. UK RP viewership may dip 30–50% initially before stabilising. Creators who diversify early will be best positioned.</p>
-    </div>
-    <div class="q-card" style="position:relative">
-      <div class="q-num">04</div>
-      <h3>Should UK Servers Prepare Now?</h3>
-      <p>Yes — but for continuity, not migration. The smart play is reinforcing community bonds, diversifying content, and ensuring the server experience is strong enough to retain players through the transition period.</p>
-    </div>
+  <div class="sh">Transition Scenarios</div>
+  <div class="scenarios">
+    <div class="sc"><span class="sc-badge best">Best Case</span><h3>Smooth Coexistence</h3><p>GTA 6 mod tools arrive within 12 months. UK servers migrate communities intact. FiveM Enhanced bridges the gap. Viewership dips briefly then recovers as GTA 6 RP matures. UK scene emerges stronger with better technology.</p></div>
+    <div class="sc"><span class="sc-badge likely">Most Likely</span><h3>Extended Parallel</h3><p>GTA 6 modding takes 18-24 months. GTA 5 RP continues with reduced but stable viewership. Some creators split time between both. UK servers maintain operations but reduce development investment. Gradual transition over 2+ years.</p></div>
+    <div class="sc"><span class="sc-badge worst">Worst Case</span><h3>Fragmentation</h3><p>No GTA 6 modding support announced. GTA 5 RP viewership drops sharply. UK servers struggle with reduced player counts. Community fragments across different games. Recovery depends on GTA 6 eventually getting mod support.</p></div>
   </div>
 
-  <!-- IMPACT MATRIX -->
-  <div class="section">
-    <div class="section-header">
-      <h2 class="section-title">Impact Matrix</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="impact-grid">
-      <div class="impact-card">
-        <div class="impact-icon">📺</div>
-        <div class="impact-title">Viewership</div>
-        <div class="impact-level high">High Impact</div>
-        <div class="impact-desc">Initial exodus to GTA 6 content. UK RP viewers may drop significantly at launch before partial recovery.</div>
-      </div>
-      <div class="impact-card">
-        <div class="impact-icon">🖥</div>
-        <div class="impact-title">Server Infrastructure</div>
-        <div class="impact-level medium">Medium Impact</div>
-        <div class="impact-desc">No immediate technical impact. Servers continue on FiveM. Long-term platform uncertainty drives planning.</div>
-      </div>
-      <div class="impact-card">
-        <div class="impact-icon">🎭</div>
-        <div class="impact-title">Creator Ecosystem</div>
-        <div class="impact-level high">High Impact</div>
-        <div class="impact-desc">Creators face content strategy decisions. Some will pivot to GTA 6, splitting the community temporarily.</div>
-      </div>
-      <div class="impact-card">
-        <div class="impact-icon">💰</div>
-        <div class="impact-title">Revenue & Donations</div>
-        <div class="impact-level medium">Medium Impact</div>
-        <div class="impact-desc">Server donation revenue may dip during transition. Creators with diversified income streams are more resilient.</div>
-      </div>
-      <div class="impact-card">
-        <div class="impact-icon">🏗</div>
-        <div class="impact-title">Dev Investment</div>
-        <div class="impact-level high">High Impact</div>
-        <div class="impact-desc">Server developers face uncertainty about continued FiveM investment vs waiting for GTA 6 modding tools.</div>
-      </div>
-      <div class="impact-card">
-        <div class="impact-icon">🤝</div>
-        <div class="impact-title">Community Bonds</div>
-        <div class="impact-level low">Low Impact</div>
-        <div class="impact-desc">Established UK RP communities have strong social bonds that transcend any single game platform.</div>
-      </div>
-    </div>
-  </div>
+  <div class="sh">UK Server Preparedness</div>
+  <table class="table"><thead><tr><th>Server</th><th>Status</th><th>Strategy</th><th>Notes</th></tr></thead><tbody>
+    <tr><td>Unique RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
+    <tr><td>TNG RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
+    <tr><td>Orbit RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
+    <tr><td>Unmatched RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
+    <tr><td>Prodigy RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
+    <tr><td>D10 RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
+  </tbody></table>
 
-  <!-- SCENARIOS -->
-  <div class="section">
-    <div class="section-header">
-      <h2 class="section-title">Transition Scenarios</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="scenario-grid">
-      <div class="scenario">
-        <span class="scenario-label best">Best Case</span>
-        <h4>Smooth Coexistence</h4>
-        <p>GTA 6 mod tools arrive within 12 months. UK servers migrate communities intact. FiveM Enhanced bridges the gap. Viewership dips briefly then recovers as GTA 6 RP matures. UK scene emerges stronger with better technology.</p>
-      </div>
-      <div class="scenario">
-        <span class="scenario-label likely">Most Likely</span>
-        <h4>Extended Parallel</h4>
-        <p>GTA 6 modding takes 18–24 months. GTA 5 RP continues with reduced but stable viewership. Some creators split time between both. UK servers maintain operations but reduce development investment. Gradual transition over 2+ years.</p>
-      </div>
-      <div class="scenario">
-        <span class="scenario-label worst">Worst Case</span>
-        <h4>Fragmentation</h4>
-        <p>No GTA 6 modding support announced. GTA 5 RP viewership drops sharply. UK servers struggle with reduced player counts. Community fragments across different games. Recovery depends on GTA 6 eventually getting mod support.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- SERVER PREP FROM DATA -->
-  <div class="section">
-    <div class="section-header">
-      <h2 class="section-title">UK Server Preparedness</h2>
-      <div class="section-line"></div>
-    </div>
-    <table class="prep-table">
-      <thead><tr><th>Server</th><th>Status</th><th>Strategy</th><th>Notes</th></tr></thead>
-      <tbody id="prep-body"><tr><td colspan="4" style="text-align:center;color:var(--t3);padding:30px;font-family:var(--font-m);font-size:12px">Loading server data…</td></tr></tbody>
-    </table>
-  </div>
-
-  <!-- RELATED -->
-  <div class="section">
-    <div class="section-header">
-      <h2 class="section-title">Related Intelligence</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="link-cards">
-      <a href="/gta-rp/fivem-enhanced/" class="link-card">
-        <div class="lc-title">FiveM Enhanced Tracker →</div>
-        <div class="lc-desc">Server migration status and technical overview</div>
-      </a>
-      <a href="/gta-rp/servers/" class="link-card">
-        <div class="lc-title">Server Directory →</div>
-        <div class="lc-desc">Live activity and server profiles</div>
-      </a>
-    </div>
+  <div class="sh">Related Intelligence</div>
+  <div class="related">
+    <a href="/gta-rp/fivem-enhanced/" class="rel"><div class="rt">FiveM Enhanced Tracker →</div><div class="rs">Server migration status and technical overview</div></a>
+    <a href="/gta-rp/servers/" class="rel"><div class="rt">Server Directory →</div><div class="rs">Live activity and server profiles</div></a>
   </div>
 </div>
-
-<div class="footer">ContentLore — GTA 6 Intelligence · Analysis based on publicly available information</div>
-
-<script>
-async function loadServerPrep() {
-  try {
-    const r = await fetch('/api/transitions?type=servers');
-    const data = await r.json();
-    const servers = data.servers || [];
-    const tbody = document.getElementById('prep-body');
-
-    if (!servers.length) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:30px;font-family:var(--font-m);font-size:12px">No server preparedness data yet</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = servers.map(s => {
-      const name = s.server_name || s.name || 'Unknown';
-      const status = s.status || s.gta6_status || 'monitoring';
-      const strategy = s.gta6_strategy || s.strategy || 'No public statement';
-      const notes = s.notes || s.gta6_notes || '—';
-
-      const statusColors = {
-        preparing: 'var(--green)', monitoring: 'var(--cyan)',
-        waiting: 'var(--t3)', unknown: 'var(--t3)',
-      };
-      const color = statusColors[status.toLowerCase()] || 'var(--t2)';
-
-      return `<tr>
-        <td style="font-family:var(--font-d);font-size:14px;text-transform:uppercase">${name}</td>
-        <td style="font-family:var(--font-m);font-size:11px;color:${color};text-transform:uppercase">${status}</td>
-        <td style="font-size:12px;color:var(--t2)">${strategy}</td>
-        <td style="font-size:12px;color:var(--t3)">${notes}</td>
-      </tr>`;
-    }).join('');
-  } catch(e) {
-    console.error('Server prep load failed:', e);
-  }
-}
-
-loadServerPrep();
-</script>
+<div class="footer">ContentLore · GTA 6 Intelligence · Analysis based on publicly available information</div>
 </body>
 </html>
