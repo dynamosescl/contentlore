@@ -3,527 +3,361 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ContentLore — Now | UK GTA RP Command Centre</title>
-<meta name="description" content="Real-time UK GTA RP command centre. Live server activity, scene clusters, viewer deltas and 24-hour timeline.">
+<title>Now — Live UK GTA RP Scene · ContentLore</title>
+<meta name="description" content="Real-time ticker of UK GTA RP. Who's live, server activity, scene detection.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0A0A0B;--bg2:#111113;--bg3:#161618;--bg4:#1C1C1F;
-  --border:#2A2A2E;--border-a:#3A3A3F;
-  --t1:#E8E8EC;--t2:#9898A0;--t3:#5A5A65;
-  --mag:#FF2D6B;--mag-g:rgba(255,45,107,.3);--mag-dim:rgba(255,45,107,.12);
-  --cyan:#00E5FF;--cyan-g:rgba(0,229,255,.25);--cyan-dim:rgba(0,229,255,.1);
-  --green:#00FF85;--green-dim:rgba(0,255,133,.12);
-  --orange:#FF8A00;--red:#FF3B3B;--yellow:#FFD600;
-  --font-d:'Oswald',sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:system-ui,-apple-system,sans-serif;
-  --clip:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
-  --clip-sm:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+  --bg:oklch(0.09 0.04 295);--fg:oklch(0.97 0.02 320);
+  --card:oklch(0.13 0.05 295);--card2:oklch(0.18 0.06 295);
+  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
+  --signal:oklch(0.72 0.30 350);--signal-dim:oklch(0.58 0.24 350);--signal-cyan:oklch(0.85 0.18 200);
+  --border:oklch(0.28 0.08 295);--live:oklch(0.72 0.30 350);
+  --twitch:oklch(0.65 0.25 295);--kick:oklch(0.82 0.22 145);
+  --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
 }
-body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:100vh}
+html{background:var(--bg);color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.72 0.30 350/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2;background:oklch(0.85 0.18 200/.015);animation:crt 7s steps(1,end) infinite}
+@keyframes crt{0%,92%,94%,96%,100%{opacity:0}93%{opacity:1}95%{opacity:.6}97%{opacity:.9}}
+body>*{position:relative;z-index:3}
 
-/* NAV */
-.nav{height:48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
-.nav-brand{font-family:var(--font-d);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:3px;margin-right:24px;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--t1)}
-.nav-brand .cl{color:var(--mag)}
-.nav-brand .gta{font-size:11px;color:var(--t3);letter-spacing:1px;background:var(--mag-dim);padding:2px 6px;clip-path:var(--clip-sm)}
-.nav-links{display:flex;gap:0}
-.nav-link{font-family:var(--font-d);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);text-decoration:none;padding:14px 14px;border-bottom:2px solid transparent;transition:all .2s}
-.nav-link:hover{color:var(--t2)}
-.nav-link.active{color:var(--mag);border-bottom-color:var(--mag)}
-.nav-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
+.nav-brand .cl{color:var(--signal)}
+.nav-brand .tag{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:1px;background:oklch(0.72 0.30 350/.1);padding:2px 6px}
+.nav-links{display:flex}
+.nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s}
+.nav-link:hover{color:var(--ink-dim)}
+.nav-link.active{color:var(--signal);border-bottom-color:var(--signal)}
+.ldot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;animation:lp 2s infinite}
+@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.72 0.30 350/.8)}70%{box-shadow:0 0 0 8px oklch(0.72 0.30 350/0)}}
 
-.container{max-width:1400px;margin:0 auto;padding:0 20px}
+/* HERO */
+.hero{border-bottom:1px solid var(--border);padding:28px 24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
+.hero-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.hero-left{display:flex;align-items:center;gap:12px}
+.hero-left .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hero-left .dot.on{background:var(--live);animation:lp 2s infinite}
+.hero-left .dot.off{background:var(--ink-faint)}
+.hero-left h1{font-family:var(--font-d);font-size:clamp(28px,4vw,40px);line-height:1}
+.hero-left h1 .neon{color:var(--signal);text-shadow:0 0 6px oklch(0.72 0.30 350/.5)}
+.hero-left .sub{font-family:var(--font-m);font-size:11px;color:var(--ink-dim);margin-left:16px}
+.hero-stats{display:flex;gap:24px}
+.hs{text-align:center}
+.hs .v{font-family:var(--font-d);font-size:28px;line-height:1}
+.hs .l{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:2px}
 
-/* STATUS BAR */
-.status-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 0;overflow:hidden}
-.status-inner{display:flex;align-items:center;gap:24px}
-.status-dot{width:8px;height:8px;background:var(--green);border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
-.status-sentence{font-family:var(--font-b);font-size:15px;color:var(--t1);line-height:1.4;flex:1}
-.status-time{font-family:var(--font-m);font-size:10px;color:var(--t3);flex-shrink:0;text-transform:uppercase;letter-spacing:1px}
+/* LAYOUT */
+.wrap{max-width:1400px;margin:0 auto;padding:24px;display:grid;grid-template-columns:1fr 340px;gap:20px}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}}
 
-/* KPI ROW */
-.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:20px 0}
-.kpi{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:14px 16px;transition:border-color .2s}
-.kpi:hover{border-color:var(--border-a)}
-.kpi-val{font-family:var(--font-d);font-size:32px;font-weight:700;line-height:1}
-.kpi-label{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px}
-.kpi-delta{font-family:var(--font-m);font-size:11px;margin-top:4px}
-.kpi-delta.up{color:var(--green)}
-.kpi-delta.down{color:var(--red)}
-.kpi-delta.flat{color:var(--t3)}
+/* SECTIONS */
+.sec{margin-bottom:28px}
+.sec-head{padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sec-kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:4px}
+.sec-title{font-family:var(--font-d);font-size:28px}
+.sec-sub{font-size:12px;color:var(--ink-dim);margin-top:4px}
 
-/* MAIN GRID */
-.main-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;padding:16px 0 24px}
+/* LIVE ROWS */
+.live-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:700px){.live-grid{grid-template-columns:1fr}}
+.lr{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);background:var(--card);text-decoration:none;color:var(--fg);transition:all .2s}
+.lr:hover{border-color:var(--signal);transform:translateY(-1px)}
+.lr-av{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--card2);flex-shrink:0}
+.lr-ph{width:36px;height:36px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:16px;color:var(--ink-faint);flex-shrink:0}
+.lr-info{min-width:0;flex:1}
+.lr-name{font-family:var(--font-d);font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1}
+.lr-meta{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr-viewers{font-family:var(--font-m);font-size:11px;color:var(--fg);text-align:right;flex-shrink:0}
+.lr-delta{font-family:var(--font-m);font-size:10px;margin-top:1px}
+.lr-delta.up{color:var(--signal-cyan)}
+.lr-delta.down{color:var(--signal)}
 
-/* SERVER ACTIVITY BARS */
-.panel{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);overflow:hidden}
-.panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.panel-title{font-family:var(--font-d);font-size:14px;text-transform:uppercase;letter-spacing:2px;color:var(--t2)}
-.panel-sub{font-family:var(--font-m);font-size:10px;color:var(--t3)}
-.panel-body{padding:14px 18px}
+/* SERVER BARS */
+.srv{border:1px solid var(--border);background:var(--card);padding:12px 16px;margin-bottom:6px}
+.srv-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.srv-name{font-family:var(--font-d);font-size:18px}
+.srv-stat{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-dim)}
+.srv-bar{height:6px;background:oklch(0.09 0.04 295/.6);overflow:hidden}
+.srv-fill{height:100%;transition:width .7s}
+.srv-fill.active{background:var(--signal)}
+.srv-fill.quiet{background:oklch(0.55 0.06 295/.3)}
+.srv-pov{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-.server-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.sb-name{font-family:var(--font-d);font-size:13px;text-transform:uppercase;letter-spacing:1px;width:90px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sb-bar{flex:1;height:24px;background:var(--bg);position:relative;overflow:hidden}
-.sb-fill{height:100%;transition:width .6s ease;position:relative}
-.sb-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 60%,rgba(255,255,255,.08))}
-.sb-stats{display:flex;gap:8px;position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:var(--font-m);font-size:10px}
-.sb-viewers{color:var(--t1)}
-.sb-count{color:var(--t3)}
-.sb-delta{font-size:9px;font-weight:600}
-.sb-delta.up{color:var(--green)}
-.sb-delta.down{color:var(--red)}
+/* TRENDING */
+.trend{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);background:var(--card);margin-bottom:6px;transition:all .2s}
+.trend:hover{border-color:var(--signal-cyan)}
+.trend-delta{font-family:var(--font-m);font-size:12px;color:var(--signal-cyan);flex-shrink:0}
 
-/* SCENE CLUSTERS */
-.scene-cluster{background:var(--bg3);border:1px solid var(--border);clip-path:var(--clip-sm);padding:14px;margin-bottom:10px;cursor:pointer;transition:all .2s}
-.scene-cluster:hover{border-color:var(--mag);background:var(--bg4)}
-.sc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.sc-server{font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:1.5px}
-.sc-viewers{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--green)}
-.sc-delta{font-family:var(--font-m);font-size:11px;margin-left:6px}
-.sc-delta.up{color:var(--green)}
-.sc-delta.down{color:var(--red)}
-.sc-streamers{display:flex;flex-wrap:wrap;gap:4px}
-.sc-tag{font-family:var(--font-m);font-size:10px;padding:2px 8px;background:var(--bg);border:1px solid var(--border);clip-path:var(--clip-sm);display:inline-flex;align-items:center;gap:4px}
-.sc-tag .dot{width:4px;height:4px;background:var(--green);border-radius:50%}
-.sc-keywords{margin-top:6px;display:flex;gap:4px;flex-wrap:wrap}
-.sc-kw{font-family:var(--font-m);font-size:9px;color:var(--mag);text-transform:uppercase;letter-spacing:.5px;padding:1px 6px;background:var(--mag-dim);clip-path:var(--clip-sm)}
+/* TICKER SIDEBAR */
+.ticker{position:sticky;top:64px;border:1px solid var(--border);background:var(--card);display:flex;flex-direction:column;max-height:calc(100vh - 80px)}
+.ticker-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.ticker-head .th-label{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);display:flex;align-items:center;gap:6px}
+.ticker-head .th-label .dot{width:6px;height:6px;border-radius:50%;background:var(--live);animation:lp 2s infinite}
+.ticker-head .th-count{font-family:var(--font-m);font-size:10px;color:var(--ink-faint)}
+.ticker-list{flex:1;overflow-y:auto;padding:8px 12px}
+.te{padding:8px 0;border-bottom:1px solid oklch(0.28 0.08 295/.4);display:flex;gap:8px}
+.te:last-child{border:none}
+.te-time{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);flex-shrink:0;min-width:40px;padding-top:2px}
+.te-text{font-size:12px;color:var(--ink-dim);line-height:1.4}
+.te-text .name{color:var(--fg);font-weight:500}
+.te-kind{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;flex-shrink:0;margin-top:6px}
+.te-kind.live{background:var(--live)}
+.te-kind.offline{background:var(--ink-faint)}
+.te-kind.trending{background:var(--signal-cyan)}
 
-/* LIVE TICKER */
-.ticker{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);overflow:hidden;margin-bottom:16px}
-.ticker-header{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
-.ticker-header .dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
-.ticker-header span{font-family:var(--font-d);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3)}
-.ticker-body{max-height:200px;overflow-y:auto}
-.ticker-body::-webkit-scrollbar{width:3px}
-.ticker-body::-webkit-scrollbar-thumb{background:var(--border)}
-.ticker-item{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid rgba(42,42,46,.5);font-family:var(--font-m);font-size:11px;transition:background .15s}
-.ticker-item:hover{background:var(--bg3)}
-.ticker-item .ti-name{color:var(--t1);font-weight:500}
-.ticker-item .ti-server{color:var(--cyan);font-size:9px;text-transform:uppercase}
-.ticker-item .ti-viewers{color:var(--green);margin-left:auto}
+.empty{text-align:center;padding:24px;color:var(--ink-dim);font-size:13px}
 
-/* TRANSFERS */
-.transfer-card{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);clip-path:var(--clip-sm);margin-bottom:6px}
-.tf-name{font-family:var(--font-d);font-size:13px;text-transform:uppercase;flex-shrink:0}
-.tf-arrow{color:var(--orange);font-family:var(--font-m);font-size:14px;flex-shrink:0}
-.tf-servers{font-family:var(--font-m);font-size:11px;display:flex;align-items:center;gap:6px}
-.tf-from{color:var(--t3)}
-.tf-to{color:var(--cyan)}
-
-/* PEAK SCENE */
-.peak{background:linear-gradient(135deg,rgba(255,45,107,.05),rgba(0,229,255,.05));border:1px solid var(--mag);clip-path:var(--clip);padding:18px;position:relative;overflow:hidden}
-.peak::before{content:'PEAK SCENE TODAY';position:absolute;top:0;right:0;background:var(--mag);color:#fff;font-family:var(--font-m);font-size:9px;letter-spacing:1px;padding:4px 12px 4px 8px;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%)}
-.peak-server{font-family:var(--font-d);font-size:22px;text-transform:uppercase;letter-spacing:2px;margin-top:4px}
-.peak-viewers{font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--mag);margin-top:4px}
-.peak-meta{font-family:var(--font-m);font-size:11px;color:var(--t3);margin-top:4px}
-
-/* TIMELINE */
-.timeline-section{padding:0 0 40px}
-.timeline-canvas{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:0;overflow:hidden}
-.timeline-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.timeline-controls{display:flex;gap:6px}
-.tl-btn{background:var(--bg3);border:1px solid var(--border);color:var(--t3);font-family:var(--font-m);font-size:10px;padding:4px 10px;cursor:pointer;clip-path:var(--clip-sm);transition:all .15s;text-transform:uppercase}
-.tl-btn:hover{border-color:var(--cyan);color:var(--cyan)}
-.tl-btn.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan)}
-.timeline-chart{position:relative;height:200px;padding:20px 18px 30px}
-.tl-grid{position:absolute;inset:20px 18px 30px;display:flex;flex-direction:column;justify-content:space-between}
-.tl-gridline{border-bottom:1px solid rgba(42,42,46,.4);position:relative}
-.tl-gridline span{position:absolute;right:0;top:-8px;font-family:var(--font-m);font-size:9px;color:var(--t3)}
-.tl-bars{position:absolute;left:18px;right:18px;bottom:30px;top:20px;display:flex;align-items:flex-end;gap:1px}
-.tl-bar{flex:1;display:flex;flex-direction:column-reverse;gap:0;min-width:0}
-.tl-seg{min-height:1px;transition:height .4s ease;position:relative}
-.tl-seg:hover{opacity:.85}
-.tl-seg .tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);padding:6px 10px;font-family:var(--font-m);font-size:10px;white-space:nowrap;z-index:50;clip-path:var(--clip-sm)}
-.tl-seg:hover .tooltip{display:block}
-.tl-time-labels{position:absolute;left:18px;right:18px;bottom:8px;display:flex;justify-content:space-between}
-.tl-time-labels span{font-family:var(--font-m);font-size:9px;color:var(--t3)}
-.tl-legend{padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap}
-.tl-legend-item{display:flex;align-items:center;gap:5px;font-family:var(--font-m);font-size:10px;color:var(--t3)}
-.tl-legend-item .swatch{width:10px;height:10px}
-
-.empty-state{text-align:center;padding:40px 20px;font-family:var(--font-m);font-size:12px;color:var(--t3)}
-
-body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
-*{position:relative;z-index:1}.nav{z-index:100}
-
-@media(max-width:1000px){
-  .main-grid{grid-template-columns:1fr}
-  .kpi-row{grid-template-columns:repeat(3,1fr)}
-}
-@media(max-width:600px){
-  .kpi-row{grid-template-columns:1fr 1fr}
-  .kpi:last-child{grid-column:span 2}
-  .tl-time-labels span{font-size:7px}
-  .nav-links{overflow-x:auto;-webkit-overflow-scrolling:touch}
-}
+::selection{background:var(--signal);color:var(--bg)}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--signal-dim);border:2px solid var(--bg)}
+@media(max-width:600px){.live-grid{grid-template-columns:1fr}.hero-stats{gap:16px}}
 </style>
 </head>
 <body>
 <nav class="nav">
-  <a href="/gta-rp/" class="nav-brand"><span class="cl">Content</span>Lore<span class="gta">GTA RP</span></a>
+  <a href="/gta-rp/" class="nav-brand"><span class="cl">ContentLore</span><span class="tag">UK</span></a>
   <div class="nav-links">
-    <a href="/gta-rp/" class="nav-link nav-live">Live</a>
+    <a href="/gta-rp/" class="nav-link"><span class="ldot" style="background:var(--live)" id="nav-dot"></span>Live</a>
     <a href="/gta-rp/now/" class="nav-link active">Now</a>
     <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
     <a href="/gta-rp/servers/" class="nav-link">Servers</a>
   </div>
 </nav>
 
-<!-- STATUS SENTENCE -->
-<div class="status-bar">
-  <div class="container">
-    <div class="status-inner">
-      <div class="status-dot"></div>
-      <div class="status-sentence" id="sentence">Scanning UK RP servers…</div>
-      <div class="status-time" id="status-time">—</div>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="dot" id="h-dot"></div>
+      <h1>Scene <span class="neon">Now</span></h1>
+      <span class="sub" id="h-sub">Loading…</span>
+    </div>
+    <div class="hero-stats">
+      <div class="hs"><div class="v" style="color:var(--signal)" id="s-live">0</div><div class="l">streaming</div></div>
+      <div class="hs"><div class="v" style="color:var(--signal-cyan)" id="s-viewers">0</div><div class="l">watching</div></div>
+      <div class="hs"><div class="v" id="s-peak">—</div><div class="l">peak today</div></div>
+      <div class="hs"><div class="v" style="color:var(--kick)" id="s-servers">0</div><div class="l">servers</div></div>
     </div>
   </div>
 </div>
 
-<div class="container">
-  <!-- KPIs -->
-  <div class="kpi-row" id="kpis">
-    <div class="kpi"><div class="kpi-val" style="color:var(--green)" id="k-live">—</div><div class="kpi-label">Streaming Now</div><div class="kpi-delta flat" id="k-live-d"></div></div>
-    <div class="kpi"><div class="kpi-val" style="color:var(--mag)" id="k-viewers">—</div><div class="kpi-label">Total Viewers</div><div class="kpi-delta flat" id="k-viewers-d"></div></div>
-    <div class="kpi"><div class="kpi-val" style="color:var(--cyan)" id="k-servers">—</div><div class="kpi-label">Active Servers</div><div class="kpi-delta flat" id="k-servers-d"></div></div>
-    <div class="kpi"><div class="kpi-val" style="color:var(--orange)" id="k-peak-v">—</div><div class="kpi-label">Peak Viewers Today</div></div>
-    <div class="kpi"><div class="kpi-val" style="color:var(--yellow)" id="k-transfers">—</div><div class="kpi-label">Server Transfers</div></div>
-  </div>
-
-  <!-- MAIN GRID -->
-  <div class="main-grid">
-    <!-- LEFT: Server activity + scenes -->
-    <div>
-      <!-- SERVER ACTIVITY -->
-      <div class="panel" style="margin-bottom:16px">
-        <div class="panel-header">
-          <span class="panel-title">Server Activity</span>
-          <span class="panel-sub">Live viewers by server</span>
-        </div>
-        <div class="panel-body" id="server-bars"><div class="empty-state">Loading…</div></div>
-      </div>
-
-      <!-- SCENE CLUSTERS -->
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">Scene Clusters</span>
-          <span class="panel-sub">Grouped by server</span>
-        </div>
-        <div class="panel-body" id="scene-clusters"><div class="empty-state">Loading…</div></div>
-      </div>
+<div class="wrap">
+  <div class="main">
+    <div class="sec">
+      <div class="sec-head"><div class="sec-kicker" id="live-kicker">loading</div><div class="sec-title">On air this minute</div><div class="sec-sub">Sorted by viewers. Tap a name to watch.</div></div>
+      <div class="live-grid" id="live-grid"></div>
     </div>
-
-    <!-- RIGHT: Ticker + Peak + Transfers -->
-    <div>
-      <!-- PEAK SCENE TODAY -->
-      <div id="peak-scene" style="margin-bottom:16px"></div>
-
-      <!-- LIVE TICKER -->
-      <div class="ticker">
-        <div class="ticker-header"><div class="dot"></div><span>Live Ticker</span></div>
-        <div class="ticker-body" id="ticker-body"><div class="empty-state">Loading…</div></div>
-      </div>
-
-      <!-- TRANSFERS -->
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">Server Transfers</span>
-          <span class="panel-sub">Detected moves</span>
-        </div>
-        <div class="panel-body" id="transfers"><div class="empty-state">No transfers detected</div></div>
-      </div>
+    <div class="sec" id="srv-sec" style="display:none">
+      <div class="sec-head"><div class="sec-kicker">Server activity</div><div class="sec-title">Where the scene is</div><div class="sec-sub">Detected from live stream titles.</div></div>
+      <div id="srv-list"></div>
+    </div>
+    <div class="sec" id="trend-sec" style="display:none">
+      <div class="sec-head"><div class="sec-kicker">Trending</div><div class="sec-title">Climbing fast</div><div class="sec-sub">Biggest viewer gains since last poll.</div></div>
+      <div id="trend-list"></div>
     </div>
   </div>
-
-  <!-- 24HR TIMELINE -->
-  <div class="timeline-section">
-    <div class="timeline-canvas">
-      <div class="timeline-header">
-        <span class="panel-title">24-Hour Timeline</span>
-        <div class="timeline-controls">
-          <button class="tl-btn active" data-hours="24" onclick="setHours(24)">24h</button>
-          <button class="tl-btn" data-hours="12" onclick="setHours(12)">12h</button>
-          <button class="tl-btn" data-hours="6" onclick="setHours(6)">6h</button>
-        </div>
-      </div>
-      <div class="timeline-chart" id="timeline-chart"><div class="empty-state">Loading timeline…</div></div>
-      <div class="tl-legend" id="tl-legend"></div>
+  <div class="ticker" id="ticker">
+    <div class="ticker-head">
+      <div class="th-label"><div class="dot"></div>Ticker · live</div>
+      <span class="th-count" id="t-count">0 events</span>
     </div>
+    <div class="ticker-list" id="ticker-list"><div class="empty">Waiting for events…</div></div>
   </div>
 </div>
 
 <script>
-// Server color palette
-const SERVER_COLORS = {
-  'JESTRP':    '#FF2D6B',
-  'ONERP':     '#00E5FF',
-  'MTRP':      '#00FF85',
-  'NPRP':      '#FF8A00',
-  'NOPIXEL':   '#A855F7',
-  'LUCID':     '#FFD600',
-  'IGNITE':    '#EF4444',
-  'ECLIPSERP': '#06B6D4',
-  'PRODIGY':   '#F97316',
-  'UKRP':      '#84CC16',
-};
-const DEFAULT_COLOR = '#6B7280';
-function srvColor(name) { return SERVER_COLORS[name] || DEFAULT_COLOR; }
+const SERVERS = [
+  {id:'unique',name:'Unique RP',keywords:['unique rp','uniquerp','unique']},
+  {id:'tng',name:'TNG RP',keywords:['tng rp','tngrp','tng']},
+  {id:'orbit',name:'Orbit RP',keywords:['orbit rp','orbitrp','orbit']},
+  {id:'new-era',name:'New Era RP',keywords:['new era rp','newera rp','new era','newera']},
+  {id:'prodigy',name:'Prodigy RP',keywords:['prodigy rp','prodigyrp','prodigy']},
+  {id:'d10',name:'D10 RP',keywords:['d10 rp','d10rp','d10']},
+  {id:'unmatched',name:'Unmatched RP',keywords:['unmatched rp','unmatchedrp','unmatched']},
+  {id:'verarp',name:'VeraRP',keywords:['vera rp','verarp','vera']},
+  {id:'endz',name:'The Endz',keywords:['the endz','endz rp','endz']},
+  {id:'letsrp',name:"Let's RP",keywords:["let's rp","letsrp","lets rp"]},
+  {id:'drilluk',name:'Drill UK RP',keywords:['drill uk','drilluk','drill rp']},
+  {id:'britishlife',name:'British Life RP',keywords:['british life','britishlife']},
+];
 
-let currentHours = 24;
-let nowData = null;
-let prevLive = null, prevViewers = null, prevServers = null;
+let prevViewers = {};
+let events = [];
+let avatarMap = {};
+let peakToday = 0;
 
-// === LOAD DATA ===
-async function loadNow() {
-  try {
-    const r = await fetch('/api/scene-of-day');
-    nowData = await r.json();
-    renderAll();
-  } catch(e) {
-    console.error('Now data failed:', e);
-    document.getElementById('sentence').textContent = 'Unable to reach data feed. Retrying…';
-  }
+function fmtBig(n) {
+  if (n==null) return '—';
+  if (n>=1e6) return (n/1e6).toFixed(1)+'M';
+  if (n>=1e3) return (n/1e3).toFixed(1)+'k';
+  return String(n);
 }
 
-function renderAll() {
-  if (!nowData) return;
-  const d = nowData;
-
-  // Sentence
-  document.getElementById('sentence').textContent = d.sentence || 'No data available';
-  document.getElementById('status-time').textContent = formatTime(d.generatedAt);
-
-  // KPIs with deltas
-  setKPI('k-live', d.totalLive, prevLive, 'k-live-d');
-  setKPI('k-viewers', d.totalViewers, prevViewers, 'k-viewers-d', true);
-  setKPI('k-servers', d.activeServers, prevServers, 'k-servers-d');
-  prevLive = d.totalLive; prevViewers = d.totalViewers; prevServers = d.activeServers;
-
-  document.getElementById('k-peak-v').textContent = d.peakSceneToday ? fmtN(d.peakSceneToday.totalViewers) : '—';
-  document.getElementById('k-transfers').textContent = (d.transfers || []).length;
-
-  // Server bars
-  renderServerBars(d.scenes || []);
-
-  // Scene clusters
-  renderClusters(d.scenes || []);
-
-  // Peak scene
-  renderPeak(d.peakSceneToday);
-
-  // Ticker
-  renderTicker(d.scenes || []);
-
-  // Transfers
-  renderTransfers(d.transfers || []);
+function ago(ms) {
+  const s = Math.floor((Date.now()-ms)/1000);
+  if (s<60) return s+'s';
+  if (s<3600) return Math.floor(s/60)+'m';
+  return Math.floor(s/3600)+'h';
 }
 
-function setKPI(valId, current, previous, deltaId, big) {
-  document.getElementById(valId).textContent = big ? fmtN(current || 0) : (current || 0);
-  if (previous !== null && deltaId) {
-    const diff = (current || 0) - previous;
-    const el = document.getElementById(deltaId);
-    if (diff > 0) { el.textContent = `▲ +${big ? fmtN(diff) : diff}`; el.className = 'kpi-delta up'; }
-    else if (diff < 0) { el.textContent = `▼ ${big ? fmtN(diff) : diff}`; el.className = 'kpi-delta down'; }
-    else { el.textContent = '— flat'; el.className = 'kpi-delta flat'; }
-  }
-}
-
-// === SERVER BARS ===
-function renderServerBars(scenes) {
-  const el = document.getElementById('server-bars');
-  if (!scenes.length) { el.innerHTML = '<div class="empty-state">No active servers</div>'; return; }
-  const maxV = Math.max(...scenes.map(s => s.totalViewers), 1);
-  el.innerHTML = scenes.map(s => {
-    const pct = Math.max(Math.round((s.totalViewers / maxV) * 100), 2);
-    const color = srvColor(s.server);
-    const delta = s.viewerDelta || 0;
-    const deltaClass = delta > 0 ? 'up' : delta < 0 ? 'down' : '';
-    const deltaStr = delta > 0 ? `+${fmtN(delta)}` : delta < 0 ? fmtN(delta) : '';
-    return `<div class="server-bar">
-      <span class="sb-name" style="color:${color}">${s.server}</span>
-      <div class="sb-bar">
-        <div class="sb-fill" style="width:${pct}%;background:${color}">
-          <div class="sb-stats">
-            <span class="sb-viewers">${fmtN(s.totalViewers)}</span>
-            <span class="sb-count">${s.streamerCount}s</span>
-            ${deltaStr ? `<span class="sb-delta ${deltaClass}">${deltaStr}</span>` : ''}
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// === SCENE CLUSTERS ===
-function renderClusters(scenes) {
-  const el = document.getElementById('scene-clusters');
-  if (!scenes.length) { el.innerHTML = '<div class="empty-state">No active scenes</div>'; return; }
-  el.innerHTML = scenes.map(s => {
-    const delta = s.viewerDelta || 0;
-    const deltaStr = delta > 0 ? `▲ +${fmtN(delta)}` : delta < 0 ? `▼ ${fmtN(delta)}` : '';
-    const deltaClass = delta > 0 ? 'up' : delta < 0 ? 'down' : '';
-    const tags = (s.streamers || []).slice(0, 8).map(st =>
-      `<span class="sc-tag"><span class="dot"></span>${st.name} <span style="color:var(--green);font-size:9px">${fmtN(st.viewers)}</span></span>`
-    ).join('');
-    const kws = (s.keywords || []).slice(0, 5).map(k => `<span class="sc-kw">${k}</span>`).join('');
-    return `<div class="scene-cluster" onclick="window.location.href='/gta-rp/multi/#streams=${(s.streamers||[]).slice(0,6).map(st=>'twitch:'+st.name.toLowerCase()).join(',')}'">
-      <div class="sc-header">
-        <span class="sc-server" style="color:${srvColor(s.server)}">${s.server}</span>
-        <span><span class="sc-viewers">${fmtN(s.totalViewers)}</span>${deltaStr ? `<span class="sc-delta ${deltaClass}">${deltaStr}</span>` : ''}</span>
-      </div>
-      <div class="sc-streamers">${tags}</div>
-      ${kws ? `<div class="sc-keywords">${kws}</div>` : ''}
-    </div>`;
-  }).join('');
-}
-
-// === PEAK SCENE ===
-function renderPeak(peak) {
-  const el = document.getElementById('peak-scene');
-  if (!peak) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="peak">
-    <div class="peak-server" style="color:${srvColor(peak.server)}">${peak.server}</div>
-    <div class="peak-viewers">${fmtN(peak.totalViewers)} viewers</div>
-    <div class="peak-meta">${peak.streamerCount} streamers · ${peak.peakViewer ? peak.peakViewer + ' topped at ' + fmtN(peak.peakViewerCount) : ''} · ${formatTime(peak.snapshotAt)}</div>
-  </div>`;
-}
-
-// === TICKER ===
-function renderTicker(scenes) {
-  const el = document.getElementById('ticker-body');
-  const allStreamers = [];
-  for (const s of scenes) {
-    for (const st of (s.streamers || [])) {
-      allStreamers.push({...st, server: s.server});
+function detectServer(title) {
+  if (!title) return null;
+  const t = title.toLowerCase();
+  for (const s of [...SERVERS].sort((a,b) => Math.max(...b.keywords.map(k=>k.length)) - Math.max(...a.keywords.map(k=>k.length)))) {
+    for (const kw of s.keywords) {
+      if (t.includes(kw)) return s;
     }
   }
-  allStreamers.sort((a,b) => (b.viewers||0) - (a.viewers||0));
-  if (!allStreamers.length) { el.innerHTML = '<div class="empty-state">No streams live</div>'; return; }
-  el.innerHTML = allStreamers.slice(0, 20).map(st => `
-    <div class="ticker-item">
-      <span class="ti-name">${st.name}</span>
-      <span class="ti-server">${st.server}</span>
-      <span class="ti-viewers">${fmtN(st.viewers)}</span>
-    </div>`).join('');
+  return null;
 }
 
-// === TRANSFERS ===
-function renderTransfers(transfers) {
-  const el = document.getElementById('transfers');
-  if (!transfers.length) { el.innerHTML = '<div class="empty-state">No transfers detected recently</div>'; return; }
-  el.innerHTML = transfers.slice(0, 8).map(t => `
-    <div class="transfer-card">
-      <span class="tf-name">${t.creator_name}</span>
-      <span class="tf-arrow">→</span>
-      <div class="tf-servers">
-        <span class="tf-from">${t.from_server}</span>
-        <span style="color:var(--t3)">→</span>
-        <span class="tf-to">${t.to_server}</span>
-      </div>
-    </div>`).join('');
-}
-
-// === TIMELINE ===
-async function loadTimeline() {
+async function loadAvatars() {
   try {
-    const r = await fetch(`/api/scene-timeline?hours=${currentHours}`);
-    const data = await r.json();
-    renderTimeline(data);
-  } catch(e) {
-    document.getElementById('timeline-chart').innerHTML = '<div class="empty-state">Timeline data unavailable</div>';
-  }
+    const r = await fetch('/api/creators?limit=500');
+    const d = await r.json();
+    (d.creators||[]).forEach(c => {
+      const k = (c.display_name||'').toLowerCase();
+      if (k && c.avatar_url && !c.avatar_url.includes('previews-ttv')) avatarMap[k] = c.avatar_url;
+    });
+  } catch(e) {}
 }
 
-function renderTimeline(data) {
-  const chart = document.getElementById('timeline-chart');
-  const legend = document.getElementById('tl-legend');
-  const tl = data.timeline || [];
-  const servers = data.servers || [];
+function getAv(name) { return avatarMap[(name||'').toLowerCase()] || ''; }
 
-  if (!tl.length) {
-    chart.innerHTML = '<div class="empty-state">No timeline data yet — snapshots build over time</div>';
-    legend.innerHTML = '';
-    return;
-  }
+function avHtml(name, size) {
+  const av = getAv(name);
+  return av ? `<img class="lr-av" src="${av}" alt="" style="width:${size}px;height:${size}px" loading="lazy" onerror="this.className='lr-ph';this.outerHTML='<div class=lr-ph style=width:${size}px;height:${size}px>${(name||'?').charAt(0)}</div>'">`
+    : `<div class="lr-ph" style="width:${size}px;height:${size}px">${(name||'?').charAt(0)}</div>`;
+}
 
-  // Find max stacked value
-  let maxVal = 0;
-  for (const slot of tl) {
-    let total = 0;
-    for (const srv of servers) {
-      total += (slot.servers[srv]?.viewers || 0);
+async function poll() {
+  try {
+    const r = await fetch('/api/live-now');
+    const d = await r.json();
+    const live = (d.ok && d.live) ? d.live : [];
+    const totalV = live.reduce((s,c) => s + (c.viewers||0), 0);
+    if (totalV > peakToday) peakToday = totalV;
+
+    // Detect new/offline events
+    const liveSet = new Set(live.map(s => (s.handle||s.display_name).toLowerCase()));
+    const prevSet = new Set(Object.keys(prevViewers));
+
+    live.forEach(s => {
+      const k = (s.handle||s.display_name).toLowerCase();
+      if (!prevSet.has(k) && Object.keys(prevViewers).length > 0) {
+        events.unshift({id:'live-'+Date.now()+k, at:Date.now(), kind:'live', text:`<span class="name">${s.display_name}</span> went live${s.game_name?' · '+s.game_name:''}`});
+      }
+    });
+    prevSet.forEach(k => {
+      if (!liveSet.has(k) && Object.keys(prevViewers).length > 0) {
+        events.unshift({id:'off-'+Date.now()+k, at:Date.now(), kind:'offline', text:`<span class="name">${k}</span> went offline`});
+      }
+    });
+
+    // Compute deltas
+    const deltas = {};
+    live.forEach(s => {
+      const k = (s.handle||s.display_name).toLowerCase();
+      const prev = prevViewers[k] || 0;
+      deltas[k] = (s.viewers||0) - prev;
+    });
+
+    // Update prev
+    prevViewers = {};
+    live.forEach(s => { prevViewers[(s.handle||s.display_name).toLowerCase()] = s.viewers||0; });
+
+    events = events.slice(0, 80);
+
+    // Hero
+    document.getElementById('s-live').textContent = live.length;
+    document.getElementById('s-viewers').textContent = fmtBig(totalV);
+    document.getElementById('s-peak').textContent = fmtBig(peakToday);
+    const dot = document.getElementById('h-dot');
+    dot.className = 'dot ' + (live.length>0?'on':'off');
+    document.getElementById('h-sub').textContent = live.length>0 ? 'Updated every 45s' : 'No UK RP streams detected';
+    document.getElementById('nav-dot').style.background = live.length>0?'var(--live)':'var(--ink-faint)';
+    document.getElementById('live-kicker').textContent = live.length>0 ? live.length+' live' : 'scene quiet';
+
+    // Server activity
+    const srvActivity = SERVERS.map(srv => {
+      const streams = live.filter(s => detectServer(s.stream_title||s.game_name) && detectServer(s.stream_title||s.game_name).id === srv.id);
+      return { ...srv, streams, liveCount: streams.length, viewers: streams.reduce((n,s)=>n+(s.viewers||0),0), topStream: streams.sort((a,b)=>(b.viewers||0)-(a.viewers||0))[0]||null };
+    });
+    const activeServers = srvActivity.filter(s => s.liveCount > 0);
+    document.getElementById('s-servers').textContent = activeServers.length;
+
+    // Live grid
+    const grid = document.getElementById('live-grid');
+    if (live.length === 0) {
+      grid.innerHTML = '<div class="empty">Nobody from the tracked roster is live right now.</div>';
+    } else {
+      grid.innerHTML = [...live].sort((a,b)=>(b.viewers||0)-(a.viewers||0)).map(s => {
+        const k = (s.handle||s.display_name).toLowerCase();
+        const d = deltas[k]||0;
+        const dHtml = d!==0 ? `<div class="lr-delta ${d>0?'up':'down'}">${d>0?'▲ +':'▼ '}${fmtBig(Math.abs(d))}</div>` : '';
+        const plat = (s.platform||'twitch').toLowerCase();
+        const url = plat==='kick'?`https://kick.com/${s.handle}`:`https://twitch.tv/${s.handle}`;
+        return `<a class="lr" href="${url}" target="_blank">
+          ${avHtml(s.display_name, 36)}
+          <div class="lr-info"><div class="lr-name">${s.display_name}</div><div class="lr-meta">${plat} · ${s.game_name||'GTA V'}</div></div>
+          <div><div class="lr-viewers">${fmtBig(s.viewers)}</div>${dHtml}</div>
+        </a>`;
+      }).join('');
     }
-    if (total > maxVal) maxVal = total;
-  }
-  maxVal = maxVal || 1;
 
-  // Grid lines
-  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(pct => {
-    const val = Math.round(maxVal * (1 - pct));
-    return `<div class="tl-gridline"><span>${fmtN(val)}</span></div>`;
-  }).join('');
+    // Server bars
+    const srvSec = document.getElementById('srv-sec');
+    if (activeServers.length > 0 || srvActivity.some(s=>s.liveCount>0)) {
+      srvSec.style.display = '';
+      const maxV = Math.max(1, ...srvActivity.map(s=>s.viewers));
+      document.getElementById('srv-list').innerHTML = srvActivity
+        .sort((a,b) => b.viewers - a.viewers)
+        .map(s => `<div class="srv">
+          <div class="srv-top"><span class="srv-name">${s.name}</span><span class="srv-stat">${s.liveCount===0?'quiet':s.liveCount+' live · '+fmtBig(s.viewers)+' watching'}</span></div>
+          <div class="srv-bar"><div class="srv-fill ${s.liveCount>0?'active':'quiet'}" style="width:${Math.max(s.liveCount>0?4:0,(s.viewers/maxV)*100)}%"></div></div>
+          ${s.topStream?`<div class="srv-pov">Top POV: ${s.topStream.display_name} · ${fmtBig(s.topStream.viewers)}</div>`:''}
+        </div>`).join('');
+    } else {
+      srvSec.style.display = 'none';
+    }
 
-  // Bars
-  const bars = tl.map(slot => {
-    const segs = servers.map(srv => {
-      const v = slot.servers[srv]?.viewers || 0;
-      const h = Math.max((v / maxVal) * 100, 0);
-      const streamers = slot.servers[srv]?.streamers || 0;
-      const color = srvColor(srv);
-      return h > 0 ? `<div class="tl-seg" style="height:${h}%;background:${color}"><div class="tooltip">${srv}: ${fmtN(v)} viewers (${streamers}s)</div></div>` : '';
-    }).join('');
-    return `<div class="tl-bar">${segs}</div>`;
-  }).join('');
+    // Trending
+    const trendSec = document.getElementById('trend-sec');
+    const trending = live.map(s => ({s, d: deltas[(s.handle||s.display_name).toLowerCase()]||0})).filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5);
+    if (trending.length > 0) {
+      trendSec.style.display = '';
+      document.getElementById('trend-list').innerHTML = trending.map(({s,d}) => `<div class="trend">
+        ${avHtml(s.display_name, 36)}
+        <div class="lr-info"><div class="lr-name">${s.display_name}</div><div class="lr-meta">${fmtBig(s.viewers)} viewers</div></div>
+        <span class="trend-delta">▲ +${fmtBig(d)}</span>
+      </div>`).join('');
+    } else {
+      trendSec.style.display = 'none';
+    }
 
-  // Time labels (show ~6 evenly spaced)
-  const step = Math.max(Math.floor(tl.length / 6), 1);
-  const labels = [];
-  for (let i = 0; i < tl.length; i += step) {
-    const d = new Date(tl[i].time);
-    labels.push(`<span>${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}</span>`);
-  }
-
-  chart.innerHTML = `
-    <div class="tl-grid">${gridLines}</div>
-    <div class="tl-bars">${bars}</div>
-    <div class="tl-time-labels">${labels.join('')}</div>`;
-
-  // Legend
-  legend.innerHTML = servers.map(srv =>
-    `<div class="tl-legend-item"><div class="swatch" style="background:${srvColor(srv)}"></div>${srv}</div>`
-  ).join('');
+    // Ticker
+    document.getElementById('t-count').textContent = events.length + ' events';
+    const tl = document.getElementById('ticker-list');
+    if (events.length === 0) {
+      tl.innerHTML = '<div class="empty">Waiting for scene events. Updates arrive every 45 seconds.</div>';
+    } else {
+      tl.innerHTML = events.map(e => `<div class="te">
+        <div class="te-kind ${e.kind}"></div>
+        <div class="te-time">${ago(e.at)}</div>
+        <div class="te-text">${e.text}</div>
+      </div>`).join('');
+    }
+  } catch(e) { console.error('Poll failed:', e); }
 }
 
-function setHours(h) {
-  currentHours = h;
-  document.querySelectorAll('.tl-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.hours) === h));
-  loadTimeline();
-}
-
-// === UTILS ===
-function fmtN(n) {
-  if (n == null || isNaN(n)) return '0';
-  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n/1000).toFixed(1) + 'k';
-  return n.toLocaleString();
-}
-
-function formatTime(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso.endsWith('Z') ? iso : iso + 'Z');
-  return d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
-}
-
-// === INIT ===
-loadNow();
-loadTimeline();
-setInterval(loadNow, 30000);
-setInterval(loadTimeline, 120000);
+loadAvatars().then(() => poll());
+setInterval(poll, 45000);
 </script>
 </body>
 </html>
