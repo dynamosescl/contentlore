@@ -16,7 +16,9 @@
   --mag:#FF2D6B;--mag-g:rgba(255,45,107,.3);--mag-dim:rgba(255,45,107,.12);
   --cyan:#00E5FF;--cyan-g:rgba(0,229,255,.25);--cyan-dim:rgba(0,229,255,.1);
   --green:#00FF85;--green-dim:rgba(0,255,133,.12);
-  --orange:#FF8A00;--red:#FF3B3B;--yellow:#FFD600;
+  --orange:#FF8A00;--red:#FF3B3B;
+  --twitch:#9146FF;--twitch-dim:rgba(145,70,255,.12);
+  --kick:#53FC18;--kick-dim:rgba(83,252,24,.08);
   --font-d:'Oswald',sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:system-ui,-apple-system,sans-serif;
   --clip:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
   --clip-sm:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
@@ -38,14 +40,14 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:1
 .container{max-width:1200px;margin:0 auto;padding:0 24px}
 
 /* HERO */
-.hero{padding:40px 0 16px}
+.hero{padding:40px 0 12px}
 .hero-eyebrow{font-family:var(--font-m);font-size:11px;color:var(--mag);text-transform:uppercase;letter-spacing:2px;display:flex;align-items:center;gap:8px}
 .hero-eyebrow::before{content:'';width:20px;height:2px;background:var(--mag)}
 .hero h1{font-family:var(--font-d);font-size:44px;font-weight:700;text-transform:uppercase;letter-spacing:3px;line-height:1;margin-top:6px}
 .hero h1 .accent{color:var(--mag);text-shadow:0 0 30px var(--mag-g)}
 .hero-sub{font-family:var(--font-b);font-size:14px;color:var(--t3);margin-top:8px;line-height:1.5;max-width:600px}
 
-/* STAT ROW */
+/* STATS */
 .stats{display:flex;gap:12px;margin:20px 0 28px;flex-wrap:wrap}
 .stat{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:12px 18px;display:flex;align-items:baseline;gap:8px}
 .stat-val{font-family:var(--font-d);font-size:28px;font-weight:700}
@@ -55,70 +57,74 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:1
 .section{margin-bottom:36px}
 .section-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .section-title{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
-.section-count{font-family:var(--font-m);font-size:11px;color:var(--mag);background:var(--mag-dim);padding:2px 8px;clip-path:var(--clip-sm)}
+.section-badge{font-family:var(--font-m);font-size:11px;color:var(--mag);background:var(--mag-dim);padding:2px 8px;clip-path:var(--clip-sm)}
 .section-line{flex:1;height:1px;background:var(--border)}
 .section-link{font-family:var(--font-m);font-size:11px;color:var(--cyan);text-decoration:none;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
 .section-link:hover{text-decoration:underline}
+.section-sub{font-family:var(--font-m);font-size:11px;color:var(--t3);margin-bottom:12px}
 
 /* LIVE CARDS */
 .live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}
-.live-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);overflow:hidden;transition:all .25s;cursor:pointer;position:relative}
+
+.live-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);overflow:hidden;transition:all .25s;text-decoration:none;color:var(--t1);display:block;position:relative}
 .live-card:hover{border-color:var(--mag);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.5)}
-.live-card.top-stream{border-color:var(--mag);box-shadow:0 0 20px var(--mag-g)}
-.live-card.top-stream::after{content:'TOP STREAM';position:absolute;top:12px;right:0;background:var(--mag);color:#fff;font-family:var(--font-m);font-size:8px;letter-spacing:1px;padding:3px 10px 3px 8px;clip-path:polygon(6px 0,100% 0,100% 100%,0 100%);z-index:5}
+.live-card.top-card{border-color:var(--mag);box-shadow:0 0 24px var(--mag-g)}
+.live-card.top-card .top-flag{display:block}
+.top-flag{display:none;position:absolute;top:0;right:0;background:var(--mag);color:#fff;font-family:var(--font-m);font-size:8px;letter-spacing:1px;padding:4px 12px 4px 10px;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%);z-index:5}
 
-.lc-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
-.lc-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--bg3);flex-shrink:0}
-.lc-avatar-ph{width:44px;height:44px;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:18px;color:var(--t3);flex-shrink:0}
-.lc-info{flex:1;min-width:0}
-.lc-name-row{display:flex;align-items:center;gap:8px}
-.lc-name{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lc-platform{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:2px 6px;clip-path:var(--clip-sm)}
-.lc-platform.twitch{background:rgba(145,70,255,.15);color:#9146FF;border:1px solid rgba(145,70,255,.3)}
-.lc-platform.kick{background:rgba(83,252,24,.1);color:#53FC18;border:1px solid rgba(83,252,24,.3)}
-.lc-title{font-family:var(--font-b);font-size:12px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
-.lc-game{font-family:var(--font-m);font-size:10px;color:var(--t3);margin-top:2px}
+.lc-top{display:flex;gap:14px;padding:16px;align-items:flex-start}
+.lc-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--bg3);flex-shrink:0}
+.lc-initial{width:48px;height:48px;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:20px;color:var(--t3);flex-shrink:0}
+.lc-body{flex:1;min-width:0}
+.lc-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lc-name{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:1px}
+.lc-plat{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;clip-path:var(--clip-sm)}
+.lc-plat.twitch{background:var(--twitch-dim);color:var(--twitch);border:1px solid rgba(145,70,255,.25)}
+.lc-plat.kick{background:var(--kick-dim);color:var(--kick);border:1px solid rgba(83,252,24,.2)}
+.lc-title{font-family:var(--font-b);font-size:12px;color:var(--t2);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc-game{font-family:var(--font-m);font-size:10px;color:var(--t3);margin-top:3px}
 
-.lc-footer{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg3)}
-.lc-live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;flex-shrink:0;animation:blink 2s infinite;box-shadow:0 0 8px rgba(0,255,133,.5)}
-.lc-live-text{font-family:var(--font-m);font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:1px}
-.lc-viewers{font-family:var(--font-d);font-size:16px;font-weight:600;color:var(--green);margin-left:auto;display:flex;align-items:baseline;gap:4px}
-.lc-viewers span{font-family:var(--font-m);font-size:9px;color:var(--t3);font-weight:400}
+.lc-bottom{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg3);border-top:1px solid var(--border)}
+.lc-dot{width:8px;height:8px;background:var(--green);border-radius:50%;flex-shrink:0;animation:blink 2s infinite;box-shadow:0 0 8px rgba(0,255,133,.4)}
+.lc-live-label{font-family:var(--font-m);font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:1px}
 .lc-duration{font-family:var(--font-m);font-size:10px;color:var(--t3)}
-.lc-server{font-family:var(--font-m);font-size:9px;color:var(--mag);text-transform:uppercase;letter-spacing:.5px;padding:2px 6px;background:var(--mag-dim);clip-path:var(--clip-sm)}
+.lc-right{margin-left:auto;display:flex;align-items:baseline;gap:4px}
+.lc-viewers{font-family:var(--font-d);font-size:18px;font-weight:600;color:var(--green)}
+.lc-vw-label{font-family:var(--font-m);font-size:9px;color:var(--t3)}
+.lc-view-btn{font-family:var(--font-m);font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-left:12px}
 
 /* NO LIVE */
-.no-live{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:40px;text-align:center}
-.no-live p{font-family:var(--font-m);font-size:13px;color:var(--t3)}
-.no-live .big{font-family:var(--font-d);font-size:24px;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:2px}
+.no-live{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:48px;text-align:center}
+.no-live .big{font-family:var(--font-d);font-size:24px;color:var(--t2);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.no-live p{font-family:var(--font-m);font-size:12px;color:var(--t3)}
 
 /* ROSTER */
-.roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
-.roster-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;transition:all .15s;cursor:pointer}
-.roster-card:hover{border-color:var(--border-a);background:var(--bg3)}
-.roster-card.is-live{border-color:rgba(0,255,133,.2)}
-.rc-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--bg3);flex-shrink:0}
-.rc-avatar-ph{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:13px;color:var(--t3);flex-shrink:0}
-.rc-avatar-wrap{position:relative;flex-shrink:0}
+.roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.rc{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;transition:all .15s;cursor:pointer;text-decoration:none;color:var(--t1)}
+.rc:hover{border-color:var(--border-a);background:var(--bg3)}
+.rc.is-live{border-color:rgba(0,255,133,.15)}
+.rc-aw{position:relative;flex-shrink:0}
+.rc-av{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--bg3)}
+.rc-ini{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:13px;color:var(--t3)}
 .rc-dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--bg2);position:absolute;bottom:-1px;right:-1px}
-.rc-dot.live{background:var(--green);box-shadow:0 0 6px var(--green)}
+.rc-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
 .rc-dot.off{background:var(--border)}
 .rc-info{flex:1;min-width:0}
 .rc-name{font-family:var(--font-d);font-size:13px;text-transform:uppercase;letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rc-meta{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;display:flex;align-items:center;gap:6px}
-.rc-on-stage{font-family:var(--font-m);font-size:8px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:3px}
-.rc-on-stage::before{content:'✓'}
-.rc-viewers{font-family:var(--font-m);font-size:11px;color:var(--green);margin-left:auto;flex-shrink:0}
+.rc-meta{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;display:flex;align-items:center;gap:6px;margin-top:1px}
+.rc-stage{color:var(--green);display:flex;align-items:center;gap:3px}
+.rc-stage::before{content:'✓';font-size:8px}
+.rc-vw{font-family:var(--font-m);font-size:11px;color:var(--green);margin-left:auto;flex-shrink:0}
 
 /* QUICK NAV */
-.quick-nav{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:28px 0 40px}
+.qnav{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:28px 0 40px}
 .qn{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip-sm);padding:14px 16px;text-decoration:none;color:var(--t1);transition:all .2s;display:block}
 .qn:hover{border-color:var(--mag);transform:translateY(-2px)}
-.qn-icon{font-size:20px;margin-bottom:6px}
+.qn-icon{font-size:18px;margin-bottom:4px}
 .qn-title{font-family:var(--font-d);font-size:13px;text-transform:uppercase;letter-spacing:1px}
-.qn-desc{font-family:var(--font-m);font-size:9px;color:var(--t3);margin-top:3px}
+.qn-desc{font-family:var(--font-m);font-size:9px;color:var(--t3);margin-top:2px}
 
-.footer{border-top:1px solid var(--border);padding:20px 24px;text-align:center;font-family:var(--font-m);font-size:10px;color:var(--t3)}
+.footer{border-top:1px solid var(--border);padding:20px;text-align:center;font-family:var(--font-m);font-size:10px;color:var(--t3)}
 
 body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
 *{position:relative;z-index:1}.nav{z-index:100}
@@ -130,7 +136,7 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
   .stats{gap:8px}
   .stat{padding:10px 14px}
   .stat-val{font-size:22px}
-  .quick-nav{grid-template-columns:1fr 1fr}
+  .qnav{grid-template-columns:1fr 1fr}
   .nav-links{overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
 </style>
@@ -149,46 +155,42 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
 </nav>
 
 <div class="container">
-  <!-- HERO -->
   <div class="hero">
     <div class="hero-eyebrow">Live Now</div>
     <h1>UK GTA RP, <span class="accent">live.</span></h1>
     <p class="hero-sub">Who's live, what they're playing, why it matters. ContentLore tracks every UK creator worth watching — across Twitch and Kick — so you never miss the storyline.</p>
   </div>
 
-  <!-- STATS -->
   <div class="stats">
-    <div class="stat"><span class="stat-val" style="color:var(--green)" id="s-live">—</span><span class="stat-label">creators on</span></div>
-    <div class="stat"><span class="stat-val" style="color:var(--mag)" id="s-viewers">—</span><span class="stat-label">watching</span></div>
-    <div class="stat"><span class="stat-val" style="color:var(--cyan)" id="s-scene">—</span><span class="stat-label">in scene</span></div>
-    <div class="stat"><span class="stat-val" style="color:var(--orange)" id="s-platforms">—</span><span class="stat-label">platforms</span></div>
+    <div class="stat"><span class="stat-val" style="color:var(--green)" id="s-live">0</span><span class="stat-label">creators on</span></div>
+    <div class="stat"><span class="stat-val" style="color:var(--mag)" id="s-viewers">0</span><span class="stat-label">watching</span></div>
+    <div class="stat"><span class="stat-val" style="color:var(--cyan)" id="s-scene">0</span><span class="stat-label">in scene</span></div>
+    <div class="stat"><span class="stat-val" style="color:var(--orange)" id="s-platforms">0</span><span class="stat-label">platforms</span></div>
   </div>
 
-  <!-- LIVE NOW -->
+  <!-- LIVE -->
   <div class="section">
     <div class="section-header">
       <h2 class="section-title">Live Right Now</h2>
-      <span class="section-count" id="live-count">0 on now</span>
+      <span class="section-badge" id="live-badge">0 on now</span>
       <div class="section-line"></div>
       <a href="/gta-rp/multi/" class="section-link">Multi-View →</a>
     </div>
-    <div class="live-grid" id="live-grid">
-      <div class="no-live"><div class="big">Scanning…</div><p>Checking streams</p></div>
-    </div>
+    <div class="live-grid" id="live-grid"></div>
   </div>
 
   <!-- ROSTER -->
   <div class="section">
     <div class="section-header">
       <h2 class="section-title">The Roster</h2>
-      <span class="section-count" id="roster-count">—</span>
       <div class="section-line"></div>
     </div>
+    <p class="section-sub" id="roster-sub">Scene tracker</p>
     <div class="roster-grid" id="roster-grid"></div>
   </div>
 
-  <!-- QUICK NAV -->
-  <div class="quick-nav">
+  <!-- NAV -->
+  <div class="qnav">
     <a href="/gta-rp/now/" class="qn"><div class="qn-icon">📡</div><div class="qn-title">Now</div><div class="qn-desc">Command centre</div></a>
     <a href="/gta-rp/multi/" class="qn"><div class="qn-icon">📺</div><div class="qn-title">Multi-View</div><div class="qn-desc">Watch together</div></a>
     <a href="/gta-rp/beef/" class="qn"><div class="qn-icon">🥩</div><div class="qn-title">Beef</div><div class="qn-desc">Rivalries</div></a>
@@ -201,175 +203,208 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
 <div class="footer">ContentLore · UK GTA RP Streaming Intelligence · 2025</div>
 
 <script>
-let liveCreators = [];
-let allCreators = [];
+/*
+  API field reference (from actual endpoints):
+  
+  /api/live-now → { ok, live: [{ id, display_name, avatar_url (STREAM PREVIEW), 
+    platform, handle, viewers, peak_viewers, uptime_mins, game_name, 
+    stream_title, profile_url, count, source }] }
+  
+  /api/creators → { ok, count, creators: [{ id, display_name, avatar_url (PROFILE PIC),
+    primary_platform, primary_handle, profile_url, categories, ... }] }
+  
+  NOTE: avatar_url on live-now = stream thumbnail preview
+        avatar_url on creators = actual profile picture
+        We cross-reference to get proper avatars for live creators.
+*/
+
+let liveData = [];
+let creatorData = [];
+let creatorAvatarMap = {}; // display_name.lower → real avatar_url
 
 async function loadAll() {
   try {
-    const [liveRes, creatorsRes, scenesRes] = await Promise.all([
-      fetch('/api/live-now').catch(() => ({json:()=>({})})),
-      fetch('/api/creators?limit=200').catch(() => ({json:()=>({})})),
-      fetch('/api/scenes').catch(() => ({json:()=>({})})),
+    // Fetch both endpoints
+    const [liveRes, creatorsRes] = await Promise.all([
+      fetch('/api/live-now'),
+      fetch('/api/creators?limit=500'),
     ]);
 
-    const liveData = await liveRes.json();
-    const creatorsData = await creatorsRes.json();
-    const scenesData = await scenesRes.json();
+    const liveJson = await liveRes.json();
+    const creatorsJson = await creatorsRes.json();
 
-    liveCreators = liveData.live || liveData.creators || [];
-    allCreators = creatorsData.creators || creatorsData || [];
-    const scenes = scenesData.scenes || scenesData || [];
+    liveData = (liveJson.ok && liveJson.live) ? liveJson.live : [];
+    creatorData = (creatorsJson.ok && creatorsJson.creators) ? creatorsJson.creators : [];
 
-    // Stats
-    const totalViewers = liveCreators.reduce((s,c) => s + (c.viewers || 0), 0);
-    const inScene = scenes.reduce((s,sc) => s + (sc.streamers?.length || sc.streamer_count || 0), 0);
-    const platforms = new Set(liveCreators.map(c => c.platform || 'twitch'));
+    // Build avatar lookup from creators (these have real profile pics)
+    creatorAvatarMap = {};
+    creatorData.forEach(c => {
+      const key = (c.display_name || '').toLowerCase();
+      if (key && c.avatar_url && !c.avatar_url.includes('previews-ttv')) {
+        creatorAvatarMap[key] = c.avatar_url.replace('{width}', '70').replace('{height}', '70');
+      }
+    });
 
-    document.getElementById('s-live').textContent = liveCreators.length;
-    document.getElementById('s-viewers').textContent = fmtN(totalViewers);
-    document.getElementById('s-scene').textContent = inScene || liveCreators.length;
-    document.getElementById('s-platforms').textContent = platforms.size || '—';
-    document.getElementById('live-count').textContent = `${liveCreators.length} on now`;
-
+    updateStats();
     renderLive();
     renderRoster();
-  } catch(e) {
-    console.error('Load failed:', e);
+  } catch (e) {
+    console.error('Failed to load data:', e);
+    document.getElementById('live-grid').innerHTML = '<div class="no-live"><div class="big">Connection Error</div><p>Could not reach ContentLore API</p></div>';
   }
+}
+
+function updateStats() {
+  const viewers = liveData.reduce((sum, c) => sum + (c.viewers || 0), 0);
+  const platforms = new Set(liveData.map(c => c.platform).filter(Boolean));
+
+  document.getElementById('s-live').textContent = liveData.length;
+  document.getElementById('s-viewers').textContent = fmtN(viewers);
+  document.getElementById('s-scene').textContent = liveData.length; // scene count
+  document.getElementById('s-platforms').textContent = platforms.size || 0;
+  document.getElementById('live-badge').textContent = liveData.length + ' on now';
+}
+
+function getAvatar(displayName) {
+  // Try creator lookup first (real profile pic), fall back to nothing
+  return creatorAvatarMap[(displayName || '').toLowerCase()] || '';
+}
+
+function fmtDuration(mins) {
+  if (!mins || mins <= 0) return '';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h > 0 ? h + 'h ' + m + 'm' : m + 'm';
 }
 
 function renderLive() {
   const grid = document.getElementById('live-grid');
 
-  if (!liveCreators.length) {
-    grid.innerHTML = `<div class="no-live"><div class="big">Nobody Live</div><p>No UK RP creators streaming right now · check back later</p></div>`;
+  if (!liveData.length) {
+    grid.innerHTML = '<div class="no-live"><div class="big">Nobody Live</div><p>No UK RP creators streaming right now · check back later</p></div>';
     return;
   }
 
   // Sort by viewers desc
-  const sorted = [...liveCreators].sort((a,b) => (b.viewers||0) - (a.viewers||0));
-  const topViewers = sorted[0]?.viewers || 0;
+  const sorted = [...liveData].sort((a, b) => (b.viewers || 0) - (a.viewers || 0));
 
   grid.innerHTML = sorted.map((c, i) => {
-    const name = c.name || c.creator_name || c.channel || '?';
+    const name = c.display_name || c.handle || '?';
     const platform = (c.platform || 'twitch').toLowerCase();
-    const title = c.title || c.stream_title || '';
-    const game = c.game || c.game_name || 'Grand Theft Auto V';
+    const title = c.stream_title || c.game_name || '';
+    const game = c.game_name || 'Grand Theft Auto V';
     const viewers = c.viewers || 0;
-    const server = c.server || '';
-    const avatar = c.profile_image_url || c.profile_image || c.avatar_url || '';
-    const isTop = i === 0 && viewers > 0;
-
-    // Duration
-    let durStr = '';
-    if (c.started_at || c.session_start) {
-      const start = new Date(c.started_at || c.session_start);
-      const mins = Math.floor((Date.now() - start) / 60000);
-      if (mins >= 60) {
-        durStr = Math.floor(mins/60) + 'h ' + (mins%60) + 'm';
-      } else {
-        durStr = mins + 'm';
-      }
-    }
+    const duration = fmtDuration(c.uptime_mins);
+    const isTop = i === 0 && sorted.length > 1;
+    const avatar = getAvatar(name);
+    const profileUrl = c.profile_url || '#';
 
     const avatarHtml = avatar
-      ? `<img class="lc-avatar" src="${avatar}" alt="" loading="lazy" onerror="this.className='lc-avatar-ph';this.outerHTML='<div class=\\'lc-avatar-ph\\'>${name.charAt(0).toUpperCase()}</div>'">`
-      : `<div class="lc-avatar-ph">${name.charAt(0).toUpperCase()}</div>`;
+      ? `<img class="lc-avatar" src="${avatar}" alt="" loading="lazy" onerror="this.outerHTML=makeInitial('${name.charAt(0).toUpperCase()}','lc-initial')">`
+      : `<div class="lc-initial">${name.charAt(0).toUpperCase()}</div>`;
 
-    const profileUrl = platform === 'kick' ? `https://kick.com/${name}` : `https://twitch.tv/${name.toLowerCase()}`;
-
-    return `<div class="live-card${isTop ? ' top-stream' : ''}" onclick="window.open('${profileUrl}','_blank')">
-      <div class="lc-header">
+    return `<a class="live-card${isTop ? ' top-card' : ''}" href="${profileUrl}">
+      <div class="top-flag">Top Stream Now</div>
+      <div class="lc-top">
         ${avatarHtml}
-        <div class="lc-info">
+        <div class="lc-body">
           <div class="lc-name-row">
             <span class="lc-name">${name}</span>
-            <span class="lc-platform ${platform}">${platform}</span>
+            <span class="lc-plat ${platform}">${platform}</span>
           </div>
-          ${title ? `<div class="lc-title" title="${title.replace(/"/g,'&quot;')}">${title}</div>` : ''}
+          ${title ? `<div class="lc-title" title="${esc(title)}">${title}</div>` : ''}
           <div class="lc-game">${game}</div>
         </div>
       </div>
-      <div class="lc-footer">
-        <div class="lc-live-dot"></div>
-        <span class="lc-live-text">Live</span>
-        ${server ? `<span class="lc-server">${server}</span>` : ''}
-        ${durStr ? `<span class="lc-duration">${durStr}</span>` : ''}
-        <div class="lc-viewers">${fmtN(viewers)} <span>watching</span></div>
+      <div class="lc-bottom">
+        <div class="lc-dot"></div>
+        <span class="lc-live-label">Live</span>
+        ${duration ? `<span class="lc-duration">${duration}</span>` : ''}
+        <div class="lc-right">
+          <span class="lc-viewers">${fmtN(viewers)}</span>
+          <span class="lc-vw-label">watching</span>
+          <span class="lc-view-btn">View →</span>
+        </div>
       </div>
-    </div>`;
+    </a>`;
   }).join('');
 }
 
 function renderRoster() {
   const grid = document.getElementById('roster-grid');
 
-  // Build live lookup
+  // Build live lookup by display_name
   const liveMap = {};
-  liveCreators.forEach(c => {
-    const name = (c.name || c.creator_name || c.channel || '').toLowerCase();
-    liveMap[name] = c;
+  liveData.forEach(c => {
+    liveMap[(c.display_name || c.handle || '').toLowerCase()] = c;
   });
 
-  // Merge all creators with live status
-  const merged = allCreators.map(c => {
-    const name = (c.creator_name || c.name || '').toLowerCase();
-    const live = liveMap[name];
+  // Merge creators with live status
+  const merged = creatorData.map(c => {
+    const key = (c.display_name || '').toLowerCase();
+    const live = liveMap[key];
     return {
-      ...c,
-      displayName: c.creator_name || c.name || '?',
+      displayName: c.display_name || '?',
+      avatar: getAvatar(c.display_name),
+      platform: c.primary_platform || 'twitch',
+      profileUrl: c.profile_url || '#',
       isLive: !!live,
-      viewers: live?.viewers || 0,
-      livePlatform: live?.platform || c.primary_platform || 'twitch',
-      server: live?.server || '',
-      avatar: c.profile_image_url || c.profile_image || c.avatar_url || '',
+      viewers: live ? (live.viewers || 0) : 0,
     };
   });
 
-  // Sort: live first (by viewers), then alphabetical
-  merged.sort((a,b) => {
+  // Sort: live first by viewers, then alphabetical
+  merged.sort((a, b) => {
     if (a.isLive && !b.isLive) return -1;
     if (!a.isLive && b.isLive) return 1;
     if (a.isLive && b.isLive) return b.viewers - a.viewers;
     return a.displayName.localeCompare(b.displayName);
   });
 
-  // Count
   const offlineCount = merged.filter(c => !c.isLive).length;
-  document.getElementById('roster-count').textContent = `${offlineCount} creators · ${liveCreators.length} live`;
+  document.getElementById('roster-sub').textContent =
+    `${offlineCount} creators not live right now · the people we watch`;
 
   grid.innerHTML = merged.map(c => {
-    const platform = (c.livePlatform || c.primary_platform || 'twitch').toLowerCase();
-    const profileUrl = platform === 'kick' ? `https://kick.com/${c.displayName}` : `https://twitch.tv/${c.displayName.toLowerCase()}`;
+    const platform = c.platform.toLowerCase();
     const avatarHtml = c.avatar
-      ? `<img class="rc-avatar" src="${c.avatar}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'rc-avatar-ph\\'>${c.displayName.charAt(0).toUpperCase()}</div>'">`
-      : `<div class="rc-avatar-ph">${c.displayName.charAt(0).toUpperCase()}</div>`;
+      ? `<img class="rc-av" src="${c.avatar}" alt="" loading="lazy" onerror="this.outerHTML=makeInitial('${c.displayName.charAt(0).toUpperCase()}','rc-ini')">`
+      : `<div class="rc-ini">${c.displayName.charAt(0).toUpperCase()}</div>`;
 
-    return `<div class="roster-card${c.isLive ? ' is-live' : ''}" onclick="window.open('${profileUrl}','_blank')">
-      <div class="rc-avatar-wrap">
+    return `<a class="rc${c.isLive ? ' is-live' : ''}" href="${c.profileUrl}">
+      <div class="rc-aw">
         ${avatarHtml}
-        <div class="rc-dot ${c.isLive ? 'live' : 'off'}"></div>
+        <div class="rc-dot ${c.isLive ? 'on' : 'off'}"></div>
       </div>
       <div class="rc-info">
         <div class="rc-name">${c.displayName}</div>
         <div class="rc-meta">
           <span>${platform}</span>
-          ${c.isLive ? `<span class="rc-on-stage">on stage</span>` : ''}
+          ${c.isLive ? '<span class="rc-stage">on stage</span>' : ''}
         </div>
       </div>
-      ${c.isLive && c.viewers ? `<span class="rc-viewers">${fmtN(c.viewers)}</span>` : ''}
-    </div>`;
+      ${c.isLive && c.viewers ? `<span class="rc-vw">${fmtN(c.viewers)}</span>` : ''}
+    </a>`;
   }).join('');
 }
 
+// Utils
 function fmtN(n) {
   if (n == null || isNaN(n)) return '0';
-  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n/1000).toFixed(1) + 'k';
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
   return n.toLocaleString();
 }
 
-// Init + auto-refresh
+function esc(s) {
+  return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function makeInitial(letter, cls) {
+  return `<div class="${cls}">${letter}</div>`;
+}
+
+// Init + auto-refresh every 30s
 loadAll();
 setInterval(loadAll, 30000);
 </script>
