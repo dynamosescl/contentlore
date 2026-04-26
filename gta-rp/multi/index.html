@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multi-View — Watch every UK GTA RP POV at once · ContentLore</title>
 <meta name="description" content="Pick up to 6 UK GTA RP streams and watch them side by side with switchable chat. Twitch + Kick.">
@@ -16,11 +18,11 @@
   --card2:oklch(0.18 0.06 295);
   --ink-dim:oklch(0.78 0.05 320);
   --ink-faint:oklch(0.55 0.06 295);
-  --signal:oklch(0.72 0.30 350);
-  --signal-dim:oklch(0.58 0.24 350);
+  --signal:oklch(0.82 0.20 195);
+  --signal-dim:oklch(0.65 0.18 195);
   --signal-cyan:oklch(0.85 0.18 200);
   --border:oklch(0.28 0.08 295);
-  --live:oklch(0.72 0.30 350);
+  --live:oklch(0.82 0.20 195);
   --twitch:oklch(0.65 0.25 295);
   --kick:oklch(0.82 0.22 145);
   --destructive:oklch(0.68 0.27 25);
@@ -33,7 +35,7 @@ html{background:var(--bg);color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-b);min-height:100vh;-webkit-font-smoothing:antialiased;position:relative}
 
 /* Scanline overlay */
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.72 0.30 350/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2;background:oklch(0.85 0.18 200/.015);animation:crt 7s steps(1,end) infinite}
 @keyframes crt{0%,92%,94%,96%,100%{opacity:0}93%{opacity:1}95%{opacity:.6}97%{opacity:.9}}
 body>*{position:relative;z-index:3}
@@ -42,39 +44,39 @@ body>*{position:relative;z-index:3}
 .nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
 .nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
 .nav-brand .cl{color:var(--signal)}
-.nav-brand .tag{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:1px;background:oklch(0.72 0.30 350/.1);padding:2px 6px}
+.nav-brand .tag{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:1px;background:oklch(0.82 0.20 195/.1);padding:2px 6px}
 .nav-links{display:flex;gap:0}
 .nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px 14px;border-bottom:2px solid transparent;transition:all .2s}
 .nav-link:hover{color:var(--ink-dim)}
 .nav-link.active{color:var(--signal);border-bottom-color:var(--signal)}
 .nav-live::before{content:'';width:6px;height:6px;background:var(--signal);border-radius:50%;display:inline-block;margin-right:4px;animation:lpulse 2s infinite}
-@keyframes lpulse{0%,100%{box-shadow:0 0 0 0 oklch(0.72 0.30 350/.8),0 0 12px oklch(0.72 0.30 350/.6)}70%{box-shadow:0 0 0 10px oklch(0.72 0.30 350/0),0 0 18px oklch(0.72 0.30 350/.3)}}
+@keyframes lpulse{0%,100%{box-shadow:0 0 0 0 oklch(0.82 0.20 195/.8),0 0 12px oklch(0.82 0.20 195/.6)}70%{box-shadow:0 0 0 10px oklch(0.82 0.20 195/0),0 0 18px oklch(0.82 0.20 195/.3)}}
 
 .wrap{max-width:1600px;margin:0 auto;padding:12px 16px 40px}
 
 /* HEADER */
 .header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px}
-.header-left .kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:6px;text-shadow:0 0 6px oklch(0.72 0.30 350/.7),0 0 18px oklch(0.72 0.30 350/.45)}
+.header-left .kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:6px;text-shadow:0 0 6px oklch(0.82 0.20 195/.7),0 0 18px oklch(0.82 0.20 195/.45)}
 .header-left h1{font-family:var(--font-d);font-size:clamp(36px,6vw,64px);line-height:.95;color:var(--fg)}
 .header-left h1 .neon{color:var(--signal);animation:flicker 4.5s steps(1,end) infinite}
-@keyframes flicker{0%,19%,21%,23%,100%{opacity:1;text-shadow:0 0 6px oklch(0.72 0.30 350/.7),0 0 18px oklch(0.72 0.30 350/.45),0 0 38px oklch(0.72 0.30 350/.25)}20%,22%{opacity:.85;text-shadow:none}}
+@keyframes flicker{0%,19%,21%,23%,100%{opacity:1;text-shadow:0 0 6px oklch(0.82 0.20 195/.7),0 0 18px oklch(0.82 0.20 195/.45),0 0 38px oklch(0.82 0.20 195/.25)}20%,22%{opacity:.85;text-shadow:none}}
 .header-left .sub{font-size:13px;color:var(--ink-dim);margin-top:6px}
 .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px}
 .header-right .count{color:var(--ink-dim)}
 .header-right .clear{color:var(--ink-dim);background:none;border:none;cursor:pointer;text-decoration:underline;font:inherit;text-transform:uppercase;letter-spacing:inherit}
 .header-right .clear:hover{color:var(--signal)}
 .af-toggle{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid var(--border);cursor:pointer;transition:all .2s;user-select:none}
-.af-toggle.on{border-color:oklch(0.72 0.30 350/.6);color:var(--signal);background:oklch(0.72 0.30 350/.1)}
+.af-toggle.on{border-color:oklch(0.82 0.20 195/.6);color:var(--signal);background:oklch(0.82 0.20 195/.1)}
 .af-toggle input{display:none}
-.watch-btn{border:1px solid oklch(0.72 0.30 350/.6);color:var(--signal);background:none;padding:6px 12px;cursor:pointer;font:inherit;text-transform:uppercase;letter-spacing:inherit;transition:all .2s}
-.watch-btn:hover{background:oklch(0.72 0.30 350/.15);box-shadow:0 0 14px oklch(0.72 0.30 350/.5)}
+.watch-btn{border:1px solid oklch(0.82 0.20 195/.6);color:var(--signal);background:none;padding:6px 12px;cursor:pointer;font:inherit;text-transform:uppercase;letter-spacing:inherit;transition:all .2s}
+.watch-btn:hover{background:oklch(0.82 0.20 195/.15);box-shadow:0 0 14px oklch(0.82 0.20 195/.5)}
 
 /* STAGE */
 .stage-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:12px}
 .stage-header .sh-kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:4px}
 .stage-header h2{font-family:var(--font-d);font-size:28px;color:var(--fg)}
 .stage-header .mode-badge{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;padding:4px 8px;border:1px solid var(--border);color:var(--ink-dim)}
-.stage-header .mode-badge.auto{border-color:oklch(0.72 0.30 350/.6);color:var(--signal);background:oklch(0.72 0.30 350/.1)}
+.stage-header .mode-badge.auto{border-color:oklch(0.82 0.20 195/.6);color:var(--signal);background:oklch(0.82 0.20 195/.1)}
 
 .stage-wrap{display:grid;grid-template-columns:1fr 340px;gap:12px;margin-bottom:24px}
 @media(max-width:1100px){.stage-wrap{grid-template-columns:1fr}}
@@ -88,7 +90,7 @@ body>*{position:relative;z-index:3}
 .vid-grid.g5,.vid-grid.g6{grid-template-columns:1fr 1fr 1fr}
 
 .tile{position:relative;border:1px solid var(--border);background:#000;aspect-ratio:16/9;overflow:hidden;transition:all .2s}
-.tile.top-tile{border-color:var(--signal);box-shadow:0 0 24px oklch(0.72 0.30 350/.55)}
+.tile.top-tile{border-color:var(--signal);box-shadow:0 0 24px oklch(0.82 0.20 195/.55)}
 .tile iframe{width:100%;height:100%;border:none}
 .tile-overlay{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:linear-gradient(180deg,rgba(0,0,0,.8),transparent);pointer-events:none;flex-wrap:wrap;gap:4px}
 .tile-overlay>*{pointer-events:auto}
@@ -98,10 +100,10 @@ body>*{position:relative;z-index:3}
 .tile-badge.name-b{color:var(--fg);font-family:var(--font-d);font-size:14px;letter-spacing:1px}
 .tile-badge.plat-b.twitch{color:var(--twitch)}
 .tile-badge.plat-b.kick{color:var(--kick)}
-.tile-badge.top-b{color:var(--signal);border:1px solid oklch(0.72 0.30 350/.6);text-shadow:0 0 6px oklch(0.72 0.30 350/.7)}
+.tile-badge.top-b{color:var(--signal);border:1px solid oklch(0.82 0.20 195/.6);text-shadow:0 0 6px oklch(0.82 0.20 195/.7)}
 .tile-badge.audio-b{color:var(--signal-cyan);border:1px solid oklch(0.85 0.18 200/.6)}
 .tile-btn{font-family:var(--font-m);font-size:10px;text-transform:uppercase;color:var(--fg);background:rgba(0,0,0,.6);border:none;padding:4px 8px;cursor:pointer;transition:background .2s}
-.tile-btn:hover{background:oklch(0.72 0.30 350/.3)}
+.tile-btn:hover{background:oklch(0.82 0.20 195/.3)}
 .tile-btn.remove:hover{background:oklch(0.68 0.27 25/.8)}
 
 /* CHAT PANEL */
@@ -109,11 +111,11 @@ body>*{position:relative;z-index:3}
 .chat-tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--border)}
 .chat-tab{flex-shrink:0;padding:8px 12px;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-dim);background:none;border:none;border-right:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s}
 .chat-tab:hover{color:var(--fg);background:oklch(0.13 0.05 295/.6)}
-.chat-tab.active{color:var(--signal);background:oklch(0.72 0.30 350/.15)}
+.chat-tab.active{color:var(--signal);background:oklch(0.82 0.20 195/.15)}
 .chat-tab .plat{font-size:8px}
-.chat-tab .plat.tw{color:oklch(0.72 0.30 350/.5)}
+.chat-tab .plat.tw{color:oklch(0.82 0.20 195/.5)}
 .chat-tab .plat.ki{color:oklch(0.82 0.22 145/.5)}
-.chat-tab.active .plat{color:oklch(0.72 0.30 350/.7)}
+.chat-tab.active .plat{color:oklch(0.82 0.20 195/.7)}
 .chat-frame{flex:1;width:100%;border:none;background:#000}
 
 /* EMPTY STAGE */
@@ -141,8 +143,8 @@ body>*{position:relative;z-index:3}
 @media(min-width:1200px){.roster-grid{grid-template-columns:repeat(6,1fr)}}
 
 .rc{position:relative;border:1px solid var(--border);background:var(--card);padding:10px;text-align:left;cursor:pointer;transition:all .2s;clip-path:var(--cut)}
-.rc:hover{border-color:var(--signal);box-shadow:0 0 12px oklch(0.72 0.30 350/.35);transform:translateY(-2px)}
-.rc.selected{border-color:var(--signal);background:oklch(0.72 0.30 350/.15);box-shadow:0 0 12px oklch(0.72 0.30 350/.45),inset 0 0 18px oklch(0.72 0.30 350/.12)}
+.rc:hover{border-color:var(--signal);box-shadow:0 0 12px oklch(0.82 0.20 195/.35);transform:translateY(-2px)}
+.rc.selected{border-color:var(--signal);background:oklch(0.82 0.20 195/.15);box-shadow:0 0 12px oklch(0.82 0.20 195/.45),inset 0 0 18px oklch(0.82 0.20 195/.12)}
 .rc.disabled{opacity:.4;cursor:not-allowed;transform:none !important;box-shadow:none !important}
 .rc-status{display:flex;align-items:center;gap:4px;min-height:14px;margin-bottom:6px}
 .rc-live{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--signal);display:inline-flex;align-items:center;gap:4px}
@@ -167,15 +169,25 @@ body>*{position:relative;z-index:3}
   .header-right{font-size:10px}
   .nav-links{overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glitch{0%,92%,94%,96%,100%{transform:none;opacity:1}93%{transform:translateX(-2px) skewX(-0.5deg);opacity:.9}95%{transform:translateX(2px) skewX(0.5deg);opacity:.85}97%{transform:translateX(-1px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 4px oklch(0.82 0.20 195/.4)}50%{box-shadow:0 0 16px oklch(0.82 0.20 195/.6),0 0 32px oklch(0.82 0.20 195/.2)}}
+.card:hover,.sc:hover,.scard:hover,.rcard:hover,.featured:hover{animation:glow-pulse 1.5s ease infinite}
+.hero h1,.sec-title,.sh{animation:fadeUp .6s ease both}
+
 </style>
 </head>
 <body>
 <nav class="nav">
-  <a href="/gta-rp/" class="nav-brand"><span class="cl">ContentLore</span><span class="tag">UK</span></a>
+  <a href="/gta-rp/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:28px;filter:brightness(1.1)" loading="eager"></a>
   <div class="nav-links">
     <a href="/gta-rp/" class="nav-link nav-live">Live</a>
     <a href="/gta-rp/now/" class="nav-link">Now</a>
     <a href="/gta-rp/multi/" class="nav-link active">Multi-View</a>
+    <a href="/gta-rp/lore/" class="nav-link">Lore</a>
+    <a href="/gta-rp/beef/" class="nav-link">Beef</a>
     <a href="/gta-rp/servers/" class="nav-link">Servers</a>
   </div>
 </nav>

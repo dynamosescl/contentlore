@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Now — Live UK GTA RP Scene · ContentLore</title>
 <meta name="description" content="Real-time ticker of UK GTA RP. Who's live, server activity, scene detection.">
@@ -13,14 +15,14 @@
   --bg:oklch(0.09 0.04 295);--fg:oklch(0.97 0.02 320);
   --card:oklch(0.13 0.05 295);--card2:oklch(0.18 0.06 295);
   --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
-  --signal:oklch(0.72 0.30 350);--signal-dim:oklch(0.58 0.24 350);--signal-cyan:oklch(0.85 0.18 200);
-  --border:oklch(0.28 0.08 295);--live:oklch(0.72 0.30 350);
+  --signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);
+  --border:oklch(0.28 0.08 295);--live:oklch(0.82 0.20 195);
   --twitch:oklch(0.65 0.25 295);--kick:oklch(0.82 0.22 145);
   --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
 }
 html{background:var(--bg);color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.72 0.30 350/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2;background:oklch(0.85 0.18 200/.015);animation:crt 7s steps(1,end) infinite}
 @keyframes crt{0%,92%,94%,96%,100%{opacity:0}93%{opacity:1}95%{opacity:.6}97%{opacity:.9}}
 body>*{position:relative;z-index:3}
@@ -28,13 +30,13 @@ body>*{position:relative;z-index:3}
 .nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
 .nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
 .nav-brand .cl{color:var(--signal)}
-.nav-brand .tag{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:1px;background:oklch(0.72 0.30 350/.1);padding:2px 6px}
+.nav-brand .tag{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:1px;background:oklch(0.82 0.20 195/.1);padding:2px 6px}
 .nav-links{display:flex}
 .nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s}
 .nav-link:hover{color:var(--ink-dim)}
 .nav-link.active{color:var(--signal);border-bottom-color:var(--signal)}
 .ldot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;animation:lp 2s infinite}
-@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.72 0.30 350/.8)}70%{box-shadow:0 0 0 8px oklch(0.72 0.30 350/0)}}
+@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.82 0.20 195/.8)}70%{box-shadow:0 0 0 8px oklch(0.82 0.20 195/0)}}
 
 /* HERO */
 .hero{border-bottom:1px solid var(--border);padding:28px 24px;position:relative;overflow:hidden}
@@ -45,7 +47,7 @@ body>*{position:relative;z-index:3}
 .hero-left .dot.on{background:var(--live);animation:lp 2s infinite}
 .hero-left .dot.off{background:var(--ink-faint)}
 .hero-left h1{font-family:var(--font-d);font-size:clamp(28px,4vw,40px);line-height:1}
-.hero-left h1 .neon{color:var(--signal);text-shadow:0 0 6px oklch(0.72 0.30 350/.5)}
+.hero-left h1 .neon{color:var(--signal);text-shadow:0 0 6px oklch(0.82 0.20 195/.5)}
 .hero-left .sub{font-family:var(--font-m);font-size:11px;color:var(--ink-dim);margin-left:16px}
 .hero-stats{display:flex;gap:24px}
 .hs{text-align:center}
@@ -118,11 +120,19 @@ body>*{position:relative;z-index:3}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--signal-dim);border:2px solid var(--bg)}
 @media(max-width:600px){.live-grid{grid-template-columns:1fr}.hero-stats{gap:16px}}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glitch{0%,92%,94%,96%,100%{transform:none;opacity:1}93%{transform:translateX(-2px) skewX(-0.5deg);opacity:.9}95%{transform:translateX(2px) skewX(0.5deg);opacity:.85}97%{transform:translateX(-1px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 4px oklch(0.82 0.20 195/.4)}50%{box-shadow:0 0 16px oklch(0.82 0.20 195/.6),0 0 32px oklch(0.82 0.20 195/.2)}}
+.card:hover,.sc:hover,.scard:hover,.rcard:hover,.featured:hover{animation:glow-pulse 1.5s ease infinite}
+.hero h1,.sec-title,.sh{animation:fadeUp .6s ease both}
+
 </style>
 </head>
 <body>
 <nav class="nav">
-  <a href="/gta-rp/" class="nav-brand"><span class="cl">ContentLore</span><span class="tag">UK</span></a>
+  <a href="/gta-rp/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:28px;filter:brightness(1.1)" loading="eager"></a>
   <div class="nav-links">
     <a href="/gta-rp/" class="nav-link"><span class="ldot" style="background:var(--live)" id="nav-dot"></span>Live</a>
     <a href="/gta-rp/now/" class="nav-link active">Now</a>

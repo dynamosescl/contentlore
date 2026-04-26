@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ContentLore — UK Streaming Intelligence</title>
 <meta name="description" content="The UK GTA RP streaming intelligence platform. Live tracking, scene detection, editorial analysis.">
@@ -13,15 +15,15 @@
   --bg:oklch(0.09 0.04 295);--fg:oklch(0.97 0.02 320);
   --card:oklch(0.13 0.05 295);--card2:oklch(0.18 0.06 295);
   --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
-  --signal:oklch(0.72 0.30 350);--signal-dim:oklch(0.58 0.24 350);--signal-cyan:oklch(0.85 0.18 200);
-  --border:oklch(0.28 0.08 295);--live:oklch(0.72 0.30 350);
+  --signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);
+  --border:oklch(0.28 0.08 295);--live:oklch(0.82 0.20 195);
   --twitch:oklch(0.65 0.25 295);--kick:oklch(0.82 0.22 145);
   --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
   --cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
 }
 html{background:var(--bg);color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.72 0.30 350/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
 body>*{position:relative;z-index:3}
 
 .nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:100}
@@ -36,12 +38,12 @@ body>*{position:relative;z-index:3}
 .hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
 .hero h1{font-family:var(--font-d);font-size:clamp(48px,10vw,96px);line-height:.92;letter-spacing:3px}
 .hero h1 .accent{color:var(--signal);animation:flicker 4.5s steps(1,end) infinite}
-@keyframes flicker{0%,19%,21%,23%,100%{opacity:1;text-shadow:0 0 6px oklch(0.72 0.30 350/.7),0 0 18px oklch(0.72 0.30 350/.45)}20%,22%{opacity:.85;text-shadow:none}}
+@keyframes flicker{0%,19%,21%,23%,100%{opacity:1;text-shadow:0 0 6px oklch(0.82 0.20 195/.7),0 0 18px oklch(0.82 0.20 195/.45)}20%,22%{opacity:.85;text-shadow:none}}
 .hero-tag{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:4px;color:var(--ink-dim);margin-top:12px}
 .hero-cta{display:flex;gap:12px;margin-top:28px}
 .cta{font-family:var(--font-d);font-size:16px;letter-spacing:2px;padding:12px 28px;text-decoration:none;clip-path:var(--cut);transition:all .25s}
 .cta-primary{background:var(--signal);color:var(--bg)}
-.cta-primary:hover{box-shadow:0 0 28px oklch(0.72 0.30 350/.5);transform:translateY(-2px)}
+.cta-primary:hover{box-shadow:0 0 28px oklch(0.82 0.20 195/.5);transform:translateY(-2px)}
 .cta-secondary{background:var(--card);border:1px solid var(--border);color:var(--fg)}
 .cta-secondary:hover{border-color:var(--signal-cyan);color:var(--signal-cyan);transform:translateY(-2px)}
 
@@ -51,7 +53,7 @@ body>*{position:relative;z-index:3}
 .pulse-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;animation:lp 2s infinite}
 .pulse-dot.on{background:var(--live)}
 .pulse-dot.off{background:var(--ink-faint)}
-@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.72 0.30 350/.8)}70%{box-shadow:0 0 0 8px oklch(0.72 0.30 350/0)}}
+@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.82 0.20 195/.8)}70%{box-shadow:0 0 0 8px oklch(0.82 0.20 195/0)}}
 .pulse-text{font-family:var(--font-m);font-size:12px;color:var(--ink-dim);flex:1}
 .pulse-stats{display:flex;gap:20px}
 .ps{display:flex;align-items:baseline;gap:4px}
@@ -62,13 +64,13 @@ body>*{position:relative;z-index:3}
 .mx{max-width:1100px;margin:0 auto;padding:40px 24px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .card{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:20px;text-decoration:none;color:var(--fg);display:block;transition:all .25s}
-.card:hover{border-color:var(--signal);transform:translateY(-3px);box-shadow:0 0 20px oklch(0.72 0.30 350/.3)}
+.card:hover{border-color:var(--signal);transform:translateY(-3px);box-shadow:0 0 20px oklch(0.82 0.20 195/.3)}
 .card-icon{font-size:22px;margin-bottom:8px}
 .card-title{font-family:var(--font-d);font-size:20px;letter-spacing:1px}
 .card-desc{font-size:12px;color:var(--ink-dim);margin-top:6px;line-height:1.5}
 .card-tag{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;display:inline-block;margin-top:10px}
 .card-tag.live{background:oklch(0.82 0.22 145/.12);color:oklch(0.82 0.22 145);border:1px solid oklch(0.82 0.22 145/.3)}
-.card-tag.edit{background:oklch(0.72 0.30 350/.1);color:var(--signal);border:1px solid oklch(0.72 0.30 350/.3)}
+.card-tag.edit{background:oklch(0.82 0.20 195/.1);color:var(--signal);border:1px solid oklch(0.82 0.20 195/.3)}
 .card-tag.intel{background:oklch(0.85 0.18 200/.1);color:var(--signal-cyan);border:1px solid oklch(0.85 0.18 200/.3)}
 
 /* EDITORIAL */
@@ -94,11 +96,19 @@ body>*{position:relative;z-index:3}
 
 ::selection{background:var(--signal);color:var(--bg)}
 @media(max-width:600px){.grid{grid-template-columns:1fr 1fr}.hero{padding:48px 24px 36px}.pulse-stats{gap:12px}}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glitch{0%,92%,94%,96%,100%{transform:none;opacity:1}93%{transform:translateX(-2px) skewX(-0.5deg);opacity:.9}95%{transform:translateX(2px) skewX(0.5deg);opacity:.85}97%{transform:translateX(-1px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 4px oklch(0.82 0.20 195/.4)}50%{box-shadow:0 0 16px oklch(0.82 0.20 195/.6),0 0 32px oklch(0.82 0.20 195/.2)}}
+.card:hover,.sc:hover,.scard:hover,.rcard:hover,.featured:hover{animation:glow-pulse 1.5s ease infinite}
+.hero h1,.sec-title,.sh{animation:fadeUp .6s ease both}
+
 </style>
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-brand">Content<span>Lore</span></a>
+  <a href="/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:28px;filter:brightness(1.1)" loading="eager"></a>
   <a href="/gta-rp/" class="link hub">GTA RP Hub</a>
   <a href="/the-platform/" class="link">Platform</a>
   <a href="/about/" class="link">About</a>
@@ -131,6 +141,8 @@ body>*{position:relative;z-index:3}
     <a href="/gta-rp/" class="card"><div class="card-icon">📡</div><div class="card-title">Live</div><div class="card-desc">Who's streaming right now across Twitch and Kick.</div><span class="card-tag live">Live Data</span></a>
     <a href="/gta-rp/now/" class="card"><div class="card-icon">⚡</div><div class="card-title">Now</div><div class="card-desc">Real-time command centre. Server bars, scene clusters, viewer deltas.</div><span class="card-tag live">Live Data</span></a>
     <a href="/gta-rp/multi/" class="card"><div class="card-icon">📺</div><div class="card-title">Multi-View</div><div class="card-desc">Watch up to 6 streams side by side with chat.</div><span class="card-tag live">Live Data</span></a>
+    <a href="/gta-rp/beef/" class="card"><div class="card-icon">🥩</div><div class="card-title">Beef</div><div class="card-desc">Every rivalry and grudge match. Heat ratings, beat timelines.</div><span class="card-tag edit">Editorial</span></a>
+    <a href="/gta-rp/lore/" class="card"><div class="card-icon">📖</div><div class="card-title">Lore</div><div class="card-desc">Story arcs and sagas tracked chapter by chapter.</div><span class="card-tag edit">Editorial</span></a>
     <a href="/gta-rp/servers/" class="card"><div class="card-icon">🖥</div><div class="card-title">Servers</div><div class="card-desc">UK RP server directory with live activity overlay.</div><span class="card-tag live">Live Data</span></a>
     <a href="/gta-rp/fivem-enhanced/" class="card"><div class="card-icon">🔧</div><div class="card-title">FiveM Enhanced</div><div class="card-desc">Platform migration tracker. Server readiness dashboard.</div><span class="card-tag intel">Intelligence</span></a>
     <a href="/gta-rp/gta-6/" class="card"><div class="card-icon">🔮</div><div class="card-title">GTA 6</div><div class="card-desc">Impact analysis, transition scenarios, community preparedness.</div><span class="card-tag intel">Intelligence</span></a>
