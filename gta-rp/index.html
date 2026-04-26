@@ -236,7 +236,15 @@ async function loadAll() {
       fetch('/api/live-now'),
     ]);
     const lJson = await lRes.json();
-    liveCreators = (lJson.ok && lJson.live) ? lJson.live : [];
+    const allLive = (lJson.ok && lJson.live) ? lJson.live : [];
+    // Only show allowlisted creators
+    const allowHandles = new Set(ALLOWLIST.map(c => c.handle.toLowerCase()));
+    const allowNames = new Set(ALLOWLIST.map(c => c.name.toLowerCase()));
+    liveCreators = allLive.filter(s => {
+      const h = (s.handle||s.display_name||'').toLowerCase();
+      const n = (s.display_name||'').toLowerCase();
+      return allowHandles.has(h) || allowNames.has(n);
+    });
 
     // Get full creators for avatars (only once)
     if (Object.keys(avatarMap).length === 0) {
