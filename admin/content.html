@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContentLore Admin — Beef & Lore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0A0A0B;--bg2:#111113;--bg3:#161618;--bg4:#1C1C1F;
+  --border:#2A2A2E;--border-a:#3A3A3F;
+  --t1:#E8E8EC;--t2:#9898A0;--t3:#5A5A65;
+  --mag:#FF2D6B;--mag-g:rgba(255,45,107,.3);
+  --cyan:#00E5FF;--cyan-g:rgba(0,229,255,.25);
+  --green:#00FF85;--orange:#FF8A00;--red:#FF3B3B;
+  --clip:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+}
+body{background:var(--bg);color:var(--t1);font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+.admin-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:16px}
+.admin-header h1{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;text-transform:uppercase;letter-spacing:2px}
+.admin-header .back{color:var(--cyan);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:13px}
+.admin-header .back:hover{text-decoration:underline}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tab{padding:12px 24px;font-family:'Oswald',sans-serif;font-size:14px;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;border:none;background:none;color:var(--t3);border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--t2)}
+.tab.active{color:var(--mag);border-bottom-color:var(--mag)}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.panel{display:none}.panel.active{display:block}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+.card{background:var(--bg3);border:1px solid var(--border);clip-path:var(--clip);padding:20px}
+.card h2{font-family:'Oswald',sans-serif;font-size:16px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t2);margin-bottom:16px}
+.field{margin-bottom:14px}
+.field label{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--t1);padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:2px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--cyan)}
+.field textarea{min-height:80px;resize:vertical}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.btn{font-family:'Oswald',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:1.5px;padding:10px 20px;border:none;cursor:pointer;clip-path:var(--clip);transition:all .2s}
+.btn-mag{background:var(--mag);color:#fff}
+.btn-mag:hover{box-shadow:0 0 20px var(--mag-g)}
+.btn-cyan{background:var(--cyan);color:#000}
+.btn-cyan:hover{box-shadow:0 0 20px var(--cyan-g)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--t2)}
+.btn-ghost:hover{border-color:var(--t3)}
+.btn-red{background:var(--red);color:#fff}
+.btn-row{display:flex;gap:8px;margin-top:16px}
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.list-item:hover{border-color:var(--border-a);background:var(--bg2)}
+.list-item .title{font-family:'Oswald',sans-serif;font-size:14px;text-transform:uppercase}
+.list-item .meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3);display:flex;gap:12px;align-items:center}
+.badge{padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+.badge-active{background:var(--mag);color:#fff}
+.badge-cooling{background:var(--orange);color:#000}
+.badge-resolved{background:var(--t3);color:var(--t1)}
+.badge-legendary{background:var(--cyan);color:#000}
+.badge-current{background:var(--green);color:#000}
+.badge-legacy{background:var(--orange);color:#000}
+.heat-bar{display:flex;gap:2px;align-items:center}
+.heat-pip{width:8px;height:8px;background:var(--border);transition:background .2s}
+.heat-pip.on{background:var(--mag)}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:13px;clip-path:var(--clip);z-index:999;transform:translateY(100px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green);color:#000}
+.toast.error{background:var(--red);color:#fff}
+.beats-editor,.chapters-editor{margin-top:8px}
+.beat-item,.chapter-item{background:var(--bg);border:1px solid var(--border);padding:10px;margin-bottom:6px;position:relative}
+.beat-item .remove,.chapter-item .remove{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--red);cursor:pointer;font-size:14px}
+.empty{text-align:center;padding:40px;color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:13px}
+.token-field{display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:var(--bg);border:1px solid var(--border);min-height:38px;cursor:text}
+.token{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:var(--bg3);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t1)}
+.token .x{cursor:pointer;color:var(--t3);font-size:10px}
+.token .x:hover{color:var(--red)}
+.token-field input{border:none;background:none;color:var(--t1);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;flex:1;min-width:80px}
+</style>
+</head>
+<body>
+<div class="admin-header">
+  <a href="/admin/" class="back">← ADMIN HOME</a>
+  <h1>Content Manager</h1>
+</div>
+<div class="tabs">
+  <button class="tab active" data-panel="beef-panel">🥩 Beefs</button>
+  <button class="tab" data-panel="lore-panel">📖 Lore Arcs</button>
+</div>
+
+<!-- BEEF PANEL -->
+<div id="beef-panel" class="panel active">
+<div class="container">
+<div class="split">
+  <div>
+    <div class="card">
+      <h2>All Beefs</h2>
+      <div id="beef-list"><div class="empty">Loading…</div></div>
+      <div class="btn-row">
+        <button class="btn btn-mag" onclick="newBeef()">+ New Beef</button>
+        <button class="btn btn-ghost" onclick="loadBeefs()">Refresh</button>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h2 id="beef-form-title">New Beef</h2>
+      <input type="hidden" id="beef-id">
+      <div class="field"><label>Title</label><input type="text" id="beef-title" placeholder="Tommy T vs Dean Watson"></div>
+      <div class="field"><label>Slug (auto-generated if blank)</label><input type="text" id="beef-slug" placeholder="tommy-t-vs-dean-watson"></div>
+      <div class="field-row">
+        <div class="field"><label>Server</label><input type="text" id="beef-server" placeholder="JESTRP"></div>
+        <div class="field"><label>Status</label>
+          <select id="beef-status"><option value="active">Active</option><option value="cooling">Cooling</option><option value="resolved">Resolved</option><option value="legendary">Legendary</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Heat (1-10)</label><input type="range" id="beef-heat" min="1" max="10" value="5" oninput="document.getElementById('heat-val').textContent=this.value"><span id="heat-val" style="font-family:'JetBrains Mono';font-size:13px;color:var(--mag);margin-left:8px">5</span></div>
+      <div class="field"><label>Side A (press Enter to add)</label><div class="token-field" id="side-a-tokens"><input type="text" placeholder="Creator name…" onkeydown="addToken(event,'side-a-tokens')"></div></div>
+      <div class="field"><label>Side B (press Enter to add)</label><div class="token-field" id="side-b-tokens"><input type="text" placeholder="Creator name…" onkeydown="addToken(event,'side-b-tokens')"></div></div>
+      <div class="field"><label>Description</label><textarea id="beef-desc" placeholder="What kicked this off…"></textarea></div>
+      <div class="field">
+        <label>Beats (timeline events)</label>
+        <div id="beef-beats" class="beats-editor"></div>
+        <button class="btn btn-ghost" onclick="addBeat()" style="margin-top:6px;font-size:11px;padding:6px 12px">+ Add Beat</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-mag" onclick="saveBeef()">Save Beef</button>
+        <button class="btn btn-red" id="beef-delete-btn" onclick="deleteBeef()" style="display:none">Delete</button>
+        <button class="btn btn-ghost" onclick="newBeef()">Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- LORE PANEL -->
+<div id="lore-panel" class="panel">
+<div class="container">
+<div class="split">
+  <div>
+    <div class="card">
+      <h2>All Lore Arcs</h2>
+      <div id="lore-list"><div class="empty">Loading…</div></div>
+      <div class="btn-row">
+        <button class="btn btn-cyan" onclick="newLore()">+ New Arc</button>
+        <button class="btn btn-ghost" onclick="loadLore()">Refresh</button>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h2 id="lore-form-title">New Lore Arc</h2>
+      <input type="hidden" id="lore-id">
+      <div class="field"><label>Title</label><input type="text" id="lore-title" placeholder="The Mandem Rise"></div>
+      <div class="field"><label>Slug (auto-generated if blank)</label><input type="text" id="lore-slug" placeholder="the-mandem-rise"></div>
+      <div class="field-row-3">
+        <div class="field"><label>Server</label><input type="text" id="lore-server" placeholder="JESTRP"></div>
+        <div class="field"><label>Kind</label>
+          <select id="lore-kind"><option value="gang-war">Gang War</option><option value="heist">Heist</option><option value="political">Political</option><option value="romance">Romance</option><option value="comedy">Comedy</option><option value="rivalry">Rivalry</option><option value="betrayal">Betrayal</option><option value="redemption">Redemption</option><option value="origin">Origin</option><option value="territory">Territory</option><option value="other">Other</option></select>
+        </div>
+        <div class="field"><label>Era</label>
+          <select id="lore-era"><option value="current">Current</option><option value="legacy">Legacy</option><option value="legendary">Legendary</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Weight (1-5)</label><input type="range" id="lore-weight" min="1" max="5" value="3" oninput="document.getElementById('weight-val').textContent=this.value"><span id="weight-val" style="font-family:'JetBrains Mono';font-size:13px;color:var(--cyan);margin-left:8px">3</span></div>
+      <div class="field"><label>Description</label><textarea id="lore-desc" placeholder="Arc summary…"></textarea></div>
+      <div class="field"><label>Linked Beefs (press Enter to add slug)</label><div class="token-field" id="linked-beefs-tokens"><input type="text" placeholder="beef-slug…" onkeydown="addToken(event,'linked-beefs-tokens')"></div></div>
+      <div class="field">
+        <label>Chapters</label>
+        <div id="lore-chapters" class="chapters-editor"></div>
+        <button class="btn btn-ghost" onclick="addChapter()" style="margin-top:6px;font-size:11px;padding:6px 12px">+ Add Chapter</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-cyan" onclick="saveLore()">Save Arc</button>
+        <button class="btn btn-red" id="lore-delete-btn" onclick="deleteLore()" style="display:none">Delete</button>
+        <button class="btn btn-ghost" onclick="newLore()">Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+const TOKEN = localStorage.getItem('cl_admin_token') || prompt('Enter admin token:');
+if (TOKEN) localStorage.setItem('cl_admin_token', TOKEN);
+const headers = {'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`};
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.panel).classList.add('active');
+  });
+});
+
+// Toast
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Token field (for side_a, side_b, linked_beefs)
+function addToken(e, containerId) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const val = e.target.value.trim();
+  if (!val) return;
+  const span = document.createElement('span');
+  span.className = 'token';
+  span.innerHTML = `${val} <span class="x" onclick="this.parentElement.remove()">✕</span>`;
+  span.dataset.value = val;
+  e.target.parentElement.insertBefore(span, e.target);
+  e.target.value = '';
+}
+function getTokens(containerId) {
+  return [...document.querySelectorAll(`#${containerId} .token`)].map(t => t.dataset.value);
+}
+function setTokens(containerId, values) {
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.token').forEach(t => t.remove());
+  const input = container.querySelector('input');
+  (values || []).forEach(v => {
+    const span = document.createElement('span');
+    span.className = 'token';
+    span.innerHTML = `${v} <span class="x" onclick="this.parentElement.remove()">✕</span>`;
+    span.dataset.value = v;
+    container.insertBefore(span, input);
+  });
+}
+
+// ===== BEEF CRUD =====
+let allBeefs = [];
+
+async function loadBeefs() {
+  try {
+    const r = await fetch(`${API}/api/beefs`);
+    const data = await r.json();
+    allBeefs = data.beefs || data || [];
+    renderBeefList();
+  } catch(e) { toast('Failed to load beefs','error'); }
+}
+
+function renderBeefList() {
+  const el = document.getElementById('beef-list');
+  if (!allBeefs.length) { el.innerHTML = '<div class="empty">No beefs yet</div>'; return; }
+  el.innerHTML = allBeefs.map(b => {
+    const heat = typeof b.heat === 'number' ? b.heat : 5;
+    const pips = Array.from({length:10}, (_,i) => `<div class="heat-pip${i < heat ? ' on' : ''}"></div>`).join('');
+    return `<div class="list-item" onclick="editBeef('${b.slug}')">
+      <div><div class="title">${b.title}</div><div class="meta"><span class="badge badge-${b.status || 'active'}">${b.status || 'active'}</span><span>${b.server || '—'}</span></div></div>
+      <div class="heat-bar">${pips}</div>
+    </div>`;
+  }).join('');
+}
+
+function newBeef() {
+  document.getElementById('beef-form-title').textContent = 'New Beef';
+  document.getElementById('beef-id').value = '';
+  document.getElementById('beef-title').value = '';
+  document.getElementById('beef-slug').value = '';
+  document.getElementById('beef-server').value = '';
+  document.getElementById('beef-status').value = 'active';
+  document.getElementById('beef-heat').value = 5;
+  document.getElementById('heat-val').textContent = '5';
+  document.getElementById('beef-desc').value = '';
+  setTokens('side-a-tokens', []);
+  setTokens('side-b-tokens', []);
+  document.getElementById('beef-beats').innerHTML = '';
+  document.getElementById('beef-delete-btn').style.display = 'none';
+}
+
+function editBeef(slug) {
+  const b = allBeefs.find(x => x.slug === slug);
+  if (!b) return;
+  document.getElementById('beef-form-title').textContent = 'Edit Beef';
+  document.getElementById('beef-id').value = b.id;
+  document.getElementById('beef-title').value = b.title;
+  document.getElementById('beef-slug').value = b.slug;
+  document.getElementById('beef-server').value = b.server || '';
+  document.getElementById('beef-status').value = b.status || 'active';
+  document.getElementById('beef-heat').value = b.heat || 5;
+  document.getElementById('heat-val').textContent = b.heat || 5;
+  document.getElementById('beef-desc').value = b.description || '';
+  const sideA = typeof b.side_a === 'string' ? JSON.parse(b.side_a || '[]') : (b.side_a || []);
+  const sideB = typeof b.side_b === 'string' ? JSON.parse(b.side_b || '[]') : (b.side_b || []);
+  setTokens('side-a-tokens', sideA);
+  setTokens('side-b-tokens', sideB);
+  const beats = typeof b.beats === 'string' ? JSON.parse(b.beats || '[]') : (b.beats || []);
+  document.getElementById('beef-beats').innerHTML = '';
+  beats.forEach(bt => addBeat(bt));
+  document.getElementById('beef-delete-btn').style.display = 'inline-block';
+}
+
+function addBeat(data) {
+  const container = document.getElementById('beef-beats');
+  const div = document.createElement('div');
+  div.className = 'beat-item';
+  div.innerHTML = `<button class="remove" onclick="this.parentElement.remove()">✕</button>
+    <div class="field-row"><div class="field"><label>Date</label><input type="date" class="beat-date" value="${data?.date || ''}"></div><div class="field"><label>Type</label><select class="beat-type"><option value="escalation"${data?.type==='escalation'?' selected':''}>Escalation</option><option value="confrontation"${data?.type==='confrontation'?' selected':''}>Confrontation</option><option value="alliance"${data?.type==='alliance'?' selected':''}>Alliance</option><option value="resolution"${data?.type==='resolution'?' selected':''}>Resolution</option><option value="betrayal"${data?.type==='betrayal'?' selected':''}>Betrayal</option></select></div></div>
+    <div class="field"><label>Summary</label><input type="text" class="beat-summary" value="${data?.summary || ''}" placeholder="What happened…"></div>`;
+  container.appendChild(div);
+}
+
+function collectBeats() {
+  return [...document.querySelectorAll('#beef-beats .beat-item')].map(el => ({
+    date: el.querySelector('.beat-date').value,
+    type: el.querySelector('.beat-type').value,
+    summary: el.querySelector('.beat-summary').value
+  })).filter(b => b.summary);
+}
+
+async function saveBeef() {
+  const payload = {
+    id: document.getElementById('beef-id').value ? parseInt(document.getElementById('beef-id').value) : undefined,
+    title: document.getElementById('beef-title').value,
+    slug: document.getElementById('beef-slug').value || undefined,
+    server: document.getElementById('beef-server').value || undefined,
+    status: document.getElementById('beef-status').value,
+    heat: parseInt(document.getElementById('beef-heat').value),
+    side_a: getTokens('side-a-tokens'),
+    side_b: getTokens('side-b-tokens'),
+    description: document.getElementById('beef-desc').value,
+    beats: collectBeats()
+  };
+  try {
+    const r = await fetch(`${API}/api/admin/beef`, {method:'POST', headers, body:JSON.stringify(payload)});
+    const data = await r.json();
+    if (data.success) { toast(`Beef ${data.action}: ${data.slug}`); loadBeefs(); }
+    else toast(data.error + (data.details ? ': ' + data.details.join(', ') : ''), 'error');
+  } catch(e) { toast('Save failed: ' + e.message, 'error'); }
+}
+
+async function deleteBeef() {
+  const id = document.getElementById('beef-id').value;
+  if (!id || !confirm('Delete this beef?')) return;
+  try {
+    const r = await fetch(`${API}/api/admin/beef?id=${id}`, {method:'DELETE', headers});
+    const data = await r.json();
+    if (data.success) { toast('Beef deleted'); newBeef(); loadBeefs(); }
+    else toast(data.error, 'error');
+  } catch(e) { toast('Delete failed', 'error'); }
+}
+
+// ===== LORE CRUD =====
+let allLore = [];
+
+async function loadLore() {
+  try {
+    const r = await fetch(`${API}/api/lore-arcs`);
+    const data = await r.json();
+    allLore = data.arcs || data || [];
+    renderLoreList();
+  } catch(e) { toast('Failed to load lore','error'); }
+}
+
+function renderLoreList() {
+  const el = document.getElementById('lore-list');
+  if (!allLore.length) { el.innerHTML = '<div class="empty">No lore arcs yet</div>'; return; }
+  el.innerHTML = allLore.map(a => {
+    return `<div class="list-item" onclick="editLore('${a.slug}')">
+      <div><div class="title">${a.title}</div><div class="meta"><span class="badge badge-${a.era || 'current'}">${a.era || 'current'}</span><span>${a.kind || 'other'}</span><span>${a.server || '—'}</span></div></div>
+      <div style="font-family:'JetBrains Mono';font-size:12px;color:var(--cyan)">W${a.weight || 3}</div>
+    </div>`;
+  }).join('');
+}
+
+function newLore() {
+  document.getElementById('lore-form-title').textContent = 'New Lore Arc';
+  document.getElementById('lore-id').value = '';
+  document.getElementById('lore-title').value = '';
+  document.getElementById('lore-slug').value = '';
+  document.getElementById('lore-server').value = '';
+  document.getElementById('lore-kind').value = 'gang-war';
+  document.getElementById('lore-era').value = 'current';
+  document.getElementById('lore-weight').value = 3;
+  document.getElementById('weight-val').textContent = '3';
+  document.getElementById('lore-desc').value = '';
+  setTokens('linked-beefs-tokens', []);
+  document.getElementById('lore-chapters').innerHTML = '';
+  document.getElementById('lore-delete-btn').style.display = 'none';
+}
+
+function editLore(slug) {
+  const a = allLore.find(x => x.slug === slug);
+  if (!a) return;
+  document.getElementById('lore-form-title').textContent = 'Edit Lore Arc';
+  document.getElementById('lore-id').value = a.id;
+  document.getElementById('lore-title').value = a.title;
+  document.getElementById('lore-slug').value = a.slug;
+  document.getElementById('lore-server').value = a.server || '';
+  document.getElementById('lore-kind').value = a.kind || 'other';
+  document.getElementById('lore-era').value = a.era || 'current';
+  document.getElementById('lore-weight').value = a.weight || 3;
+  document.getElementById('weight-val').textContent = a.weight || 3;
+  document.getElementById('lore-desc').value = a.description || '';
+  const linked = typeof a.linked_beefs === 'string' ? JSON.parse(a.linked_beefs || '[]') : (a.linked_beefs || []);
+  setTokens('linked-beefs-tokens', linked);
+  const chapters = typeof a.chapters === 'string' ? JSON.parse(a.chapters || '[]') : (a.chapters || []);
+  document.getElementById('lore-chapters').innerHTML = '';
+  chapters.forEach(ch => addChapter(ch));
+  document.getElementById('lore-delete-btn').style.display = 'inline-block';
+}
+
+function addChapter(data) {
+  const container = document.getElementById('lore-chapters');
+  const div = document.createElement('div');
+  div.className = 'chapter-item';
+  div.innerHTML = `<button class="remove" onclick="this.parentElement.remove()">✕</button>
+    <div class="field-row"><div class="field"><label>Chapter Title</label><input type="text" class="ch-title" value="${data?.title || ''}" placeholder="Chapter title"></div><div class="field"><label>Date</label><input type="date" class="ch-date" value="${data?.date || ''}"></div></div>
+    <div class="field"><label>Summary</label><textarea class="ch-summary" placeholder="What happened in this chapter…">${data?.summary || ''}</textarea></div>`;
+  container.appendChild(div);
+}
+
+function collectChapters() {
+  return [...document.querySelectorAll('#lore-chapters .chapter-item')].map(el => ({
+    title: el.querySelector('.ch-title').value,
+    date: el.querySelector('.ch-date').value,
+    summary: el.querySelector('.ch-summary').value
+  })).filter(c => c.title);
+}
+
+async function saveLore() {
+  const payload = {
+    id: document.getElementById('lore-id').value ? parseInt(document.getElementById('lore-id').value) : undefined,
+    title: document.getElementById('lore-title').value,
+    slug: document.getElementById('lore-slug').value || undefined,
+    server: document.getElementById('lore-server').value || undefined,
+    kind: document.getElementById('lore-kind').value,
+    era: document.getElementById('lore-era').value,
+    weight: parseInt(document.getElementById('lore-weight').value),
+    description: document.getElementById('lore-desc').value,
+    linked_beefs: getTokens('linked-beefs-tokens'),
+    chapters: collectChapters()
+  };
+  try {
+    const r = await fetch(`${API}/api/admin/lore`, {method:'POST', headers, body:JSON.stringify(payload)});
+    const data = await r.json();
+    if (data.success) { toast(`Arc ${data.action}: ${data.slug}`); loadLore(); }
+    else toast(data.error + (data.details ? ': ' + data.details.join(', ') : ''), 'error');
+  } catch(e) { toast('Save failed: ' + e.message, 'error'); }
+}
+
+async function deleteLore() {
+  const id = document.getElementById('lore-id').value;
+  if (!id || !confirm('Delete this lore arc?')) return;
+  try {
+    const r = await fetch(`${API}/api/admin/lore?id=${id}`, {method:'DELETE', headers});
+    const data = await r.json();
+    if (data.success) { toast('Arc deleted'); newLore(); loadLore(); }
+    else toast(data.error, 'error');
+  } catch(e) { toast('Delete failed', 'error'); }
+}
+
+// Init
+loadBeefs();
+loadLore();
+</script>
+</body>
+</html>

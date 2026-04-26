@@ -1,796 +1,325 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Beef · UK GTA RP · ContentLore</title>
-<meta name="description" content="Live rivalries and feuds across the UK GTA RP scene. Heat-ranked, beat-tracked, updated when it kicks off." />
-<meta name="theme-color" content="#0A0A0B" />
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContentLore — Beef Tracker | UK GTA RP</title>
+<meta name="description" content="Track every rivalry, grudge match and beef across UK GTA RP servers. Live heat ratings and beat-by-beat timelines.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ── Reset + base ─────────────────────────────────────────── */
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0A0A0B;--bg2:#111113;--bg3:#161618;--bg4:#1C1C1F;
+  --border:#2A2A2E;--border-a:#3A3A3F;
+  --t1:#E8E8EC;--t2:#9898A0;--t3:#5A5A65;
+  --mag:#FF2D6B;--mag-g:rgba(255,45,107,.3);--mag-dim:rgba(255,45,107,.12);
+  --cyan:#00E5FF;--cyan-g:rgba(0,229,255,.25);--cyan-dim:rgba(0,229,255,.1);
+  --green:#00FF85;--green-dim:rgba(0,255,133,.12);
+  --orange:#FF8A00;--red:#FF3B3B;--yellow:#FFD600;
+  --font-d:'Oswald',sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:system-ui,-apple-system,sans-serif;
+  --clip:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+  --clip-sm:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+}
+body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:100vh}
 
-:root {
-  --bg: #0A0A0B;
-  --bg-card: #0F0F12;
-  --bg-elev: #131316;
-  --bg-hover: #1A1A1E;
-  --text: #F2F2F0;
-  --text-2: #9B9B97;
-  --text-3: #5C5C58;
-  --text-dim: #3A3A3C;
-  --border: #26262A;
-  --border-s: #34343A;
-  --signal: oklch(0.72 0.25 350);
-  --signal-dim: oklch(0.50 0.18 350);
-  --signal-bg: oklch(0.72 0.25 350 / 0.10);
-  --cyan: oklch(0.85 0.18 200);
-  --cyan-dim: oklch(0.55 0.12 200);
-  --live: #ff3b47;
-  --heat-1: #5C5C58;
-  --heat-2: #4A9B8F;
-  --heat-3: #D4A574;
-  --heat-4: oklch(0.72 0.25 350);
-  --heat-5: #ff3b47;
-  --font-d: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
-  --font-m: 'JetBrains Mono', monospace;
-  --font-b: system-ui, -apple-system, sans-serif;
-  --cut: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
-}
+/* NAV */
+.nav{height:48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:0;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:3px;margin-right:24px;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--t1)}
+.nav-brand .cl{color:var(--mag)}
+.nav-brand .gta{font-size:11px;color:var(--t3);letter-spacing:1px;background:var(--mag-dim);padding:2px 6px;clip-path:var(--clip-sm)}
+.nav-links{display:flex;gap:0}
+.nav-link{font-family:var(--font-d);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);text-decoration:none;padding:14px 14px;border-bottom:2px solid transparent;transition:all .2s}
+.nav-link:hover{color:var(--t2)}
+.nav-link.active{color:var(--mag);border-bottom-color:var(--mag)}
+.nav-link.coming{opacity:.35;pointer-events:none}
+.nav-live{display:inline-flex;align-items:center;gap:4px}
+.nav-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-b);
-  font-size: 15px;
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-}
+/* HERO */
+.hero{padding:40px 24px 24px;max-width:1200px;margin:0 auto}
+.hero h1{font-family:var(--font-d);font-size:48px;font-weight:700;text-transform:uppercase;letter-spacing:4px;line-height:1}
+.hero h1 .accent{color:var(--mag);text-shadow:0 0 40px var(--mag-g)}
+.hero p{font-family:var(--font-m);font-size:13px;color:var(--t3);margin-top:8px;letter-spacing:.5px}
 
-/* ── Nav ──────────────────────────────────────────────────── */
-.nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 clamp(16px, 4vw, 64px);
-  height: 52px;
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(10,10,11,0.92);
-  backdrop-filter: blur(12px);
-}
-.nav-brand {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  text-decoration: none;
-}
-.nav-brand .wm {
-  font-family: var(--font-d);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.nav-brand .wm .dot { color: var(--signal); }
-.nav-brand .tag {
-  font-family: var(--font-m);
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-.nav-links {
-  display: flex;
-  gap: 0;
-  list-style: none;
-}
-.nav-links a {
-  font-family: var(--font-m);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  text-decoration: none;
-  padding: 16px 14px;
-  transition: color 0.15s;
-}
-.nav-links a:hover { color: var(--text); }
-.nav-links a.active { color: var(--signal); border-bottom: 2px solid var(--signal); }
+/* FILTERS */
+.filters{display:flex;gap:8px;padding:0 24px 20px;max-width:1200px;margin:0 auto;flex-wrap:wrap;align-items:center}
+.filter-btn{background:var(--bg3);border:1px solid var(--border);color:var(--t2);font-family:var(--font-m);font-size:11px;padding:6px 14px;cursor:pointer;clip-path:var(--clip-sm);transition:all .15s;text-transform:uppercase;letter-spacing:.5px}
+.filter-btn:hover{border-color:var(--mag);color:var(--mag)}
+.filter-btn.active{background:var(--mag-dim);border-color:var(--mag);color:var(--mag)}
+.filter-sep{width:1px;height:20px;background:var(--border)}
 
-@media(max-width:768px) { .nav-links { display: none; } }
+/* GRID */
+.beef-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;padding:0 24px 40px;max-width:1200px;margin:0 auto}
 
-/* ── Page container ───────────────────────────────────────── */
-.page { max-width: 1400px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 64px); }
+/* BEEF CARD */
+.beef-card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:0;overflow:hidden;transition:all .25s;cursor:pointer;position:relative}
+.beef-card:hover{border-color:var(--mag);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.beef-card.both-live{border-color:var(--green);box-shadow:0 0 20px var(--green-dim)}
+.beef-card.both-live::after{content:'BOTH SIDES LIVE';position:absolute;top:12px;right:0;background:var(--green);color:#000;font-family:var(--font-m);font-size:9px;letter-spacing:1px;padding:3px 10px 3px 8px;clip-path:polygon(6px 0,100% 0,100% 100%,0 100%);animation:pulse 2s infinite}
 
-/* ── Hero ─────────────────────────────────────────────────── */
-.hero {
-  padding: 48px 0 32px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 32px;
-}
-.hero-kicker {
-  font-family: var(--font-m);
-  font-size: 10px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--signal);
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.hero-kicker .dot {
-  width: 6px; height: 6px;
-  background: var(--live);
-  border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+/* HEAT BAR */
+.heat-strip{height:4px;background:var(--bg);display:flex;gap:1px}
+.heat-strip .pip{flex:1;transition:background .3s}
 
-.hero h1 {
-  font-family: var(--font-d);
-  font-size: clamp(40px, 6vw, 72px);
-  font-weight: 700;
-  line-height: 0.92;
-  text-transform: uppercase;
-  letter-spacing: -0.01em;
-  margin-bottom: 14px;
-}
-.hero h1 em {
-  font-style: normal;
-  color: var(--signal);
-}
-.hero-sub {
-  font-size: 15px;
-  color: var(--text-2);
-  max-width: 560px;
-}
+.card-body{padding:16px 18px}
+.card-server{font-family:var(--font-m);font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.card-title{font-family:var(--font-d);font-size:22px;font-weight:600;text-transform:uppercase;letter-spacing:1px;line-height:1.2}
+.card-desc{font-family:var(--font-b);font-size:13px;color:var(--t2);margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
-/* ── Stats bar ────────────────────────────────────────────── */
-.stats-bar {
-  display: flex;
-  gap: 32px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 28px;
-}
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.stat-val {
-  font-family: var(--font-d);
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--text);
-}
-.stat-label {
-  font-family: var(--font-m);
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
+/* SIDES */
+.card-sides{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;margin-top:14px;align-items:center}
+.side{text-align:center}
+.side-names{font-family:var(--font-d);font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+.side-label{font-family:var(--font-m);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.vs{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--mag);text-shadow:0 0 12px var(--mag-g)}
 
-/* ── Filters ──────────────────────────────────────────────── */
-.filters {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 28px;
-}
-.filter-btn {
-  font-family: var(--font-m);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-3);
-  cursor: pointer;
-  transition: all 0.15s;
-  clip-path: var(--cut);
-}
-.filter-btn:hover { border-color: var(--border-s); color: var(--text-2); }
-.filter-btn.active { border-color: var(--signal); color: var(--signal); background: var(--signal-bg); }
+/* STATUS + HEAT */
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--bg3);border-top:1px solid var(--border);margin-top:14px;margin:-0 -18px -16px}
+.status-badge{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;clip-path:var(--clip-sm)}
+.status-active{background:var(--mag);color:#fff}
+.status-cooling{background:var(--orange);color:#000}
+.status-resolved{background:var(--t3);color:var(--t1)}
+.status-legendary{background:linear-gradient(135deg,var(--cyan),var(--mag));color:#fff}
+.heat-display{display:flex;align-items:center;gap:6px}
+.heat-label{font-family:var(--font-m);font-size:10px;color:var(--t3);text-transform:uppercase}
+.heat-num{font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--mag)}
 
-/* ── Both sides live banner ───────────────────────────────── */
-.both-live-banner {
-  display: none;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 20px;
-  background: linear-gradient(135deg, rgba(255,59,71,0.12) 0%, rgba(255,59,71,0.04) 100%);
-  border: 1px solid rgba(255,59,71,0.3);
-  margin-bottom: 20px;
-  clip-path: var(--cut);
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-.both-live-banner:hover { border-color: var(--live); }
-.both-live-banner.visible { display: flex; }
-.both-live-banner .pulse-ring {
-  width: 10px; height: 10px;
-  background: var(--live);
-  border-radius: 50%;
-  animation: pulse 1.5s ease-in-out infinite;
-  flex-shrink: 0;
-}
-.both-live-banner .bll-text {
-  font-family: var(--font-d);
-  font-size: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--text);
-}
-.both-live-banner .bll-sub {
-  font-family: var(--font-m);
-  font-size: 10px;
-  color: var(--text-2);
-  letter-spacing: 0.1em;
-}
-.both-live-banner .bll-action {
-  margin-left: auto;
-  font-family: var(--font-m);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--live);
-  flex-shrink: 0;
-}
+/* DETAIL OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 20px}
+.overlay.open{display:flex}
+.detail{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);max-width:700px;width:100%;padding:0}
+.detail-heat-strip{height:6px;display:flex;gap:1px;background:var(--bg)}
+.detail-heat-strip .pip{flex:1}
+.detail-body{padding:24px}
+.detail-close{position:absolute;top:16px;right:20px;background:none;border:none;color:var(--t3);font-size:24px;cursor:pointer}
+.detail-close:hover{color:var(--red)}
+.detail .card-title{font-size:28px}
 
-/* ── Beef card ────────────────────────────────────────────── */
-.beef-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 16px;
-  margin-bottom: 48px;
-}
-@media(max-width:480px) { .beef-grid { grid-template-columns: 1fr; } }
+/* TIMELINE */
+.timeline{margin-top:24px;border-left:2px solid var(--border);padding-left:20px}
+.beat{margin-bottom:20px;position:relative}
+.beat::before{content:'';position:absolute;left:-25px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--mag);border:2px solid var(--bg2)}
+.beat.escalation::before{background:var(--red)}
+.beat.confrontation::before{background:var(--orange)}
+.beat.alliance::before{background:var(--cyan)}
+.beat.resolution::before{background:var(--green)}
+.beat.betrayal::before{background:var(--yellow)}
+.beat-date{font-family:var(--font-m);font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px}
+.beat-type{font-family:var(--font-m);font-size:10px;color:var(--mag);text-transform:uppercase;letter-spacing:1px;margin-left:8px}
+.beat-summary{font-family:var(--font-b);font-size:14px;color:var(--t1);margin-top:4px;line-height:1.5}
 
-.beef-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  clip-path: var(--cut);
-  transition: border-color 0.15s, transform 0.15s;
-  position: relative;
-  overflow: hidden;
-}
-.beef-card:hover { border-color: var(--border-s); transform: translateY(-2px); }
-.beef-card.featured {
-  grid-column: 1 / -1;
-  border-color: var(--signal-dim);
-}
-.beef-card.featured:hover { border-color: var(--signal); }
+.empty-state{text-align:center;padding:80px 20px;font-family:var(--font-m);font-size:13px;color:var(--t3)}
 
-.bc-heat-stripe {
-  position: absolute;
-  top: 0; left: 0;
-  width: 4px;
-  height: 100%;
-}
+/* NOISE */
+body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+*{position:relative;z-index:1}
+.nav{z-index:100}
+.overlay{z-index:200}
 
-.bc-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px 0;
-}
-.bc-server {
-  font-family: var(--font-m);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border: 1px solid var(--border-s);
-  color: var(--text-3);
-}
-.bc-status {
-  font-family: var(--font-m);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-}
-.bc-status[data-status="active"] { color: var(--signal); background: var(--signal-bg); }
-.bc-status[data-status="cooking"] { color: var(--cyan); background: oklch(0.85 0.18 200 / 0.10); }
-.bc-status[data-status="settled"] { color: var(--text-3); background: rgba(92,92,88,0.1); }
-.bc-status[data-status="cold"] { color: var(--text-dim); background: rgba(58,58,60,0.1); }
-
-.bc-body { padding: 12px 18px 16px; }
-
-.bc-title {
-  font-family: var(--font-d);
-  font-size: 22px;
-  font-weight: 600;
-  text-transform: uppercase;
-  line-height: 1.1;
-  margin-bottom: 6px;
-  color: var(--text);
-}
-.beef-card.featured .bc-title { font-size: 28px; }
-
-.bc-hook {
-  font-size: 14px;
-  color: var(--text-2);
-  line-height: 1.5;
-  margin-bottom: 12px;
-}
-
-.bc-heat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-.bc-heat-label {
-  font-family: var(--font-m);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-.bc-heat-dots {
-  display: flex;
-  gap: 3px;
-}
-.bc-heat-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-dim);
-}
-.bc-heat-dot.on { background: var(--heat-3); }
-
-.bc-participants {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-.bc-participant {
-  font-family: var(--font-m);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-2);
-  padding: 3px 10px;
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  text-decoration: none;
-  transition: all 0.15s;
-}
-.bc-participant:hover { border-color: var(--signal-dim); color: var(--signal); }
-.bc-participant.is-live {
-  border-color: rgba(255,59,71,0.3);
-  position: relative;
-}
-.bc-participant.is-live::before {
-  content: '';
-  width: 5px; height: 5px;
-  background: var(--live);
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 4px;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.bc-crews {
-  font-family: var(--font-m);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 12px;
-}
-
-/* ── Beat timeline ────────────────────────────────────────── */
-.bc-beats-toggle {
-  font-family: var(--font-m);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: color 0.15s;
-  border-top: 1px solid var(--border);
-  width: 100%;
-}
-.bc-beats-toggle:hover { color: var(--text-2); }
-.bc-beats-toggle .arrow { transition: transform 0.2s; }
-.bc-beats-toggle.open .arrow { transform: rotate(90deg); }
-
-.bc-beats {
-  display: none;
-  padding-top: 8px;
-}
-.bc-beats.open { display: block; }
-
-.bc-beat {
-  display: flex;
-  gap: 12px;
-  padding: 8px 0;
-  border-left: 2px solid var(--border);
-  margin-left: 4px;
-  padding-left: 14px;
-}
-.bc-beat-when {
-  font-family: var(--font-m);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  flex-shrink: 0;
-  min-width: 80px;
-}
-.bc-beat-what {
-  font-size: 13px;
-  color: var(--text-2);
-  line-height: 1.5;
-}
-
-/* ── Featured summary ─────────────────────────────────────── */
-.bc-summary {
-  font-size: 14px;
-  color: var(--text-2);
-  line-height: 1.65;
-  margin-bottom: 14px;
-  padding: 12px 16px;
-  background: var(--bg-elev);
-  border-left: 3px solid var(--signal-dim);
-}
-
-/* ── Empty state ──────────────────────────────────────────── */
-.empty {
-  padding: 80px 0;
-  text-align: center;
-}
-.empty h2 {
-  font-family: var(--font-d);
-  font-size: 28px;
-  text-transform: uppercase;
-  color: var(--text-3);
-  margin-bottom: 10px;
-}
-.empty p {
-  font-size: 14px;
-  color: var(--text-dim);
-}
-
-/* ── Loading ──────────────────────────────────────────────── */
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 80px 0;
-}
-.spinner {
-  width: 22px; height: 22px;
-  border: 2px solid var(--border);
-  border-top-color: var(--signal);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading span {
-  font-family: var(--font-m);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-
-/* ── Footer ───────────────────────────────────────────────── */
-.footer {
-  border-top: 1px solid var(--border);
-  padding: 20px clamp(16px, 4vw, 64px);
-  margin-top: 64px;
-  font-family: var(--font-m);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
+@media(max-width:600px){
+  .hero h1{font-size:32px}
+  .beef-grid{grid-template-columns:1fr;padding:0 12px 24px}
+  .filters{padding:0 12px 16px}
+  .nav-links{overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
 </style>
 </head>
 <body>
-
-<!-- Nav -->
 <nav class="nav">
-  <a href="../../" class="nav-brand">
-    <span class="wm">ContentLore<span class="dot">.</span></span>
-    <span class="tag">UK · GTA RP</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="../">Live</a></li>
-    <li><a href="../now/">Now</a></li>
-    <li><a href="../multi/">Multi-View</a></li>
-    <li><a href="../lore/">Lore</a></li>
-    <li><a href="./" class="active">Beef</a></li>
-    <li><a href="../servers/">Servers</a></li>
-  </ul>
+  <a href="/gta-rp/" class="nav-brand"><span class="cl">Content</span>Lore<span class="gta">GTA RP</span></a>
+  <div class="nav-links">
+    <a href="/gta-rp/" class="nav-link nav-live">Live</a>
+    <a href="/gta-rp/now/" class="nav-link coming">Now</a>
+    <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/lore/" class="nav-link">Lore</a>
+    <a href="/gta-rp/beef/" class="nav-link active">Beef</a>
+    <a href="/gta-rp/servers/" class="nav-link">Servers</a>
+  </div>
 </nav>
 
-<div class="page">
-
-  <!-- Hero -->
-  <div class="hero">
-    <div class="hero-kicker"><span class="dot"></span> Beef Tracker · Live</div>
-    <h1>Who's got <em>beef.</em></h1>
-    <p class="hero-sub">Rivalries, feuds and storylines across the UK GTA RP scene. Heat-ranked, beat-tracked, updated when it kicks off.</p>
-  </div>
-
-  <!-- Stats bar -->
-  <div class="stats-bar" id="stats-bar">
-    <div class="stat"><span class="stat-val" id="stat-total">—</span><span class="stat-label">Total beefs</span></div>
-    <div class="stat"><span class="stat-val" id="stat-active">—</span><span class="stat-label">Active</span></div>
-    <div class="stat"><span class="stat-val" id="stat-cooking">—</span><span class="stat-label">Cooking</span></div>
-    <div class="stat"><span class="stat-val" id="stat-avg-heat">—</span><span class="stat-label">Avg heat</span></div>
-  </div>
-
-  <!-- Both sides live banner (hidden until detected) -->
-  <div class="both-live-banner" id="both-live-banner">
-    <span class="pulse-ring"></span>
-    <div>
-      <div class="bll-text" id="bll-title">—</div>
-      <div class="bll-sub" id="bll-sub">Both participants are streaming right now</div>
-    </div>
-    <span class="bll-action">Watch on Multi-View →</span>
-  </div>
-
-  <!-- Filters -->
-  <div class="filters" id="filters">
-    <button class="filter-btn active" data-filter="all">All</button>
-    <!-- Server filters injected by JS -->
-  </div>
-
-  <!-- Beef grid -->
-  <div id="beef-container">
-    <div class="loading"><div class="spinner"></div><span>Loading beefs…</span></div>
-  </div>
-
+<div class="hero">
+  <h1><span class="accent">Beef</span> Tracker</h1>
+  <p>Every rivalry, grudge match and score to settle across UK RP</p>
 </div>
 
-<footer class="footer">© ContentLore 2026 · Independent UK streaming publication</footer>
+<div class="filters" id="filters">
+  <button class="filter-btn active" data-filter="all" onclick="filterBeefs('all')">All</button>
+  <div class="filter-sep"></div>
+  <button class="filter-btn" data-filter="active" onclick="filterBeefs('active')">🔥 Active</button>
+  <button class="filter-btn" data-filter="cooling" onclick="filterBeefs('cooling')">❄️ Cooling</button>
+  <button class="filter-btn" data-filter="resolved" onclick="filterBeefs('resolved')">✓ Resolved</button>
+  <button class="filter-btn" data-filter="legendary" onclick="filterBeefs('legendary')">⭐ Legendary</button>
+  <div class="filter-sep"></div>
+  <div id="server-filters"></div>
+</div>
+
+<div class="beef-grid" id="beef-grid">
+  <div class="empty-state">Loading beefs…</div>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail" id="detail-content"></div>
+</div>
 
 <script>
-// ================================================================
-// Beef page controller
-// ================================================================
-
 let allBeefs = [];
-let activeFilter = 'all';
+let currentFilter = 'all';
+let currentServer = null;
 
-async function init() {
+async function loadBeefs() {
   try {
-    const res = await fetch('/api/beefs');
-    const data = await res.json();
-    if (!data.ok || !data.beefs) throw new Error(data.error || 'Failed to load');
-    allBeefs = data.beefs;
-    renderStats();
-    renderFilters();
+    const r = await fetch('/api/beefs');
+    const data = await r.json();
+    allBeefs = (data.beefs || data || []).map(b => ({
+      ...b,
+      side_a: typeof b.side_a === 'string' ? JSON.parse(b.side_a || '[]') : (b.side_a || []),
+      side_b: typeof b.side_b === 'string' ? JSON.parse(b.side_b || '[]') : (b.side_b || []),
+      beats: typeof b.beats === 'string' ? JSON.parse(b.beats || '[]') : (b.beats || []),
+    }));
+    buildServerFilters();
     renderBeefs();
-    checkBothSidesLive();
-  } catch (err) {
-    document.getElementById('beef-container').innerHTML =
-      '<div class="empty"><h2>Couldn\'t load beefs</h2><p>' + esc(err.message) + '</p></div>';
+  } catch(e) {
+    document.getElementById('beef-grid').innerHTML = '<div class="empty-state">Failed to load beefs</div>';
   }
 }
 
-function renderStats() {
-  document.getElementById('stat-total').textContent = allBeefs.length;
-  document.getElementById('stat-active').textContent = allBeefs.filter(b => b.status === 'active').length;
-  document.getElementById('stat-cooking').textContent = allBeefs.filter(b => b.status === 'cooking').length;
-  const avg = allBeefs.length > 0
-    ? (allBeefs.reduce((s, b) => s + b.heat, 0) / allBeefs.length).toFixed(1)
-    : '—';
-  document.getElementById('stat-avg-heat').textContent = avg;
+function buildServerFilters() {
+  const servers = [...new Set(allBeefs.map(b => b.server).filter(Boolean))];
+  document.getElementById('server-filters').innerHTML = servers.map(s =>
+    `<button class="filter-btn" data-server="${s}" onclick="filterServer('${s}')">${s}</button>`
+  ).join('');
 }
 
-function renderFilters() {
-  const servers = [...new Set(allBeefs.map(b => b.server_id))];
-  const container = document.getElementById('filters');
-  const serverNames = {
-    unique: 'Unique RP', tng: 'TNG RP', orbit: 'Orbit RP', 'new-era': 'New Era RP',
-    prodigy: 'Prodigy RP', d10: 'D10 RP', unmatched: 'Unmatched RP', vera: 'VeraRP',
-    endz: 'The EndZ', letsrp: "Let's RP", 'drill-uk': 'Drill UK', 'british-life': 'BLRP'
-  };
-  servers.forEach(sid => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn';
-    btn.dataset.filter = sid;
-    btn.textContent = serverNames[sid] || sid;
-    btn.onclick = () => setFilter(sid);
-    container.appendChild(btn);
-  });
-
-  // Status filters
-  ['active', 'cooking', 'settled', 'cold'].forEach(s => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn';
-    btn.dataset.filter = s;
-    btn.textContent = s.charAt(0).toUpperCase() + s.slice(1);
-    btn.onclick = () => setFilter(s);
-    container.appendChild(btn);
-  });
+function filterBeefs(status) {
+  currentFilter = status;
+  currentServer = null;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-filter="${status}"]`).classList.add('active');
+  document.querySelectorAll('[data-server]').forEach(b => b.classList.remove('active'));
+  renderBeefs();
 }
 
-function setFilter(f) {
-  activeFilter = activeFilter === f ? 'all' : f;
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.filter === activeFilter);
-  });
+function filterServer(server) {
+  currentServer = currentServer === server ? null : server;
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+  if (!currentServer) document.querySelector('[data-filter="all"]').classList.add('active');
+  document.querySelectorAll('[data-server]').forEach(b => b.classList.toggle('active', b.dataset.server === currentServer));
   renderBeefs();
 }
 
 function renderBeefs() {
   let filtered = allBeefs;
-  if (activeFilter !== 'all') {
-    filtered = allBeefs.filter(b =>
-      b.server_id === activeFilter || b.status === activeFilter
-    );
-  }
+  if (currentFilter !== 'all') filtered = filtered.filter(b => b.status === currentFilter);
+  if (currentServer) filtered = filtered.filter(b => b.server === currentServer);
 
-  if (filtered.length === 0) {
-    document.getElementById('beef-container').innerHTML =
-      '<div class="empty"><h2>No beefs found</h2><p>Try a different filter.</p></div>';
+  const grid = document.getElementById('beef-grid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state">No beefs match your filters</div>';
     return;
   }
 
-  // Featured = highest heat
-  const sorted = [...filtered].sort((a, b) => b.heat - a.heat || b.started.localeCompare(a.started));
-  const featured = sorted[0];
-  const rest = sorted.slice(1);
+  // Sort: active first, then by heat desc
+  filtered.sort((a,b) => {
+    if (a.status === 'active' && b.status !== 'active') return -1;
+    if (b.status === 'active' && a.status !== 'active') return 1;
+    return (b.heat||0) - (a.heat||0);
+  });
 
-  let html = '<div class="beef-grid">';
-  html += buildCard(featured, true);
-  rest.forEach(b => { html += buildCard(b, false); });
-  html += '</div>';
+  grid.innerHTML = filtered.map(b => {
+    const heat = b.heat || 5;
+    const heatColor = heat >= 8 ? 'var(--red)' : heat >= 5 ? 'var(--mag)' : heat >= 3 ? 'var(--orange)' : 'var(--t3)';
+    const pips = Array.from({length:10}, (_,i) =>
+      `<div class="pip" style="background:${i < heat ? heatColor : 'var(--bg3)'}"></div>`
+    ).join('');
+    const sideA = (b.side_a || []).join(', ') || '???';
+    const sideB = (b.side_b || []).join(', ') || '???';
+    const bothLive = b.both_sides_live ? ' both-live' : '';
 
-  document.getElementById('beef-container').innerHTML = html;
-}
-
-function buildCard(b, isFeatured) {
-  const heatCol = ['', 'var(--heat-1)', 'var(--heat-2)', 'var(--heat-3)', 'var(--heat-4)', 'var(--heat-5)'][b.heat] || 'var(--heat-3)';
-  const heatDots = Array.from({length: 5}, (_, i) =>
-    `<span class="bc-heat-dot ${i < b.heat ? 'on' : ''}" style="${i < b.heat ? 'background:' + heatCol : ''}"></span>`
-  ).join('');
-
-  const participants = (b.participants || []).map(p =>
-    `<a href="/creator/${esc(p)}" class="bc-participant">${esc(p)}</a>`
-  ).join('');
-
-  const crews = b.crews && b.crews.length > 0
-    ? `<div class="bc-crews">Crews: ${b.crews.map(c => esc(c)).join(' vs ')}</div>`
-    : '';
-
-  const beats = (b.beats || []).map(beat =>
-    `<div class="bc-beat">
-      <span class="bc-beat-when">${esc(beat.when)}</span>
-      <span class="bc-beat-what">${esc(beat.what)}</span>
-    </div>`
-  ).join('');
-
-  const beatsSection = beats
-    ? `<button class="bc-beats-toggle" onclick="toggleBeats(this)">
-        <span class="arrow">▸</span> ${b.beats.length} beat${b.beats.length !== 1 ? 's' : ''}
-      </button>
-      <div class="bc-beats">${beats}</div>`
-    : '';
-
-  const summary = isFeatured && b.summary
-    ? `<div class="bc-summary">${esc(b.summary)}</div>`
-    : '';
-
-  const serverNames = {
-    unique: 'Unique RP', tng: 'TNG RP', orbit: 'Orbit RP', 'new-era': 'New Era',
-    prodigy: 'Prodigy RP', d10: 'D10 RP', unmatched: 'Unmatched RP'
-  };
-
-  return `
-    <div class="beef-card ${isFeatured ? 'featured' : ''}" data-slug="${esc(b.slug)}">
-      <div class="bc-heat-stripe" style="background:${heatCol}"></div>
-      <div class="bc-head">
-        <span class="bc-server">${esc(serverNames[b.server_id] || b.server_id)}</span>
-        <span class="bc-status" data-status="${esc(b.status)}">${esc(b.status)}</span>
-      </div>
-      <div class="bc-body">
-        <div class="bc-title">${esc(b.title)}</div>
-        <div class="bc-hook">${esc(b.hook)}</div>
-        ${summary}
-        <div class="bc-heat">
-          <span class="bc-heat-label">Heat</span>
-          <div class="bc-heat-dots">${heatDots}</div>
+    return `<div class="beef-card${bothLive}" onclick="showDetail('${b.slug}')">
+      <div class="heat-strip">${pips}</div>
+      <div class="card-body">
+        <div class="card-server">${b.server || 'Unknown Server'}</div>
+        <div class="card-title">${b.title}</div>
+        <div class="card-desc">${b.description || ''}</div>
+        <div class="card-sides">
+          <div class="side"><div class="side-label">Side A</div><div class="side-names">${sideA}</div></div>
+          <div class="vs">VS</div>
+          <div class="side"><div class="side-label">Side B</div><div class="side-names">${sideB}</div></div>
         </div>
-        <div class="bc-participants">${participants}</div>
-        ${crews}
-        ${beatsSection}
+        <div class="card-footer">
+          <span class="status-badge status-${b.status || 'active'}">${b.status || 'active'}</span>
+          <div class="heat-display">
+            <span class="heat-label">Heat</span>
+            <span class="heat-num" style="color:${heatColor}">${heat}</span>
+          </div>
+        </div>
       </div>
-    </div>
-  `;
+    </div>`;
+  }).join('');
 }
 
-function toggleBeats(btn) {
-  btn.classList.toggle('open');
-  const beats = btn.nextElementSibling;
-  beats.classList.toggle('open');
-}
+async function showDetail(slug) {
+  try {
+    const r = await fetch(`/api/beef/${slug}`);
+    const data = await r.json();
+    const b = data.beef || data;
+    b.side_a = typeof b.side_a === 'string' ? JSON.parse(b.side_a || '[]') : (b.side_a || []);
+    b.side_b = typeof b.side_b === 'string' ? JSON.parse(b.side_b || '[]') : (b.side_b || []);
+    b.beats = typeof b.beats === 'string' ? JSON.parse(b.beats || '[]') : (b.beats || []);
 
-// ── Both sides live check ────────────────────────────────────
-async function checkBothSidesLive() {
-  for (const beef of allBeefs) {
-    if (beef.status === 'settled' || beef.status === 'cold') continue;
-    if (!beef.participants || beef.participants.length < 2) continue;
+    const heat = b.heat || 5;
+    const heatColor = heat >= 8 ? 'var(--red)' : heat >= 5 ? 'var(--mag)' : heat >= 3 ? 'var(--orange)' : 'var(--t3)';
+    const pips = Array.from({length:10}, (_,i) =>
+      `<div class="pip" style="background:${i < heat ? heatColor : 'var(--bg3)'}"></div>`
+    ).join('');
+    const sideA = (b.side_a || []).join(', ') || '???';
+    const sideB = (b.side_b || []).join(', ') || '???';
 
-    try {
-      const res = await fetch('/api/beef/' + encodeURIComponent(beef.slug));
-      const data = await res.json();
-      if (data.ok && data.beef.both_sides_live) {
-        const banner = document.getElementById('both-live-banner');
-        document.getElementById('bll-title').textContent = beef.title + ' — BOTH SIDES LIVE';
-        banner.classList.add('visible');
-        banner.onclick = () => {
-          const handles = beef.participants.slice(0, 2);
-          // Navigate to multi-view with both streams
-          window.location.href = '../multi/?load=' + handles.join(',');
-        };
+    let beatsHtml = '';
+    if (b.beats && b.beats.length) {
+      beatsHtml = '<div class="timeline">' + b.beats.map(bt => `
+        <div class="beat ${bt.type || ''}">
+          <div><span class="beat-date">${bt.date || 'Unknown'}</span><span class="beat-type">${bt.type || ''}</span></div>
+          <div class="beat-summary">${bt.summary || ''}</div>
+        </div>`).join('') + '</div>';
+    }
 
-        // Also highlight participants in the card
-        document.querySelectorAll('.bc-participant').forEach(el => {
-          const handle = el.textContent.trim().toLowerCase();
-          if (data.beef.live_status[handle]?.is_live) {
-            el.classList.add('is-live');
-          }
-        });
-
-        break; // Show the first one found
-      }
-    } catch { /* silent */ }
+    document.getElementById('detail-content').innerHTML = `
+      <div class="detail-heat-strip">${pips}</div>
+      <div class="detail-body" style="position:relative">
+        <button class="detail-close" onclick="closeDetail()">✕</button>
+        <div class="card-server">${b.server || 'Unknown Server'}</div>
+        <div class="card-title">${b.title}</div>
+        <div class="card-desc" style="-webkit-line-clamp:unset;margin-top:12px">${b.description || ''}</div>
+        <div class="card-sides" style="margin-top:20px">
+          <div class="side"><div class="side-label">Side A</div><div class="side-names">${sideA}</div></div>
+          <div class="vs">VS</div>
+          <div class="side"><div class="side-label">Side B</div><div class="side-names">${sideB}</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:20px">
+          <span class="status-badge status-${b.status || 'active'}">${b.status || 'active'}</span>
+          <div class="heat-display"><span class="heat-label">Heat</span><span class="heat-num" style="color:${heatColor}">${heat}/10</span></div>
+          ${b.both_sides_live ? '<span style="font-family:var(--font-m);font-size:11px;color:var(--green);animation:pulse 2s infinite">⬤ BOTH SIDES LIVE</span>' : ''}
+        </div>
+        ${beatsHtml ? '<h3 style="font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:1.5px;margin-top:28px;color:var(--t2)">Timeline</h3>' : ''}
+        ${beatsHtml}
+      </div>`;
+    document.getElementById('detail-overlay').classList.add('open');
+  } catch(e) {
+    console.error('Detail load failed:', e);
   }
 }
 
-// ── Utils ─────────────────────────────────────────────────────
-function esc(s) {
-  if (s == null) return '';
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
 }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
 
-// ── Auto-refresh every 90s ────────────────────────────────────
-setInterval(async () => {
-  try {
-    const res = await fetch('/api/beefs');
-    const data = await res.json();
-    if (data.ok) {
-      allBeefs = data.beefs;
-      renderStats();
-      renderBeefs();
-      checkBothSidesLive();
-    }
-  } catch { /* silent */ }
-}, 90000);
-
-// Boot
-init();
+loadBeefs();
 </script>
 </body>
 </html>
