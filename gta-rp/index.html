@@ -204,7 +204,8 @@ async function loadAll() {
     const rJson = await cRes.json();
     liveCreators = (lJson.ok && lJson.live) ? lJson.live : [];
 
-    // Get full creators for avatars (only once)
+    // Get full creators for avatars (only once) + capture Kick creators
+    let kickCreators = [];
     if (Object.keys(avatarMap).length === 0) {
       try {
         const aRes = await fetch('/api/creators?limit=500');
@@ -212,21 +213,37 @@ async function loadAll() {
         (aJson.creators || []).forEach(c => {
           const k = (c.display_name||'').toLowerCase();
           if (k && c.avatar_url && !c.avatar_url.includes('previews-ttv')) avatarMap[k] = c.avatar_url;
+          // Capture Kick creators for roster
+          if ((c.primary_platform||'').toLowerCase() === 'kick') {
+            kickCreators.push({
+              display_name: c.display_name || '',
+              platform: 'kick',
+              handle: (c.primary_handle || c.display_name || '').toLowerCase(),
+            });
+          }
         });
       } catch(e) {}
     }
 
-    // Build offline roster from recent-live
+    // Build offline roster from recent-live + all Kick creators
     const recentSessions = rJson.sessions || rJson.recent || [];
     const liveNames = new Set(liveCreators.map(s => (s.display_name||s.handle||'').toLowerCase()));
-    allCreators = recentSessions
+    const rosterFromRecent = recentSessions
       .map(s => ({
         display_name: s.creator_name || s.display_name || s.name || '',
         platform: s.platform || 'twitch',
         handle: (s.creator_name || s.display_name || s.name || '').toLowerCase(),
-      }))
-      .filter(s => !liveNames.has(s.handle.toLowerCase()))
-      .filter((s,i,a) => a.findIndex(x => x.handle === s.handle) === i)
+      }));
+    // Merge recent + kick, deduplicate, remove currently live
+    const merged = [...rosterFromRecent, ...kickCreators];
+    const seen = new Set();
+    allCreators = merged
+      .filter(s => {
+        const k = s.handle.toLowerCase();
+        if (seen.has(k) || liveNames.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
       .sort((a,b) => a.display_name.localeCompare(b.display_name));
 
     renderAll();
