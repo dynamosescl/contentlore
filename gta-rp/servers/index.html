@@ -6,9 +6,9 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UK RP Servers — ContentLore</title>
-<meta name="description" content="UK GTA RP server directory with live activity overlay.">
+<meta name="description" content="UK GTA RP server status board. Live streamer counts, viewers, top broadcaster per server. Refreshes every 60 seconds.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -18,6 +18,7 @@
   --signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);
   --border:oklch(0.28 0.08 295);--live:oklch(0.82 0.20 195);
   --twitch:oklch(0.65 0.25 295);--kick:oklch(0.82 0.22 145);
+  --status-up:oklch(0.82 0.22 145);--status-idle:oklch(0.55 0.06 295);
   --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
   --cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
 }
@@ -28,61 +29,101 @@ body>*{position:relative;z-index:3}
 
 .nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
 .nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
-.nav-brand .cl{color:var(--signal)}
-.nav-brand .tag{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:1px;background:oklch(0.82 0.20 195/.1);padding:2px 6px}
 .nav-links{display:flex}
-.nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s}
+.nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
 .nav-link:hover{color:var(--ink-dim)}
 .nav-link.active{color:var(--signal);border-bottom-color:var(--signal)}
 .ldot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;animation:lp 2s infinite}
 @keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.82 0.20 195/.8)}70%{box-shadow:0 0 0 8px oklch(0.82 0.20 195/0)}}
+@media(max-width:700px){.nav-links{overflow-x:auto}}
 
 .hero{border-bottom:1px solid var(--border);padding:36px 24px;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
-.hero-inner{max-width:1200px;margin:0 auto}
-.hero-kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px;text-shadow:0 0 6px oklch(0.82 0.20 195/.5)}
-.hero h1{font-family:var(--font-d);font-size:clamp(36px,6vw,64px);line-height:.95}
-.hero h1 .neon{color:var(--signal);animation:flicker 4.5s steps(1,end) infinite}
-@keyframes flicker{0%,19%,21%,23%,100%{opacity:1;text-shadow:0 0 6px oklch(0.82 0.20 195/.7),0 0 18px oklch(0.82 0.20 195/.45)}20%,22%{opacity:.85;text-shadow:none}}
-.hero-sub{font-size:14px;color:var(--ink-dim);margin-top:8px}
-.hero-stats{display:flex;gap:24px;margin-top:20px}
-.hs .v{font-family:var(--font-d);font-size:32px;line-height:1}
+.hero-inner{max-width:1280px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.hero-kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px}
+.hero h1{font-family:var(--font-d);font-size:clamp(40px,7vw,72px);line-height:.95;letter-spacing:1px}
+.hero h1 .neon{color:var(--signal);text-shadow:0 0 6px oklch(0.82 0.20 195/.4),0 0 18px oklch(0.82 0.20 195/.25)}
+.hero-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;max-width:560px}
+.hero-stats{display:flex;gap:24px}
+.hs{display:flex;flex-direction:column;align-items:flex-start}
+.hs .v{font-family:var(--font-d);font-size:36px;line-height:1;letter-spacing:1px}
 .hs .l{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:2px}
 
-.mx{max-width:1200px;margin:0 auto;padding:28px 24px}
+.mx{max-width:1280px;margin:0 auto;padding:28px 24px}
+
+/* DEPARTURES BOARD */
+.board-wrap{background:#000;border:1px solid var(--border);clip-path:var(--cut);overflow:hidden;margin-bottom:36px;position:relative}
+.board-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,oklch(0.13 0.05 295) 0%,#000 100%);border-bottom:1px solid var(--border);gap:12px}
+.board-title{display:flex;align-items:center;gap:10px}
+.board-title .arrow{width:10px;height:10px;border-top:2px solid var(--signal);border-right:2px solid var(--signal);transform:rotate(45deg)}
+.board-title h2{font-family:var(--font-d);font-size:22px;letter-spacing:2px;color:var(--fg)}
+.board-meta{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.board-meta .last-up{color:var(--signal)}
+.board-meta .refresh-dot{width:6px;height:6px;border-radius:50%;background:var(--signal);animation:lp 2s infinite}
+.board-table{width:100%;font-family:var(--font-m)}
+.board-row{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1.6fr;gap:0;align-items:center;padding:14px 20px;border-bottom:1px solid oklch(0.28 0.08 295/.4);transition:background .15s,border-color .15s}
+.board-row.head{background:#000;border-bottom:1px solid var(--border);padding:10px 20px;color:var(--ink-faint);font-size:10px;text-transform:uppercase;letter-spacing:2px;font-weight:600;position:sticky;top:48px;z-index:5}
+.board-row.live{background:oklch(0.82 0.20 195/.04)}
+.board-row.live:hover{background:oklch(0.82 0.20 195/.10)}
+.board-row.idle{background:transparent}
+.board-row.idle:hover{background:oklch(0.13 0.05 295/.5)}
+.board-row:last-child{border-bottom:none}
+.cell{display:flex;align-items:center;gap:8px;min-width:0}
+.cell.sname{font-family:var(--font-d);font-size:22px;letter-spacing:1.5px;color:var(--fg)}
+.cell.sname .stag{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);font-style:italic;text-transform:none;letter-spacing:0;display:block;margin-top:2px;font-weight:400}
+.cell.sname-head{font-family:var(--font-m);font-size:10px;font-weight:600}
+.cell .stack{display:flex;flex-direction:column;min-width:0}
+.cell .stack .stag{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);font-style:italic;letter-spacing:0;text-transform:none;font-weight:400;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:2px;padding:4px 10px;border:1px solid;background:oklch(0.09 0.04 295/.6)}
+.status-pill.up{color:var(--status-up);border-color:var(--status-up)}
+.status-pill.up .dot{width:6px;height:6px;border-radius:50%;background:var(--status-up);box-shadow:0 0 6px var(--status-up);animation:lp 2s infinite}
+.status-pill.idle{color:var(--status-idle);border-color:var(--status-idle)}
+.status-pill.idle .dot{width:6px;height:6px;border-radius:50%;background:var(--status-idle);opacity:.6}
+.cell.num{font-variant-numeric:tabular-nums;font-size:22px;font-family:var(--font-d);letter-spacing:1px}
+.cell.num.zero{color:var(--ink-faint);opacity:.5}
+.cell.num.streamers{color:var(--signal)}
+.cell.num.viewers{color:var(--signal-cyan)}
+.cell.top-streamer{font-size:13px;color:var(--ink-dim)}
+.cell.top-streamer a{color:var(--signal-cyan);text-decoration:none;display:inline-flex;align-items:center;gap:8px;font-weight:500}
+.cell.top-streamer a:hover{color:var(--signal);text-decoration:underline}
+.cell.top-streamer .vc{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);font-weight:600}
+.cell.top-streamer .empty{color:var(--ink-faint);font-style:italic;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+
+@media(max-width:850px){
+  .board-row{grid-template-columns:1.4fr 0.9fr 0.7fr 1fr;padding:12px 14px;font-size:12px;gap:0}
+  .board-row .cell.num.streamers{display:none}
+  .board-row.head .cell.streamers-head{display:none}
+  .cell.sname{font-size:16px;letter-spacing:1px}
+  .cell.num{font-size:18px}
+}
+@media(max-width:520px){
+  .board-row{grid-template-columns:1.2fr 0.8fr 1fr;gap:0}
+  .board-row .cell.num.viewers{display:none}
+  .board-row.head .cell.viewers-head{display:none}
+}
+
+/* SERVER CARDS (below board) */
+.section-h{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.section-h h2{font-family:var(--font-d);font-size:32px;letter-spacing:1px}
+.section-h .sub{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
 @media(max-width:700px){.grid{grid-template-columns:1fr}}
-
 .sc{border:1px solid var(--border);background:var(--card);clip-path:var(--cut);overflow:hidden;transition:all .25s}
 .sc:hover{border-color:var(--signal);transform:translateY(-2px);box-shadow:0 0 20px oklch(0.82 0.20 195/.2)}
-.sc.live-server{border-color:oklch(0.82 0.20 195/.4)}
+.sc.live-server{border-color:oklch(0.82 0.20 195/.5)}
 .sc-head{padding:16px 16px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.sc-name{font-family:var(--font-d);font-size:26px;line-height:1}
-.sc-live-badge{display:flex;align-items:center;gap:4px;font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--signal);background:oklch(0.82 0.20 195/.1);padding:3px 8px;flex-shrink:0}
+.sc-name{font-family:var(--font-d);font-size:26px;line-height:1;letter-spacing:1px}
+.sc-live-badge{display:flex;align-items:center;gap:4px;font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--signal);background:oklch(0.82 0.20 195/.1);padding:3px 8px;flex-shrink:0;font-weight:600}
 .sc-live-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--live);animation:lp 2s infinite}
 .sc-tag{font-family:var(--font-m);font-size:11px;color:var(--ink-dim);padding:0 16px;margin-top:4px;font-style:italic}
 .sc-body{padding:8px 16px 12px;font-size:13px;color:var(--ink-dim);line-height:1.5}
 .sc-vibes{padding:0 16px 8px;display:flex;gap:4px;flex-wrap:wrap}
 .vibe{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:2px 6px;border:1px solid var(--border);color:var(--ink-faint)}
-.sc-stats{padding:8px 16px;border-top:1px solid var(--border);display:flex;gap:16px}
-.ss{display:flex;align-items:baseline;gap:4px}
-.ss .v{font-family:var(--font-d);font-size:18px}
-.ss .l{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
-.sc-bar{margin:0 16px;height:4px;background:oklch(0.09 0.04 295/.6);overflow:hidden}
-.sc-fill{height:100%;background:var(--signal);transition:width .7s}
 .sc-roster{padding:8px 16px 12px;font-family:var(--font-m);font-size:10px;color:var(--ink-faint);border-top:1px solid oklch(0.28 0.08 295/.5)}
 .sc-roster span{color:var(--ink-dim)}
 
 .footer{border-top:1px solid var(--border);padding:20px;text-align:center;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:20px}
 ::selection{background:var(--signal);color:var(--bg)}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes glitch{0%,92%,94%,96%,100%{transform:none;opacity:1}93%{transform:translateX(-2px) skewX(-0.5deg);opacity:.9}95%{transform:translateX(2px) skewX(0.5deg);opacity:.85}97%{transform:translateX(-1px)}}
-@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
-@keyframes glow-pulse{0%,100%{box-shadow:0 0 4px oklch(0.82 0.20 195/.4)}50%{box-shadow:0 0 16px oklch(0.82 0.20 195/.6),0 0 32px oklch(0.82 0.20 195/.2)}}
-.card:hover,.sc:hover,.scard:hover,.rcard:hover,.featured:hover{animation:glow-pulse 1.5s ease infinite}
-.hero h1,.sec-title,.sh{animation:fadeUp .6s ease both}
-
 </style>
 </head>
 <body>
@@ -92,24 +133,56 @@ body>*{position:relative;z-index:3}
     <a href="/gta-rp/" class="nav-link"><span class="ldot" style="background:var(--live)"></span>Live</a>
     <a href="/gta-rp/now/" class="nav-link">Now</a>
     <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/clips/" class="nav-link">Clips</a>
     <a href="/gta-rp/servers/" class="nav-link active">Servers</a>
   </div>
 </nav>
 
 <div class="hero">
   <div class="hero-inner">
-    <div class="hero-kicker">Server Directory</div>
-    <h1>UK RP <span class="neon">Servers</span></h1>
-    <div class="hero-sub">Every UK GTA RP server tracked. Live activity overlay from stream detection.</div>
+    <div>
+      <div class="hero-kicker">Status Board · auto-refresh 60s</div>
+      <h1>UK RP <span class="neon">Servers</span></h1>
+      <div class="hero-sub">Live status of every UK GTA RP server we track. Detected from the curated 22's stream titles.</div>
+    </div>
     <div class="hero-stats">
-      <div class="hs"><div class="v" style="color:var(--signal)" id="s-total">0</div><div class="l">servers</div></div>
-      <div class="hs"><div class="v" style="color:var(--signal-cyan)" id="s-active">0</div><div class="l">live now</div></div>
-      <div class="hs"><div class="v" style="color:var(--kick)" id="s-viewers">0</div><div class="l">viewers</div></div>
+      <div class="hs"><div class="v" style="color:var(--signal)" id="s-active">—</div><div class="l">live now</div></div>
+      <div class="hs"><div class="v" style="color:var(--signal-cyan)" id="s-viewers">—</div><div class="l">viewers</div></div>
+      <div class="hs"><div class="v" style="color:var(--fg)" id="s-total">12</div><div class="l">tracked</div></div>
     </div>
   </div>
 </div>
 
 <div class="mx">
+  <!-- DEPARTURES BOARD -->
+  <div class="board-wrap">
+    <div class="board-bar">
+      <div class="board-title">
+        <span class="arrow"></span>
+        <h2>Server Status</h2>
+      </div>
+      <div class="board-meta">
+        <span class="last-up" id="last-update">—</span>
+        <span class="refresh-dot"></span>
+      </div>
+    </div>
+    <div class="board-table" id="board">
+      <div class="board-row head">
+        <div class="cell sname-head">Server</div>
+        <div class="cell">Status</div>
+        <div class="cell streamers-head">Streamers</div>
+        <div class="cell viewers-head">Viewers</div>
+        <div class="cell">Top Streamer</div>
+      </div>
+      <!-- rows injected -->
+    </div>
+  </div>
+
+  <!-- SERVER CARDS -->
+  <div class="section-h">
+    <h2>Server Profiles</h2>
+    <span class="sub">Vibe, roster &amp; story</span>
+  </div>
   <div class="grid" id="grid"></div>
 </div>
 
@@ -131,73 +204,110 @@ const SERVERS = [
   {id:'britishlife',name:'British Life RP',tag:'Everyday British life, RP-style.',blurb:'UK server offering a slower-paced, civ-heavy roleplay experience rooted in British culture.',keywords:['british life','britishlife'],roster:[],vibes:['civ-heavy','newbie-friendly']},
 ];
 
+// Match longest keyword first so "newera rp" beats "newera"/"new era".
+const SERVERS_BY_KW_LEN = [...SERVERS].sort((a, b) =>
+  Math.max(...b.keywords.map(k => k.length)) - Math.max(...a.keywords.map(k => k.length))
+);
+
 function detectServer(title) {
   if (!title) return null;
   const t = title.toLowerCase();
-  for (const s of [...SERVERS].sort((a,b) => Math.max(...b.keywords.map(k=>k.length)) - Math.max(...a.keywords.map(k=>k.length)))) {
-    for (const kw of s.keywords) { if (t.includes(kw)) return s; }
+  for (const s of SERVERS_BY_KW_LEN) {
+    for (const kw of s.keywords) if (t.includes(kw)) return s;
   }
   return null;
 }
 
 function fmtBig(n) {
-  if (n==null) return '0';
-  if (n>=1e3) return (n/1e3).toFixed(1)+'k';
+  if (n == null) return '0';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
   return String(n);
 }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 async function load() {
   try {
-    const r = await fetch('/api/live-now');
+    const r = await fetch('/api/uk-rp-live');
     const d = await r.json();
-    const live = (d.ok && d.live) ? d.live : [];
+    const live = ((d.ok && d.live) ? d.live : []).filter(s => s.is_live);
 
-    // Map live streams to servers
+    // Map each server → its current live streamers
     const srvData = SERVERS.map(srv => {
       const streams = live.filter(s => {
         const det = detectServer(s.stream_title || s.game_name);
         return det && det.id === srv.id;
-      });
-      return { ...srv, streams, liveCount: streams.length, viewers: streams.reduce((n,s)=>n+(s.viewers||0),0) };
+      }).sort((a, b) => (b.viewers || 0) - (a.viewers || 0));
+      const viewers = streams.reduce((n, s) => n + (s.viewers || 0), 0);
+      return { ...srv, streams, liveCount: streams.length, viewers };
     });
 
     const activeCount = srvData.filter(s => s.liveCount > 0).length;
-    const totalViewers = srvData.reduce((n,s) => n + s.viewers, 0);
-    const maxV = Math.max(1, ...srvData.map(s => s.viewers));
+    const totalViewers = srvData.reduce((n, s) => n + s.viewers, 0);
 
-    document.getElementById('s-total').textContent = SERVERS.length;
     document.getElementById('s-active').textContent = activeCount;
     document.getElementById('s-viewers').textContent = fmtBig(totalViewers);
+    document.getElementById('s-total').textContent = SERVERS.length;
+    document.getElementById('last-update').textContent =
+      'Updated ' + new Date().toLocaleTimeString('en-GB', { hour12: false });
 
-    // Sort: active servers first by viewers, then alphabetical
-    srvData.sort((a,b) => {
+    // Sort: live first by viewers desc, then idle alphabetical
+    srvData.sort((a, b) => {
       if (a.liveCount !== b.liveCount) return a.liveCount > 0 ? -1 : 1;
       if (a.liveCount > 0 && b.liveCount > 0) return b.viewers - a.viewers;
       return a.name.localeCompare(b.name);
     });
 
+    // Departures board rows
+    const board = document.getElementById('board');
+    board.querySelectorAll('.board-row:not(.head)').forEach(r => r.remove());
+    const rowsHtml = srvData.map(srv => {
+      const isLive = srv.liveCount > 0;
+      const top = isLive ? srv.streams[0] : null;
+      // TODO: "Peak today" column would go here once scene_snapshots is producing rows.
+      // SQL: SELECT MAX(total_viewers) FROM scene_snapshots WHERE server = ? AND snapshot_at > date('now','-1 day')
+      const topCell = top
+        ? `<a href="/creator-profile/${esc(top.handle)}">
+             <span>${esc(top.display_name)}</span>
+             <span class="vc">${fmtBig(top.viewers)}</span>
+           </a>`
+        : '<span class="empty">— quiet —</span>';
+      return `
+        <div class="board-row ${isLive ? 'live' : 'idle'}">
+          <div class="cell sname"><div class="stack"><span>${esc(srv.name)}</span><span class="stag">${esc(srv.tag)}</span></div></div>
+          <div class="cell">
+            <span class="status-pill ${isLive ? 'up' : 'idle'}">
+              <span class="dot"></span>${isLive ? 'UP' : 'IDLE'}
+            </span>
+          </div>
+          <div class="cell num streamers ${srv.liveCount === 0 ? 'zero' : ''}">${srv.liveCount}</div>
+          <div class="cell num viewers ${srv.viewers === 0 ? 'zero' : ''}">${fmtBig(srv.viewers)}</div>
+          <div class="cell top-streamer">${topCell}</div>
+        </div>`;
+    }).join('');
+    board.insertAdjacentHTML('beforeend', rowsHtml);
+
+    // Cards below — keep all 12 visible always (they're descriptive, not status)
     document.getElementById('grid').innerHTML = srvData.map(srv => `
       <div class="sc${srv.liveCount > 0 ? ' live-server' : ''}">
         <div class="sc-head">
-          <div class="sc-name">${srv.name}</div>
+          <div class="sc-name">${esc(srv.name)}</div>
           ${srv.liveCount > 0 ? `<div class="sc-live-badge"><div class="dot"></div>${srv.liveCount} live</div>` : ''}
         </div>
-        <div class="sc-tag">${srv.tag}</div>
-        <div class="sc-body">${srv.blurb}</div>
+        <div class="sc-tag">${esc(srv.tag)}</div>
+        <div class="sc-body">${esc(srv.blurb)}</div>
         <div class="sc-vibes">${srv.vibes.map(v => `<span class="vibe">${v}</span>`).join('')}</div>
-        <div class="sc-stats">
-          <div class="ss"><span class="v" style="color:${srv.liveCount>0?'var(--signal)':'var(--ink-faint)'}">${srv.liveCount}</span><span class="l">live</span></div>
-          <div class="ss"><span class="v" style="color:${srv.viewers>0?'var(--signal-cyan)':'var(--ink-faint)'}">${fmtBig(srv.viewers)}</span><span class="l">viewers</span></div>
-        </div>
-        <div class="sc-bar"><div class="sc-fill" style="width:${srv.liveCount>0?Math.max(4,(srv.viewers/maxV)*100):0}%"></div></div>
         ${srv.roster.length ? `<div class="sc-roster">Known creators: <span>${srv.roster.join(' · ')}</span></div>` : ''}
       </div>
     `).join('');
-  } catch(e) { console.error(e); }
+  } catch (e) {
+    console.error('Load failed:', e);
+    document.getElementById('last-update').textContent = 'Update failed';
+  }
 }
 
 load();
-setInterval(load, 90000);
+setInterval(load, 60000);
 </script>
 </body>
 </html>
