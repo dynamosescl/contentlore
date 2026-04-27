@@ -87,6 +87,9 @@ export async function onRequestGet({ env }) {
       live_count: live.filter(s => s.is_live).length,
       fetched_at: new Date().toISOString(),
       live,
+      // TEMPORARY: surfaces what the Kick API call actually returned.
+      // Remove this field once Kick polling is verified end-to-end.
+      _kick_debug: kickResult?._debug || null,
     };
 
     // 5. Cache for 30s (non-fatal on failure)
@@ -203,29 +206,57 @@ function resolveTwitchThumb(url) {
 // shows up in /public/v1/livestreams.
 // ================================================================
 async function fetchKick(env) {
+  // TEMPORARY: collects per-call diagnostics surfaced as `_kick_debug` on the
+  // response. Strip once Kick polling is verified working end-to-end.
+  const debug = {
+    token_ok: false,
+    token_error: null,
+    channels_status: null,
+    channels_error: null,
+    channels_returned: 0,
+    livestreams_status: null,
+    livestreams_error: null,
+    livestreams_returned: 0,
+    livestreams_matched: 0,
+    slugs_in_channels: [],
+  };
+
   if (KICK_HANDLES.length === 0) {
-    return { channelsBySlug: {}, avatarsBySlug: {} };
+    return { channelsBySlug: {}, avatarsBySlug: {}, _debug: debug };
   }
 
   let token;
   try {
     token = await getKickToken(env);
-  } catch {
-    return { channelsBySlug: {}, avatarsBySlug: {}, _error: 'kick_token_failed' };
+    debug.token_ok = !!token;
+  } catch (e) {
+    debug.token_error = String(e?.message || e);
+    return { channelsBySlug: {}, avatarsBySlug: {}, _debug: debug };
   }
   const authHeader = { authorization: `Bearer ${token}` };
 
   const slugQs = KICK_HANDLES.map(s => `slug=${encodeURIComponent(s)}`).join('&');
   const channelsPromise = fetch(`https://api.kick.com/public/v1/channels?${slugQs}`, { headers: authHeader })
-    .then(r => r.ok ? r.json() : null)
-    .catch(() => null);
+    .then(async r => {
+      debug.channels_status = r.status;
+      if (!r.ok) {
+        debug.channels_error = await r.text().then(t => t.slice(0, 200)).catch(() => 'non-2xx');
+        return null;
+      }
+      return r.json();
+    })
+    .catch(e => { debug.channels_error = String(e?.message || e); return null; });
 
-  // Pull live streams in parallel — used purely to enrich avatars (and as a
-  // sanity cross-check for is_live). Filter to broadcaster_user_ids we know
-  // about *after* we've resolved them from the channels response.
   const livePromise = fetch('https://api.kick.com/public/v1/livestreams?limit=100&sort=viewer_count', { headers: authHeader })
-    .then(r => r.ok ? r.json() : null)
-    .catch(() => null);
+    .then(async r => {
+      debug.livestreams_status = r.status;
+      if (!r.ok) {
+        debug.livestreams_error = await r.text().then(t => t.slice(0, 200)).catch(() => 'non-2xx');
+        return null;
+      }
+      return r.json();
+    })
+    .catch(e => { debug.livestreams_error = String(e?.message || e); return null; });
 
   const [channelsJson, liveJson] = await Promise.all([channelsPromise, livePromise]);
 
@@ -237,12 +268,18 @@ async function fetchKick(env) {
     channelsBySlug[slug] = ch;
     if (ch.broadcaster_user_id != null) idToSlug[ch.broadcaster_user_id] = slug;
   }
+  debug.channels_returned = Object.keys(channelsBySlug).length;
+  debug.slugs_in_channels = Object.keys(channelsBySlug);
+
+  const allLivestreams = liveJson?.data || [];
+  debug.livestreams_returned = allLivestreams.length;
 
   // Fold livestream data back into our channel shape (matches by user id).
-  for (const ls of (liveJson?.data || [])) {
+  for (const ls of allLivestreams) {
     const slug = idToSlug[ls.broadcaster_user_id] || String(ls.slug || '').toLowerCase();
     if (!slug || !channelsBySlug[slug]) continue;
     channelsBySlug[slug]._livestream = ls;
+    debug.livestreams_matched++;
     if (ls.profile_picture) {
       try {
         await env.KV.put(`kick:avatar:${slug}`, ls.profile_picture, { expirationTtl: KICK_AVATAR_TTL });
@@ -250,7 +287,6 @@ async function fetchKick(env) {
     }
   }
 
-  // Pre-load any cached avatars for slugs that didn't come back live.
   const avatarsBySlug = {};
   await Promise.all(KICK_HANDLES.map(async slug => {
     try {
@@ -259,7 +295,7 @@ async function fetchKick(env) {
     } catch { /* ignore */ }
   }));
 
-  return { channelsBySlug, avatarsBySlug };
+  return { channelsBySlug, avatarsBySlug, _debug: debug };
 }
 
 function buildKickEntry(entry, kickResult) {
