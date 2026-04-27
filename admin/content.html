@@ -5,76 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ContentLore Admin — Beef & Lore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0A0A0B;--bg2:#111113;--bg3:#161618;--bg4:#1C1C1F;
-  --border:#2A2A2E;--border-a:#3A3A3F;
-  --t1:#E8E8EC;--t2:#9898A0;--t3:#5A5A65;
-  --mag:#FF2D6B;--mag-g:rgba(255,45,107,.3);
-  --cyan:#00E5FF;--cyan-g:rgba(0,229,255,.25);
-  --green:#00FF85;--orange:#FF8A00;--red:#FF3B3B;
+  --bg:oklch(0.09 0.04 295);--bg2:oklch(0.13 0.05 295);--bg3:oklch(0.18 0.06 295);--bg4:oklch(0.22 0.07 295);
+  --border:oklch(0.28 0.08 295);--border-a:oklch(0.38 0.10 295);
+  --t1:oklch(0.97 0.02 320);--t2:oklch(0.78 0.05 320);--t3:oklch(0.55 0.06 295);
+  --signal:oklch(0.82 0.20 195);--signal-g:oklch(0.82 0.20 195/.35);
+  --signal-cyan:oklch(0.85 0.18 200);--signal-cyan-g:oklch(0.85 0.18 200/.30);
+  --success:oklch(0.82 0.22 145);--orange:oklch(0.78 0.18 60);--red:oklch(0.65 0.25 25);
+  --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
   --clip:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
 }
-body{background:var(--bg);color:var(--t1);font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+html{background:var(--bg);color-scheme:dark}
+body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:100vh;-webkit-font-smoothing:antialiased}
 .admin-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:16px}
-.admin-header h1{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;text-transform:uppercase;letter-spacing:2px}
-.admin-header .back{color:var(--cyan);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:13px}
+.admin-header h1{font-family:var(--font-d);font-size:24px;letter-spacing:3px}
+.admin-header .back{color:var(--signal-cyan);text-decoration:none;font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px}
 .admin-header .back:hover{text-decoration:underline}
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg2)}
-.tab{padding:12px 24px;font-family:'Oswald',sans-serif;font-size:14px;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;border:none;background:none;color:var(--t3);border-bottom:2px solid transparent;transition:all .2s}
+.tab{padding:12px 24px;font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;border:none;background:none;color:var(--t3);border-bottom:2px solid transparent;transition:all .2s}
 .tab:hover{color:var(--t2)}
-.tab.active{color:var(--mag);border-bottom-color:var(--mag)}
+.tab.active{color:var(--signal);border-bottom-color:var(--signal)}
 .container{max-width:1200px;margin:0 auto;padding:24px}
 .panel{display:none}.panel.active{display:block}
 .split{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 @media(max-width:900px){.split{grid-template-columns:1fr}}
-.card{background:var(--bg3);border:1px solid var(--border);clip-path:var(--clip);padding:20px}
-.card h2{font-family:'Oswald',sans-serif;font-size:16px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t2);margin-bottom:16px}
+.card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:20px}
+.card h2{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:2px;color:var(--t2);margin-bottom:16px}
 .field{margin-bottom:14px}
-.field label{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--t1);padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:2px;outline:none;transition:border-color .2s}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--cyan)}
+.field label{display:block;font-family:var(--font-m);font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--t1);padding:8px 12px;font-family:var(--font-m);font-size:13px;border-radius:2px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--signal)}
 .field textarea{min-height:80px;resize:vertical}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.btn{font-family:'Oswald',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:1.5px;padding:10px 20px;border:none;cursor:pointer;clip-path:var(--clip);transition:all .2s}
-.btn-mag{background:var(--mag);color:#fff}
-.btn-mag:hover{box-shadow:0 0 20px var(--mag-g)}
-.btn-cyan{background:var(--cyan);color:#000}
-.btn-cyan:hover{box-shadow:0 0 20px var(--cyan-g)}
+.btn{font-family:var(--font-d);font-size:14px;text-transform:uppercase;letter-spacing:2px;padding:10px 20px;border:none;cursor:pointer;clip-path:var(--clip);transition:all .2s}
+.btn-mag{background:var(--signal);color:var(--bg)}
+.btn-mag:hover{box-shadow:0 0 22px var(--signal-g);transform:translateY(-1px)}
+.btn-cyan{background:var(--signal-cyan);color:var(--bg)}
+.btn-cyan:hover{box-shadow:0 0 22px var(--signal-cyan-g);transform:translateY(-1px)}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--t2)}
-.btn-ghost:hover{border-color:var(--t3)}
-.btn-red{background:var(--red);color:#fff}
-.btn-row{display:flex;gap:8px;margin-top:16px}
+.btn-ghost:hover{border-color:var(--signal);color:var(--t1)}
+.btn-red{background:var(--red);color:var(--t1)}
+.btn-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
 .list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all .15s}
-.list-item:hover{border-color:var(--border-a);background:var(--bg2)}
-.list-item .title{font-family:'Oswald',sans-serif;font-size:14px;text-transform:uppercase}
-.list-item .meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3);display:flex;gap:12px;align-items:center}
-.badge{padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
-.badge-active{background:var(--mag);color:#fff}
-.badge-cooling{background:var(--orange);color:#000}
-.badge-resolved{background:var(--t3);color:var(--t1)}
-.badge-legendary{background:var(--cyan);color:#000}
-.badge-current{background:var(--green);color:#000}
-.badge-legacy{background:var(--orange);color:#000}
+.list-item:hover{border-color:var(--signal);background:var(--bg2)}
+.list-item .title{font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:1px}
+.list-item .meta{font-family:var(--font-m);font-size:11px;color:var(--t3);display:flex;gap:12px;align-items:center}
+.badge{padding:2px 8px;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border:1px solid transparent}
+.badge-active{background:oklch(0.82 0.20 195/.15);color:var(--signal);border-color:oklch(0.82 0.20 195/.4)}
+.badge-cooling{background:oklch(0.78 0.18 60/.15);color:var(--orange);border-color:oklch(0.78 0.18 60/.4)}
+.badge-resolved{background:oklch(0.55 0.06 295/.15);color:var(--t2);border-color:oklch(0.55 0.06 295/.4)}
+.badge-legendary{background:oklch(0.85 0.18 200/.15);color:var(--signal-cyan);border-color:oklch(0.85 0.18 200/.4)}
+.badge-current{background:oklch(0.82 0.22 145/.15);color:var(--success);border-color:oklch(0.82 0.22 145/.4)}
+.badge-legacy{background:oklch(0.78 0.18 60/.15);color:var(--orange);border-color:oklch(0.78 0.18 60/.4)}
 .heat-bar{display:flex;gap:2px;align-items:center}
 .heat-pip{width:8px;height:8px;background:var(--border);transition:background .2s}
-.heat-pip.on{background:var(--mag)}
-.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:13px;clip-path:var(--clip);z-index:999;transform:translateY(100px);opacity:0;transition:all .3s}
+.heat-pip.on{background:var(--signal)}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;font-family:var(--font-m);font-size:13px;clip-path:var(--clip);z-index:999;transform:translateY(100px);opacity:0;transition:all .3s}
 .toast.show{transform:translateY(0);opacity:1}
-.toast.success{background:var(--green);color:#000}
-.toast.error{background:var(--red);color:#fff}
+.toast.success{background:var(--success);color:var(--bg)}
+.toast.error{background:var(--red);color:var(--t1)}
 .beats-editor,.chapters-editor{margin-top:8px}
 .beat-item,.chapter-item{background:var(--bg);border:1px solid var(--border);padding:10px;margin-bottom:6px;position:relative}
 .beat-item .remove,.chapter-item .remove{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--red);cursor:pointer;font-size:14px}
-.empty{text-align:center;padding:40px;color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:13px}
+.empty{text-align:center;padding:40px;color:var(--t3);font-family:var(--font-m);font-size:13px}
 .token-field{display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:var(--bg);border:1px solid var(--border);min-height:38px;cursor:text}
-.token{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:var(--bg3);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t1)}
+.token{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:var(--bg3);border:1px solid var(--border);font-family:var(--font-m);font-size:12px;color:var(--t1)}
 .token .x{cursor:pointer;color:var(--t3);font-size:10px}
 .token .x:hover{color:var(--red)}
-.token-field input{border:none;background:none;color:var(--t1);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;flex:1;min-width:80px}
+.token-field input{border:none;background:none;color:var(--t1);font-family:var(--font-m);font-size:12px;outline:none;flex:1;min-width:80px}
+::selection{background:var(--signal);color:var(--bg)}
 </style>
 </head>
 <body>
@@ -113,7 +116,7 @@ body{background:var(--bg);color:var(--t1);font-family:system-ui,-apple-system,sa
           <select id="beef-status"><option value="active">Active</option><option value="cooling">Cooling</option><option value="resolved">Resolved</option><option value="legendary">Legendary</option></select>
         </div>
       </div>
-      <div class="field"><label>Heat (1-10)</label><input type="range" id="beef-heat" min="1" max="10" value="5" oninput="document.getElementById('heat-val').textContent=this.value"><span id="heat-val" style="font-family:'JetBrains Mono';font-size:13px;color:var(--mag);margin-left:8px">5</span></div>
+      <div class="field"><label>Heat (1-10)</label><input type="range" id="beef-heat" min="1" max="10" value="5" oninput="document.getElementById('heat-val').textContent=this.value"><span id="heat-val" style="font-family:'JetBrains Mono';font-size:13px;color:var(--signal);margin-left:8px">5</span></div>
       <div class="field"><label>Side A (press Enter to add)</label><div class="token-field" id="side-a-tokens"><input type="text" placeholder="Creator name…" onkeydown="addToken(event,'side-a-tokens')"></div></div>
       <div class="field"><label>Side B (press Enter to add)</label><div class="token-field" id="side-b-tokens"><input type="text" placeholder="Creator name…" onkeydown="addToken(event,'side-b-tokens')"></div></div>
       <div class="field"><label>Description</label><textarea id="beef-desc" placeholder="What kicked this off…"></textarea></div>
@@ -162,7 +165,7 @@ body{background:var(--bg);color:var(--t1);font-family:system-ui,-apple-system,sa
           <select id="lore-era"><option value="current">Current</option><option value="legacy">Legacy</option><option value="legendary">Legendary</option></select>
         </div>
       </div>
-      <div class="field"><label>Weight (1-5)</label><input type="range" id="lore-weight" min="1" max="5" value="3" oninput="document.getElementById('weight-val').textContent=this.value"><span id="weight-val" style="font-family:'JetBrains Mono';font-size:13px;color:var(--cyan);margin-left:8px">3</span></div>
+      <div class="field"><label>Weight (1-5)</label><input type="range" id="lore-weight" min="1" max="5" value="3" oninput="document.getElementById('weight-val').textContent=this.value"><span id="weight-val" style="font-family:'JetBrains Mono';font-size:13px;color:var(--signal-cyan);margin-left:8px">3</span></div>
       <div class="field"><label>Description</label><textarea id="lore-desc" placeholder="Arc summary…"></textarea></div>
       <div class="field"><label>Linked Beefs (press Enter to add slug)</label><div class="token-field" id="linked-beefs-tokens"><input type="text" placeholder="beef-slug…" onkeydown="addToken(event,'linked-beefs-tokens')"></div></div>
       <div class="field">
@@ -367,7 +370,7 @@ function renderLoreList() {
   el.innerHTML = allLore.map(a => {
     return `<div class="list-item" onclick="editLore('${a.slug}')">
       <div><div class="title">${a.title}</div><div class="meta"><span class="badge badge-${a.era || 'current'}">${a.era || 'current'}</span><span>${a.kind || 'other'}</span><span>${a.server || '—'}</span></div></div>
-      <div style="font-family:'JetBrains Mono';font-size:12px;color:var(--cyan)">W${a.weight || 3}</div>
+      <div style="font-family:'JetBrains Mono';font-size:12px;color:var(--signal-cyan)">W${a.weight || 3}</div>
     </div>`;
   }).join('');
 }

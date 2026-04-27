@@ -7,11 +7,17 @@
 // 30s KV cache to keep latency down without hammering platform APIs.
 // ================================================================
 
-import { jsonResponse, getTwitchToken } from '../_lib.js';
+import { jsonResponse, getTwitchToken, getKickToken } from '../_lib.js';
 
 const CACHE_KEY = 'uk-rp-live:cache';
 const CACHE_TTL = 30; // seconds
+const CACHE_HEADERS = { 'cache-control': 'public, s-maxage=20' };
+const THUMB_SIZE = { w: 1280, h: 720 };
+const KICK_AVATAR_TTL = 86400 * 7; // 7 days
 
+// Optional `tiktok` / `youtube` fields are surfaced in every entry so creator-
+// profile pages and the multi-platform footprint card can light up without a
+// schema change later. Populate as handles become known.
 const ALLOWLIST = [
   { handle: 'tyrone',         platform: 'twitch', name: 'Tyrone' },
   { handle: 'lbmm',           platform: 'twitch', name: 'LBMM' },
@@ -40,26 +46,19 @@ const ALLOWLIST = [
 const TWITCH_HANDLES = ALLOWLIST.filter(c => c.platform === 'twitch').map(c => c.handle);
 const KICK_HANDLES   = ALLOWLIST.filter(c => c.platform === 'kick').map(c => c.handle);
 
-const KICK_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-  'Accept': 'application/json, text/plain, */*',
-  'Accept-Language': 'en-GB,en;q=0.9',
-  'Referer': 'https://kick.com/',
-  'Origin': 'https://kick.com',
-};
-
 export async function onRequestGet({ env }) {
   // 1. KV cache check
   try {
     const cached = await env.KV.get(CACHE_KEY, 'json');
-    if (cached) return jsonResponse(cached);
+    if (cached) return jsonResponse(cached, 200, CACHE_HEADERS);
   } catch { /* fall through to fresh fetch */ }
 
   try {
-    // 2. Fetch live data from both platforms in parallel
-    const [twitchResult, ...kickResults] = await Promise.all([
+    // 2. Fetch live data from both platforms in parallel — single batched
+    //    request per platform thanks to multi-value query params.
+    const [twitchResult, kickResult] = await Promise.all([
       fetchTwitch(env),
-      ...KICK_HANDLES.map(h => fetchKick(h)),
+      fetchKick(env),
     ]);
 
     // 3. Merge into allowlist-shaped response
@@ -67,8 +66,7 @@ export async function onRequestGet({ env }) {
       if (entry.platform === 'twitch') {
         return buildTwitchEntry(entry, twitchResult);
       }
-      const kickData = kickResults[KICK_HANDLES.indexOf(entry.handle)];
-      return buildKickEntry(entry, kickData);
+      return buildKickEntry(entry, kickResult);
     });
 
     // 4. Sort: live (by viewers desc), then offline (alphabetical)
@@ -91,7 +89,7 @@ export async function onRequestGet({ env }) {
       await env.KV.put(CACHE_KEY, JSON.stringify(payload), { expirationTtl: CACHE_TTL });
     } catch { /* ignore */ }
 
-    return jsonResponse(payload);
+    return jsonResponse(payload, 200, CACHE_HEADERS);
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }
@@ -172,46 +170,111 @@ function buildTwitchEntry(entry, twitchResult) {
       game_name: stream.game_name || null,
       started_at: startedAtSec,
       uptime_mins: uptimeMins,
-      thumbnail_url: stream.thumbnail_url || null,
+      thumbnail_url: resolveTwitchThumb(stream.thumbnail_url),
+      tiktok: entry.tiktok || null,
+      youtube: entry.youtube || null,
     };
   }
   return offlineStub(entry, display_name, avatar_url);
 }
 
-// ================================================================
-// Kick: v1 with v2 fallback. Both return the same shape; trying both
-// gives us a different code path / edge-cache layer at Kick's CDN
-// in case one is WAF-blocked from CF datacenter IPs.
-//
-// (HTML scrape fallback was removed — Kick moved to Next.js 13 App
-// Router with self.__next_f.push streaming chunks. The old regex
-// targets — "session_title", "viewer_count", "profile_pic" — no
-// longer appear in the rendered HTML at all.)
-// ================================================================
-async function fetchKick(slug) {
-  for (const version of ['v1', 'v2']) {
-    try {
-      const res = await fetch(`https://kick.com/api/${version}/channels/${encodeURIComponent(slug)}`, { headers: KICK_HEADERS });
-      if (res.ok) {
-        const data = await res.json();
-        if (!data?.error) return { source: version, data };
-      }
-    } catch { /* try next version */ }
-  }
-  return { source: 'failed', data: null };
+// Twitch returns thumbnail URLs containing literal `{width}` and `{height}`
+// placeholders the client is expected to substitute. Doing it server-side
+// means callers can drop straight into <img src> without string surgery.
+function resolveTwitchThumb(url) {
+  if (!url) return null;
+  return url.replace('{width}', String(THUMB_SIZE.w)).replace('{height}', String(THUMB_SIZE.h));
 }
 
-function buildKickEntry(entry, kickData) {
-  const data = kickData?.data;
-  const source = kickData?.source || 'failed';
-  const display_name = entry.name;
-  const avatar_url = data?.user?.profile_pic || null;
+// ================================================================
+// Kick: official Public API at api.kick.com (OAuth client credentials).
+//   • /public/v1/channels?slug=...   — channel + stream state, batched up to 50
+//   • /public/v1/livestreams?...     — supplies profile_picture for live entries
+//
+// The unauthenticated kick.com/api/v1|v2 scrape paths have been retired.
+// Avatar URLs for offline Kick creators are read from a long-lived KV cache
+// (key: `kick:avatar:{slug}`) that is back-populated whenever the same slug
+// shows up in /public/v1/livestreams.
+// ================================================================
+async function fetchKick(env) {
+  if (KICK_HANDLES.length === 0) {
+    return { channelsBySlug: {}, avatarsBySlug: {} };
+  }
 
-  if (data?.livestream) {
-    const ls = data.livestream;
-    const startedAtSec = ls.created_at
-      ? Math.floor(new Date(ls.created_at).getTime() / 1000)
-      : null;
+  let token;
+  try {
+    token = await getKickToken(env);
+  } catch {
+    return { channelsBySlug: {}, avatarsBySlug: {}, _error: 'kick_token_failed' };
+  }
+  const authHeader = { authorization: `Bearer ${token}` };
+
+  const slugQs = KICK_HANDLES.map(s => `slug=${encodeURIComponent(s)}`).join('&');
+  const channelsPromise = fetch(`https://api.kick.com/public/v1/channels?${slugQs}`, { headers: authHeader })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null);
+
+  // Pull live streams in parallel — used purely to enrich avatars (and as a
+  // sanity cross-check for is_live). Filter to broadcaster_user_ids we know
+  // about *after* we've resolved them from the channels response.
+  const livePromise = fetch('https://api.kick.com/public/v1/livestreams?limit=100&sort=viewer_count', { headers: authHeader })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null);
+
+  const [channelsJson, liveJson] = await Promise.all([channelsPromise, livePromise]);
+
+  const channelsBySlug = {};
+  const idToSlug = {};
+  for (const ch of (channelsJson?.data || [])) {
+    const slug = String(ch.slug || '').toLowerCase();
+    if (!slug) continue;
+    channelsBySlug[slug] = ch;
+    if (ch.broadcaster_user_id != null) idToSlug[ch.broadcaster_user_id] = slug;
+  }
+
+  // Fold livestream data back into our channel shape (matches by user id).
+  for (const ls of (liveJson?.data || [])) {
+    const slug = idToSlug[ls.broadcaster_user_id] || String(ls.slug || '').toLowerCase();
+    if (!slug || !channelsBySlug[slug]) continue;
+    channelsBySlug[slug]._livestream = ls;
+    if (ls.profile_picture) {
+      try {
+        await env.KV.put(`kick:avatar:${slug}`, ls.profile_picture, { expirationTtl: KICK_AVATAR_TTL });
+      } catch { /* ignore — cache is best-effort */ }
+    }
+  }
+
+  // Pre-load any cached avatars for slugs that didn't come back live.
+  const avatarsBySlug = {};
+  await Promise.all(KICK_HANDLES.map(async slug => {
+    try {
+      const v = await env.KV.get(`kick:avatar:${slug}`);
+      if (v) avatarsBySlug[slug] = v;
+    } catch { /* ignore */ }
+  }));
+
+  return { channelsBySlug, avatarsBySlug };
+}
+
+function buildKickEntry(entry, kickResult) {
+  const slug = entry.handle.toLowerCase();
+  const ch = kickResult.channelsBySlug?.[slug];
+  const display_name = entry.name;
+
+  // Avatar precedence: fresh livestream profile_picture → cached KV → null.
+  const avatar_url = ch?._livestream?.profile_picture || kickResult.avatarsBySlug?.[slug] || null;
+
+  // The Channels endpoint returns a `stream` sub-object with is_live; when the
+  // broadcaster is live the matching /livestreams entry gives us viewer_count
+  // and thumbnail. Treat is_live conservatively — only mark live when both
+  // channel.stream.is_live and a livestream record agree.
+  const stream = ch?.stream;
+  const ls = ch?._livestream;
+  const isLive = !!(stream?.is_live);
+
+  if (isLive) {
+    const startIso = ls?.started_at || stream?.start_time;
+    const startedAtSec = startIso ? Math.floor(new Date(startIso).getTime() / 1000) : null;
     const uptimeMins = startedAtSec
       ? Math.max(0, Math.round((Date.now() / 1000 - startedAtSec) / 60))
       : null;
@@ -221,16 +284,17 @@ function buildKickEntry(entry, kickData) {
       platform: 'kick',
       avatar_url,
       is_live: true,
-      viewers: ls.viewer_count || 0,
-      stream_title: ls.session_title || null,
-      game_name: ls.categories?.[0]?.name || null,
+      viewers: ls?.viewer_count ?? stream?.viewer_count ?? 0,
+      stream_title: ls?.stream_title || ch?.stream_title || null,
+      game_name: ls?.category?.name || ch?.category?.name || null,
       started_at: startedAtSec,
       uptime_mins: uptimeMins,
-      thumbnail_url: null,
-      _kick_source: source,
+      thumbnail_url: ls?.thumbnail || stream?.thumbnail || null,
+      tiktok: entry.tiktok || null,
+      youtube: entry.youtube || null,
     };
   }
-  return { ...offlineStub(entry, display_name, avatar_url), _kick_source: source };
+  return offlineStub(entry, display_name, avatar_url);
 }
 
 function offlineStub(entry, display_name, avatar_url) {
@@ -246,5 +310,7 @@ function offlineStub(entry, display_name, avatar_url) {
     started_at: null,
     uptime_mins: null,
     thumbnail_url: null,
+    tiktok: entry.tiktok || null,
+    youtube: entry.youtube || null,
   };
 }

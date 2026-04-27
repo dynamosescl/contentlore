@@ -192,7 +192,8 @@ export async function fetchTwitchStream(env, userId) {
 }
 
 /**
- * Fetch Kick channel by slug (public API, no auth strictly required but token is cleaner).
+ * Fetch a single Kick channel by slug via the official Public API.
+ * Returns the channel object (with .stream, .category, .stream_title) or null.
  */
 export async function fetchKickChannel(env, slug) {
   try {
@@ -205,13 +206,6 @@ export async function fetchKickChannel(env, slug) {
     const data = await res.json();
     return data?.data?.[0] ?? null;
   } catch {
-    // Fallback to unauthenticated v2 endpoint
-    try {
-      const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`);
-      if (!res.ok) return null;
-      return await res.json();
-    } catch {
-      return null;
-    }
+    return null;
   }
 }

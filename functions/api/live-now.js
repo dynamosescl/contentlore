@@ -82,7 +82,7 @@ export async function onRequestGet({ env }) {
       }
     }
 
-    return jsonResponse({ ok: true, live, count: live.length, source: 'sessions' });
+    return jsonResponse({ ok: true, live, count: live.length, source: 'sessions' }, 200, { 'cache-control': 'public, s-maxage=20' });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }
@@ -123,5 +123,5 @@ async function fallbackToSnapshots(env) {
     profile_url: `/creator/${r.id}`,
   }));
 
-  return jsonResponse({ ok: true, live, count: live.length, source: 'snapshots_fallback' });
+  return jsonResponse({ ok: true, live, count: live.length, source: 'snapshots_fallback' }, 200, { 'cache-control': 'public, s-maxage=20' });
 }
