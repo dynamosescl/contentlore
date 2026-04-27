@@ -45,7 +45,7 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 
 The repo also contains several legacy directories (`about/`, `contact/`, `creators/`, `ethics/`, `ledger/`, `rising/`, `signals/`, `the-platform/`, `gta-rp/beef/`, `gta-rp/lore/`) that survived the 2026-04-26 cleanup sweep but aren't part of the active navigation. They serve via `_redirects` catch-all if anyone deep-links them. Worth a re-audit eventually.
 
-**Active Pages Functions (16, plus 2 helpers):**
+**Active Pages Functions (17, plus 2 helpers):**
 
 | Endpoint | File | Purpose |
 |---|---|---|
@@ -56,6 +56,7 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 | `GET /api/cfx-populations` | `api/cfx-populations.js` | Live FiveM player counts for 5 known UK server CFX IDs, 60s KV |
 | `POST /api/streaks/check-in` | `api/streaks/check-in.js` | Idempotent daily-visit increment (anonymous UUID), badge state |
 | `GET /api/streaks/leaderboard?order=current\|max` | `api/streaks/leaderboard.js` | Top opt-in users with display names, 5-min KV |
+| `GET\|POST /api/gta6-pulse` | `api/gta6-pulse.js` | Anonymous one-vote-per-device GTA 6 readiness poll, 30s KV tallies cache |
 | `GET /api/creators` | `api/creators.js` | Paged creator directory (D1) |
 | `GET /api/stats` | `api/stats.js` | Aggregate counters (D1) |
 | `GET /api/beefs` | `api/beefs.js` | Editorial beef list (D1) |
@@ -82,10 +83,11 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 - `creator_edges` (raid/host/shoutout social graph)
 - `snapshots` (per-poll observations of live state)
 - `stream_sessions` (derived sessions from snapshots — 950 rows, 768 creators as of 2026-04-27)
-- `scene_snapshots` (server-clustered scene captures — **0 rows in prod**, scheduler not producing)
+- `scene_snapshots` (server-clustered scene captures — scheduler `scenes.js` rewritten and redeployed 2026-04-27 against the real `snapshots` schema and the 12-server UK registry; first rows expected on the next cron tick)
 - `pending_creators` (discovery triage — **0 rows in prod** as of 2026-04-27)
 - `beefs`, `lore_arcs` (editorial)
 - `watch_streaks` (Phase 3 — anon UUID, current/max streak, total_visits, optional display_name)
+- `gta6_pulse_votes` (Phase 4 — anon UUID, choice ∈ {ready, optimistic, worried, not-thinking}, voted_at)
 
 **Data pipeline:** Scheduler worker (every 15 min) → polls Twitch/Kick → `snapshots` → `stream_sessions` → `scene_snapshots`. `/api/uk-rp-live` bypasses DB entirely and queries Twitch + Kick official APIs directly for the 22 allowlisted creators (30s KV cache).
 
@@ -196,13 +198,13 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - [—] **Scene Bingo** — deferred (needs community traction first)
 
 ### PHASE 4 — INTELLIGENCE (data depth)
-- [ ] **GTA 6 Deep Dive** — live news feed (RSS / web sources) about GTA 6 RP modding progress. Community sentiment tracker poll with historical results. Creator transition plans (survey data). Visual countdown timeline with milestones. Impact calculator ("If X% viewers move to GTA 6, here's what happens to UK scene").
+- [x] **GTA 6 Deep Dive** — `/gta-rp/gta-6/` rebuilt as a living briefing. Live ticking countdown to 19 Nov 2026 console launch. Latest News feed (release lock, Trailer 3 expectations, FiveM 202k Steam record, Cfx Platform Licence update, Project ROME rumour, UK scene posture). Updated Impact Matrix + Transition Scenarios reflecting Cfx.re/Rockstar ownership. Community Pulse poll with anonymous one-vote-per-device + live results bars, backed by `gta6_pulse_votes` table (migration 009). Endpoint `GET\|POST /api/gta6-pulse`. Impact calculator ("if X% migrate") still open as a follow-up.
+- [~] **Restore `scene_snapshots` capture** — scheduler's `scenes.js` was reading from a non-existent `creator_snapshots` table with wrong column names and a US-server registry (NoPixel, JESTRP, Lucid City). Rewritten 2026-04-27 against the real `snapshots` table and the canonical 12-server UK list (mirrored from `functions/api/timeline.js`). Bonus: `/trigger` endpoint now also calls `captureSceneSnapshots` for manual smoke testing. Awaiting first cron tick to confirm rows landing in prod. **No migration needed** — table schema was correct all along.
 - [ ] **FiveM Enhanced Deep Dive** — real migration status per server (not just "monitoring" — actual data from server owners). Technical changelog per update. Framework compatibility matrix (ESX, QBCore, QBOX Enhanced-readiness). Creator impact section (who's mentioned Enhanced on stream via title keyword detection).
 - [ ] **Historical Analytics** — viewer trends over time per creator. Server population charts. Scene activity heatmap (hours × days of week showing when UK scene is busiest).
 - [ ] **Creator Network Graph** — visual graph showing who raids/hosts who. Data already in `creator_edges` table. Interactive network visualisation.
 - [ ] **Weekly Scene Digest** — auto-generated "This Week in UK GTA RP" page: peak moments, new creators, server changes, top clips. Could also push to Discord webhook.
 - [ ] **Creator Growth Tracker** — follower/viewer growth over time per creator. "Fastest growing" weekly highlight.
-- [ ] **Restore `scene_snapshots` capture** — scheduler's `scenes.js` is producing zero rows in prod, blocking Server Status "Peak Today" and limiting Timeline summaries. Investigate and fix as a Phase 4 prerequisite.
 
 ### PHASE 5 — GROWTH (external reach)
 - [ ] **Discord Bot** — when any allowlist creator goes live, post to Discord channel with embed (thumbnail, game, viewers). Free marketing that drives traffic back to site.
@@ -233,10 +235,10 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 │  sessions → stream_     │  │  All 30s-300s KV-cached              │
 │             sessions    │  └──────────────┬───────────────────────┘
 │  scenes  → scene_       │                 │
-│             snapshots*  │                 │
+│             snapshots   │                 │
 │  discovery → pending_   │                 │
 │              creators   │                 │
-│ (* currently 0 rows)    │                 │
+│                         │                 │
 └──────────┬──────────────┘                 │
            │                                │
            ▼                                │
@@ -251,6 +253,7 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 │   pending_creators       │                │
 │   beefs, lore_arcs       │                │
 │   watch_streaks (Ph3)    │                │
+│   gta6_pulse_votes (Ph4) │                │
 └──────────┬───────────────┘                │
            │                                │
            ▼                                ▼
@@ -298,6 +301,7 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - `timeline:{today|yesterday|7d}:cache` — Timeline response cache (5 min)
 - `cfx:populations:cache` — CFX populations cache (60s)
 - `streaks:leaderboard:{current|max}:{limit}:cache` — Watch Streaks leaderboard cache (5 min)
+- `gta6:pulse:tallies:cache` — GTA 6 Community Pulse aggregate counts (30s; busted on each POST)
 
 ---
 
@@ -357,7 +361,7 @@ Updates take effect immediately. Cron continues on its existing schedule. The sc
 # Production
 npx wrangler d1 execute contentlore-db --file=migrations/00X_name.sql --remote
 ```
-Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. Migration numbering has historical gaps and a duplicate (002, 004, two 005, 006, 008 — no 003 or 007). Pick the next free number for new ones.
+Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. Migration numbering has historical gaps and a duplicate (002, 004, two 005, 006, 008, 009 — no 003 or 007). Pick the next free number for new ones.
 
 ### Smoke tests after deploy
 ```bash
@@ -380,7 +384,7 @@ All should return non-zero. The scheduler `/status` shows the most recent poll s
 - **`_routes.json` controls Function routing.** `include` list captures paths for Functions; everything else is static. New Function paths (e.g. `/creator-profile/*`, `/api/streaks/*`) must be added or they fall through to the catch-all and serve the homepage.
 - **D1 platform records can drift from the curated allowlist.** Always source-of-truth the allowlist; treat `creator_platforms.platform` as a hint that needs reconciling. Tyrone (was `kick`+`rising`) and reeclare (was `kick`) got fixed in 2026-04-27 — they're now both `twitch`+`creator`.
 - **16 of 22 allowlisted creators aren't in the `creators` table yet.** Only bags, dynamoses, kavsual, reeclare, samham, tyrone exist there as of 2026-04-27. Profile stats / server affinity / timeline rows are empty for the other 16 until the scheduler discovers and adds them. Code path is correct; data is sparse.
-- **`scene_snapshots` is empty in prod.** Scheduler's `scenes.js` isn't producing rows. Blocks Server Status "Peak Today" column (omitted with TODO) and limits the Timeline summary stats. Investigating is a Phase 4 prerequisite — see the TODO in `functions/api/cfx-populations.js`'s area and the matching SQL stub in `gta-rp/servers/index.html`.
+- **`scene_snapshots` was empty for weeks** because the scheduler's `scenes.js` queried a non-existent `creator_snapshots` table with wrong column names AND used a US-server keyword registry. Fix deployed 2026-04-27 — `scenes.js` now reads `snapshots` joined to `creators`/`creator_platforms` with the canonical UK 12-server list (mirrored from `functions/api/timeline.js`'s SERVERS array). If `scene_snapshots` ever stalls again, check (1) whether `snapshots` has fresh `is_live=1` rows in the last 30 minutes, (2) whether `stream_title` actually contains a UK server keyword — non-RP titles (e.g. just "GTA RP UK") will skip the row.
 - **Twitch iframe autoplay warning** — Twitch refuses `autoplay=true` if the iframe was hidden when the `src` was set. If multi-view loads tiles before the container is rendered, console fills with "Couldn't autoplay because of style visibility checks". Phase 2 multi-view improvements include the fix as an open item.
 - **`functions/_scheduled.js`** is the legacy in-Pages cron handler. **Cloudflare Pages doesn't fire crons for Pages Functions** — only the standalone Worker (`contentlore-scheduler`) actually runs on a schedule. The Pages-side file is dead code preserved for reference until safely removed.
 - **CFX server IDs are 6-character hashes**, not derivable from server names. Public server search isn't a documented FiveM API; use `gtaboom.com/servers/{id}` URLs from web search to discover candidates, then verify against `https://servers-frontend.fivem.net/api/servers/single/{id}`. 7 of our 12 UK servers are whitelist-only with IPs gated behind Discord — no public CFX ID available.
@@ -427,4 +431,12 @@ Slot-machine modal on `/gta-rp/`. Deceleration animation 60ms→420ms over ~2s. 
 **Site-wide hygiene**
 Stripped all CRT/flicker/glitch animations (`1252d9a`, `60c3450`) — content-heavy pages too distracting. Kept only static `body::before` scanline overlay. Fixed two D1 platform-record drift bugs (Tyrone + reeclare were wrongly tagged `kick`).
 
-**CLAUDE.md sync** (this commit) — flipped Phase 1 + Phase 3 status, refreshed Current State / Architecture / KV-keys / Gotchas, added this Session Log.
+**CLAUDE.md sync** (`954a238`) — flipped Phase 1 + Phase 3 status, refreshed Current State / Architecture / KV-keys / Gotchas, added this Session Log.
+
+**Phase 4 #1 — Scene snapshots restoration** (scheduler-only deploy)
+Diagnosed why `scene_snapshots` had stayed at 0 rows since launch. Root causes in scheduler `src/scenes.js`: queried a non-existent `creator_snapshots` table; used wrong column names (`creator_name`/`viewer_count`/`snapshot_at` instead of `creator_id`/`viewers`/`captured_at`); SERVER_REGISTRY listed US servers (NoPixel, JESTRP, Lucid City) so even a working query would never match a UK creator's title. Whole function was wrapped in a try/catch returning `{ snapshots: 0, error }` so failures stayed silent. Rewrote against the real schema with the canonical 12-server UK registry mirrored from `functions/api/timeline.js`. Wired `captureSceneSnapshots` into the worker's `/trigger` endpoint for manual smoke testing. Deployed via `npx wrangler deploy`. Schema migration was unnecessary — `scene_snapshots` table itself was always correct.
+
+**Phase 4 #2 — GTA 6 Deep Dive** (`5de8712`)
+Rebuilt `/gta-rp/gta-6/` as a living intelligence briefing. Live JS countdown to 19 Nov 2026 console launch (with hero T-minus badge). Latest News card grid covering: release date lock, Take-Two 21 May earnings call / Trailer 3 expectations, FiveM 202k concurrent Steam record on 15 Mar 2026, Cfx.re Creator Platform Licence Agreement reissued 12 Jan 2026, "Project ROME" first-party modding rumour, UK scene posture inference. Updated Impact Matrix + Transition Scenarios to reflect Rockstar's Cfx.re ownership (FiveM is now first-party — server-infrastructure impact dropped to Low; "Smooth Coexistence" remains plausible but no longer dependent on a third-party rescue). Community Pulse poll: 4 options (Ready / Cautiously optimistic / Worried / Not thinking), anonymous one-vote-per-device with localStorage UUID, live results bar, change-vote-any-time. Backed by `GET|POST /api/gta6-pulse` and `gta6_pulse_votes` (migration 009 applied to prod).
+
+**CLAUDE.md sync** (this commit) — flipped Phase 4 statuses, recorded scenes-fix diagnosis as a permanent gotcha, added this entry.
