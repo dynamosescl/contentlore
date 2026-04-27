@@ -33,10 +33,12 @@ const PARENT_DOMAINS = ['contentlore.com', 'localhost'];
 //   509658 = Just Chatting
 const ALLOWED_GAME_IDS = new Set(['32982', '509658']);
 
+// Mirror the Twitch slice of functions/api/uk-rp-live.js — keep in sync.
 const TWITCH_HANDLES = [
   'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
   'megsmary', 'tazzthegeeza', 'wheelydev', 'rexality', 'steeel',
   'justj0hnnyhd', 'cherish_remedy', 'lorddorro', 'jck0__', 'absthename',
+  'essellz', 'lewthescot', 'angels365', 'fantasiasfantasy',
 ];
 
 const HANDLE_TO_NAME = {
@@ -45,6 +47,8 @@ const HANDLE_TO_NAME = {
   tazzthegeeza: 'TaZzTheGeeza', wheelydev: 'WheelyDev', rexality: 'RexaliTy',
   steeel: 'Steeel', justj0hnnyhd: 'JustJ0hnnyHD', cherish_remedy: 'Cherish_Remedy',
   lorddorro: 'LordDorro', jck0__: 'JCK0__', absthename: 'ABsTheName',
+  essellz: 'Essellz', lewthescot: 'LewTheScot', angels365: 'Angels365',
+  fantasiasfantasy: 'FantasiasFantasy',
 };
 
 export async function onRequestGet({ request, env }) {

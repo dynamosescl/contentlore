@@ -16,9 +16,11 @@
 import { jsonResponse } from '../_lib.js';
 
 const ALLOWED_HANDLES = new Set([
+  // Mirror functions/api/uk-rp-live.js — keep in sync.
   'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
   'megsmary', 'tazzthegeeza', 'wheelydev', 'rexality', 'steeel',
   'justj0hnnyhd', 'cherish_remedy', 'lorddorro', 'jck0__', 'absthename',
+  'essellz', 'lewthescot', 'angels365', 'fantasiasfantasy',
   'kavsual', 'shammers', 'bags', 'dynamoses', 'dcampion', 'elliewaller',
 ]);
 
