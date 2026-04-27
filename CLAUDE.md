@@ -45,7 +45,7 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 
 The repo also contains several legacy directories (`about/`, `contact/`, `creators/`, `ethics/`, `ledger/`, `rising/`, `signals/`, `the-platform/`, `gta-rp/beef/`, `gta-rp/lore/`) that survived the 2026-04-26 cleanup sweep but aren't part of the active navigation. They serve via `_redirects` catch-all if anyone deep-links them. Worth a re-audit eventually.
 
-**Active Pages Functions (17, plus 2 helpers):**
+**Active Pages Functions (17, plus 1 helper):**
 
 | Endpoint | File | Purpose |
 |---|---|---|
@@ -67,7 +67,6 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 | `GET\|POST /api/admin/lore` | `api/admin/lore.js` | Lore arc CRUD (Bearer auth) |
 | `GET\|POST /api/admin/backfill-avatars` | `api/admin/backfill-avatars.js` | One-shot Twitch avatar backfill (Bearer auth) |
 | _helper_ | `_lib.js` | `jsonResponse`, `getTwitchToken`, `getKickToken`, `fetchKickChannel`, etc. |
-| _dead code_ | `_scheduled.js` | Legacy in-Pages cron handler — kept for reference, doesn't fire (Pages doesn't run crons) |
 
 **26-creator allowlist** (source of truth: `functions/api/uk-rp-live.js`; mirrored in `contentlore-scheduler/src/discovery.js` as `ALLOWLIST_HANDLES`)
 - 20 Twitch: tyrone, lbmm, reeclare, stoker, samham, deggyuk, megsmary, tazzthegeeza, wheelydev, rexality, steeel, justj0hnnyhd, cherish_remedy, lorddorro, jck0__, absthename, essellz, lewthescot, angels365, fantasiasfantasy
@@ -82,14 +81,21 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 - `creator_platforms` (creator_id, platform, handle, platform_id, is_primary, verified, verified_at — PK on creator_id+platform)
 - `creator_edges` (raid/host/shoutout social graph)
 - `snapshots` (per-poll observations of live state)
-- `stream_sessions` (derived sessions from snapshots — 950 rows, 768 creators as of 2026-04-27)
-- `scene_snapshots` (server-clustered scene captures — scheduler `scenes.js` rewritten and redeployed 2026-04-27 against the real `snapshots` schema and the 12-server UK registry; first rows expected on the next cron tick)
-- `pending_creators` (discovery triage — **0 rows in prod** as of 2026-04-27)
+- `stream_sessions` (derived sessions from snapshots — actively growing as `pollCurated` writes 26 fresh rows per tick)
+- `scene_snapshots` (server-clustered scene captures — actively populating; first rows produced 2026-04-27 18:33 UTC after the curated polling pass landed. ~4 server rows per tick during peak hours.)
+- `pending_creators` (discovery triage — currently 5 rows after the 2026-04-27 cleanup of US leaks; refills on each cron tick when fresh UK GTA RP candidates appear)
 - `beefs`, `lore_arcs` (editorial)
 - `watch_streaks` (Phase 3 — anon UUID, current/max streak, total_visits, optional display_name)
 - `gta6_pulse_votes` (Phase 4 — anon UUID, choice ∈ {ready, optimistic, worried, not-thinking}, voted_at)
 
-**Data pipeline:** Scheduler worker (every 15 min) → polls Twitch/Kick → `snapshots` → `stream_sessions` → `scene_snapshots`. `/api/uk-rp-live` bypasses DB entirely and queries Twitch + Kick official APIs directly for the 26 allowlisted creators (30s KV cache).
+**Data pipeline:** Scheduler worker (every 15 min) runs five steps in order:
+1. `pollCurated` — batched Twitch + Kick fetch for **all 26 curated creators**, writes one snapshot per creator (~3.5s, runs every tick).
+2. `runPollingPass` — round-robin pass through 12 long-tail creators (cursor-tracked, ~6.7 days for full sweep).
+3. `rebuildSessions` — stitches new snapshots into `stream_sessions`.
+4. `captureSceneSnapshots` — groups currently-live curated streams by detected UK server, writes one row per active server.
+5. `discoverCreators` — scans top 300 GTA V Twitch streams for new UK RP candidates, writes to `pending_creators`.
+
+`/api/uk-rp-live` bypasses D1 entirely and queries Twitch + Kick official APIs directly for the 26 allowlisted creators (30s KV cache).
 
 ---
 
@@ -184,11 +190,12 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - [x] Persistent selections — `localStorage` keys `cl:multi:selected:v1` and `cl:multi:layout:v1`
 - [x] Better empty state — live-creator thumbnail cards with one-click "+ Add to stage" replacing the text fallback
 - [x] URL share — `?add=tyrone,stoker` (comma-list or repeated `?add=`) overrides saved selection on load
-- [ ] Mobile layout — single stream with swipeable tabs for switching creators + chat
-- [ ] Bigger tiles in Focus mode — partly addressed by Focus preset (1×1 stretches to viewport) but no dedicated full-bleed mode yet
-- [ ] Picture-in-picture mode — pop out a stream while browsing other pages
-- [ ] Quick-add from live page — button on each stream card that adds directly to multi-view without navigating
-- [ ] Fix Twitch autoplay warning — ensure iframe is visible before loading `src` to satisfy Twitch's style-visibility requirement
+- [x] **Detachable chat drawer** (commit `e3b97a6`) — replaced the 340px sidebar + per-tile chat experiments with a fixed right-side drawer (380px, full viewport height minus nav). Tabs across the top let you switch which creator's chat is loaded. Mobile (<900px) becomes a bottom-up sheet. State (open/closed + active tab) persists in localStorage. Per-tile `💬 Chat` button pops the drawer focused on that streamer.
+- [x] Bigger tiles in Focus mode — drawer-closed Focus mode now stretches to full viewport width (1600px max), no sidebar competing for space.
+- [ ] Mobile layout polish — drawer-as-bottom-sheet works, but a dedicated swipe-between-creators flow would be friendlier on phones.
+- [ ] Picture-in-picture mode — pop out a stream while browsing other pages.
+- [ ] Quick-add from live page — button on each stream card that adds directly to multi-view without navigating.
+- [ ] Fix Twitch autoplay warning — ensure iframe is visible before loading `src` to satisfy Twitch's style-visibility requirement.
 
 ### PHASE 3 — GAMIFICATION
 - [x] **Watch Streaks** — D1 `watch_streaks` table, opt-in client (`/streak-checkin.js` defer-loaded on hub pages), `POST /api/streaks/check-in` (idempotent within UTC day) + `GET /api/streaks/leaderboard`, `/gta-rp/streaks/` page with stats card, 3 badges (Week Warrior 7d / Month Regular 30d / Scene Veteran 100d), and current-vs-all-time leaderboard. Anonymous by default; display name optional and only required to appear on the leaderboard. Migration `008_watch_streaks.sql` applied to prod.
@@ -199,7 +206,7 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 
 ### PHASE 4 — INTELLIGENCE (data depth)
 - [x] **GTA 6 Deep Dive** — `/gta-rp/gta-6/` rebuilt as a living briefing. Live ticking countdown to 19 Nov 2026 console launch. Latest News feed (release lock, Trailer 3 expectations, FiveM 202k Steam record, Cfx Platform Licence update, Project ROME rumour, UK scene posture). Updated Impact Matrix + Transition Scenarios reflecting Cfx.re/Rockstar ownership. Community Pulse poll with anonymous one-vote-per-device + live results bars, backed by `gta6_pulse_votes` table (migration 009). Endpoint `GET\|POST /api/gta6-pulse`. Impact calculator ("if X% migrate") still open as a follow-up.
-- [~] **Restore `scene_snapshots` capture** — scheduler's `scenes.js` was reading from a non-existent `creator_snapshots` table with wrong column names and a US-server registry (NoPixel, JESTRP, Lucid City). Rewritten 2026-04-27 against the real `snapshots` table and the canonical 12-server UK list (mirrored from `functions/api/timeline.js`). Bonus: `/trigger` endpoint now also calls `captureSceneSnapshots` for manual smoke testing. Awaiting first cron tick to confirm rows landing in prod. **No migration needed** — table schema was correct all along.
+- [x] **Restore `scene_snapshots` capture** — root cause was three-layered: (1) `scenes.js` queried a non-existent `creator_snapshots` table with wrong column names + a US-server registry; (2) even with `scenes.js` fixed, the 26 curated creators weren't in the `creators` table so the round-robin polling never wrote `is_live=1` rows for them; (3) round-robin cadence was ~6.7 days per creator anyway. Full fix shipped: rewrote `scenes.js` against the real schema with the UK 12-server list (commit `76fda06`), backfilled the 20 missing curated creators into `creators`+`creator_platforms` (migration `010_backfill_curated.sql`), added `pollCurated()` step to the scheduler that batched-polls all 26 every tick (commit `e24152f`). First scene rows landed 2026-04-27 18:33 UTC, ~4 server rows per tick during peak hours.
 - [ ] **FiveM Enhanced Deep Dive** — real migration status per server (not just "monitoring" — actual data from server owners). Technical changelog per update. Framework compatibility matrix (ESX, QBCore, QBOX Enhanced-readiness). Creator impact section (who's mentioned Enhanced on stream via title keyword detection).
 - [ ] **Historical Analytics** — viewer trends over time per creator. Server population charts. Scene activity heatmap (hours × days of week showing when UK scene is busiest).
 - [ ] **Creator Network Graph** — visual graph showing who raids/hosts who. Data already in `creator_edges` table. Interactive network visualisation.
@@ -231,14 +238,16 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 │  (Cloudflare Worker)    │  │   /api/uk-rp-live    (curated 26)    │
 │  cron */15 * * * *      │  │   /api/clips         (Twitch helix)  │
 │                         │  │   /api/cfx-populations (FiveM master)│
-│  polling → snapshots    │  │   /api/streaks/check-in  (D1 write)  │
-│  sessions → stream_     │  │  All 30s-300s KV-cached              │
-│             sessions    │  └──────────────┬───────────────────────┘
+│  curated → snapshots    │  │   /api/streaks/check-in  (D1 write)  │
+│             (all 26/tick)│  │  All 30s-300s KV-cached              │
+│  polling → snapshots    │  └──────────────┬───────────────────────┘
+│             (12/tick rr) │                 │
+│  sessions → stream_     │                 │
+│             sessions    │                 │
 │  scenes  → scene_       │                 │
 │             snapshots   │                 │
 │  discovery → pending_   │                 │
 │              creators   │                 │
-│                         │                 │
 └──────────┬──────────────┘                 │
            │                                │
            ▼                                │
@@ -295,7 +304,7 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - `twitch:user-id:{handle}` — permanent user-id resolver
 - `kick:avatar:{slug}` — Kick profile_picture cache (7 days, populated when broadcaster is live)
 - `cron:live-scan:cursor`, `cron:pass-count`, `cron:handle-map:v1` — scheduler state
-- `cron:last-run`, `sessions:last-run` — diagnostic summaries (7-day TTL)
+- `cron:last-run`, `sessions:last-run`, `curated:last-run` — diagnostic summaries (7-day TTL)
 - `uk-rp-live:cache` — endpoint response cache (30s)
 - `clips:{24h|7d|30d}:cache` — Clip Wall response cache (5 min)
 - `timeline:{today|yesterday|7d}:cache` — Timeline response cache (5 min)
@@ -382,11 +391,12 @@ All should return non-zero. The scheduler `/status` shows the most recent poll s
 - **Allowlist source of truth** is `functions/api/uk-rp-live.js`. The `SERVERS` array on `gta-rp/servers/index.html` (mirrored in `functions/api/cfx-populations.js`) is the source for server metadata. When you add a new server with a CFX ID, update **both** locations.
 - **`_redirects` has a SPA-style catch-all** (`/* /index.html 200`). Any unmatched route returns the homepage with HTTP 200, never a real 404. Useful for SEO continuity, but means broken links don't surface as errors.
 - **`_routes.json` controls Function routing.** `include` list captures paths for Functions; everything else is static. New Function paths (e.g. `/creator-profile/*`, `/api/streaks/*`) must be added or they fall through to the catch-all and serve the homepage.
-- **D1 platform records can drift from the curated allowlist.** Always source-of-truth the allowlist; treat `creator_platforms.platform` as a hint that needs reconciling. Tyrone (was `kick`+`rising`) and reeclare (was `kick`) got fixed in 2026-04-27 — they're now both `twitch`+`creator`.
-- **20 of 26 allowlisted creators aren't in the `creators` table yet.** Only bags, dynamoses, kavsual, reeclare, samham, tyrone exist there as of 2026-04-27. Profile stats / server affinity / timeline rows are empty for the other 20 until the scheduler discovers and adds them. Code path is correct; data is sparse.
-- **`scene_snapshots` was empty for weeks** because the scheduler's `scenes.js` queried a non-existent `creator_snapshots` table with wrong column names AND used a US-server keyword registry. Fix deployed 2026-04-27 — `scenes.js` now reads `snapshots` joined to `creators`/`creator_platforms` with the canonical UK 12-server list (mirrored from `functions/api/timeline.js`'s SERVERS array). If `scene_snapshots` ever stalls again, check (1) whether `snapshots` has fresh `is_live=1` rows in the last 30 minutes, (2) whether `stream_title` actually contains a UK server keyword — non-RP titles (e.g. just "GTA RP UK") will skip the row.
+- **D1 platform records can drift from the curated allowlist.** Always source-of-truth the allowlist; treat `creator_platforms.platform` as a hint that needs reconciling. Tyrone (was `kick`+`rising`) and reeclare (was `kick`) got fixed in 2026-04-27 — they're now both `twitch`+`creator`. Bags has both a `twitch-bags` and a `kick` platform row under the same creator id (his allowlist platform is kick but a prior twitch-tagged discovery left the legacy id).
+- **All 26 allowlisted creators are now in `creators`+`creator_platforms`** as of 2026-04-27 (migration `010_backfill_curated.sql`). New creators added to `functions/api/uk-rp-live.js` ALLOWLIST also need a backfill row in D1 + a matching entry in `contentlore-scheduler/src/curated.js` ALLOWLIST + a matching entry in `discovery.js` ALLOWLIST_HANDLES. Yes that's three places — eventually move to a shared D1 table or KV blob.
+- **The curated allowlist is mirrored in 6 places** that must stay in sync: `functions/api/uk-rp-live.js` (canonical), `contentlore-scheduler/src/curated.js`, `contentlore-scheduler/src/discovery.js`, `functions/api/timeline.js` (`ALLOWED_HANDLES` Set), `functions/api/clips.js` (`TWITCH_HANDLES` + `HANDLE_TO_NAME`), `functions/creator-profile/[handle].js`. When adding a creator, grep for `tyrone` to find every list.
+- **If `scene_snapshots` ever stalls again**, check (1) whether `snapshots` has fresh `is_live=1` rows in the last 30 minutes (`pollCurated` should be writing them every tick), (2) whether `stream_title` actually contains a UK server keyword — Tyrone's "Just Chatting" titles and Angels365's "@angels365 !breakice" don't match any server keyword and silently get skipped, which is correct.
+- **If Kick API returns 401 from `/channels` or `/livestreams`** even though token grant succeeded, the `kick:app_token` in KV is probably stale (from an old/revoked Kick app). Purge with `wrangler kv key delete kick:app_token --namespace-id=f6c05b65a4e84c5baba997122ebcc8c6 --remote` — both Pages and the scheduler share this key. Burned us once on 2026-04-27.
 - **Twitch iframe autoplay warning** — Twitch refuses `autoplay=true` if the iframe was hidden when the `src` was set. If multi-view loads tiles before the container is rendered, console fills with "Couldn't autoplay because of style visibility checks". Phase 2 multi-view improvements include the fix as an open item.
-- **`functions/_scheduled.js`** is the legacy in-Pages cron handler. **Cloudflare Pages doesn't fire crons for Pages Functions** — only the standalone Worker (`contentlore-scheduler`) actually runs on a schedule. The Pages-side file is dead code preserved for reference until safely removed.
 - **CFX server IDs are 6-character hashes**, not derivable from server names. Public server search isn't a documented FiveM API; use `gtaboom.com/servers/{id}` URLs from web search to discover candidates, then verify against `https://servers-frontend.fivem.net/api/servers/single/{id}`. 7 of our 12 UK servers are whitelist-only with IPs gated behind Discord — no public CFX ID available.
 - **Site-wide animation policy: no flicker, no glitch, no CRT.** All such animations were stripped in `60c3450`. Only the static `body::before` scanline overlay remains. If a future feature needs motion, prefer subtle `transform`/`opacity` transitions on hover rather than ambient infinite animations.
 
@@ -439,4 +449,27 @@ Diagnosed why `scene_snapshots` had stayed at 0 rows since launch. Root causes i
 **Phase 4 #2 — GTA 6 Deep Dive** (`5de8712`)
 Rebuilt `/gta-rp/gta-6/` as a living intelligence briefing. Live JS countdown to 19 Nov 2026 console launch (with hero T-minus badge). Latest News card grid covering: release date lock, Take-Two 21 May earnings call / Trailer 3 expectations, FiveM 202k concurrent Steam record on 15 Mar 2026, Cfx.re Creator Platform Licence Agreement reissued 12 Jan 2026, "Project ROME" first-party modding rumour, UK scene posture inference. Updated Impact Matrix + Transition Scenarios to reflect Rockstar's Cfx.re ownership (FiveM is now first-party — server-infrastructure impact dropped to Low; "Smooth Coexistence" remains plausible but no longer dependent on a third-party rescue). Community Pulse poll: 4 options (Ready / Cautiously optimistic / Worried / Not thinking), anonymous one-vote-per-device with localStorage UUID, live results bar, change-vote-any-time. Backed by `GET|POST /api/gta6-pulse` and `gta6_pulse_votes` (migration 009 applied to prod).
 
-**CLAUDE.md sync** (this commit) — flipped Phase 4 statuses, recorded scenes-fix diagnosis as a permanent gotcha, added this entry.
+**CLAUDE.md sync** (`76fda06`) — flipped Phase 4 statuses, recorded scenes-fix diagnosis as a permanent gotcha, added this entry.
+
+**Phase 2 — Multi-View chat drawer** (`6374446`, `e491141`, `e3b97a6`)
+Two iterations on chat. First attempt pushed chat into each tile (per-tile iframe stack); the Twitch embed reserves ~80px for its own header + community-points bar so quad/six left almost no scrollback. Second commit bumped per-tile heights but the math still didn't work. Final approach (`e3b97a6`): replaced per-tile chat with a fixed right-side drawer (380px), tabs at the top to pick which creator's chat to load, mobile <900px gets a bottom-up sheet covering the grid. iframe `src` only swaps on tab change so the chat doesn't reconnect on every 90-second poll. Drawer state + active tab persist in localStorage. Streams now use full viewport width when drawer is closed.
+
+**Site-wide teal recolour** (`a3458d5`, `9f20f38`)
+Swapped the deep-indigo palette to dark teal across all 13 hub HTML files. Two passes: first the four user-specified vars (`--bg`, `--card`, `--card2`, `--border`) plus their inline alpha variants; then the ink-faint, modal-backdrop, admin `--bg4` / `--border-a`. Twitch brand purple (`oklch(0.65 0.25 295)`) deliberately untouched.
+
+**Allowlist 22 → 26 + discovery filter tightening** (`99c152b`)
+Added 4 creators (essellz, lewthescot, angels365, fantasiasfantasy — all UK Twitch creators surfaced by the discovery scan after the schema bug was fixed). Tightened `looksUKGTARP()` in `discovery.js` to require both an RP keyword AND a UK server keyword (was: RP + (UK-tag OR server)) — fixes US streamers leaking through via their `UK`/`English` Twitch tags. Hardcoded the 26 ALLOWLIST_HANDLES Set into discovery so curated creators never re-leak into `pending_creators`. Synced the count across CLAUDE.md, clips, servers, streaks, timeline, mod, creator-profile.
+
+**Kick: end-to-end fix** (scheduler-only deploy)
+Set `KICK_CLIENT_ID` + `KICK_CLIENT_SECRET` secrets on the scheduler (they were missing entirely — explained why DB-driven `/api/live-now` never showed Kick activity). Diagnosed Pages-side `/api/uk-rp-live` returning all 6 Kick creators offline despite token grant succeeding: the `kick:app_token` in KV was stale (from an old Kick app that was revoked), and the OAuth grant succeeded but the resulting token was rejected by `/channels` and `/livestreams` with 401. Purged `kick:app_token` from KV; fresh token fixed it. Added a temporary `_kick_debug` field to `/api/uk-rp-live` for the diagnosis (stripped 24h later).
+
+**Phase 4 #3 — Curated polling pass + downstream unblock** (`e24152f`)
+Diagnosed the real reason `scene_snapshots`/timeline/profile-stats stayed empty even after the `scenes.js` fix: 20 of 26 curated creators weren't in the `creators` table, and the round-robin polling was on a ~6.7-day cadence per creator anyway. Three-part fix:
+1. `migrations/010_backfill_curated.sql` — backfilled 20 missing curated rows into `creators` + `creator_platforms` (idempotent INSERT OR IGNORE; bags got a kick platform row attached to existing `twitch-bags`).
+2. New `contentlore-scheduler/src/curated.js` (`pollCurated`) — batched Twitch `/streams` + Kick `/channels` calls for all 26 handles, writes one snapshot per creator per tick. Wired in as the first step of both `scheduled()` and `/trigger`.
+3. Synced three more stale 22-handle allowlists in `timeline.js`, `clips.js`, `creator-profile/[handle].js` to the 26-handle current state.
+
+Verified end-to-end after the 18:30 UTC cron tick: 26 fresh snapshots, 9 ongoing `stream_sessions`, 4 server rows in `scene_snapshots` (orbit/unmatched/d10/prodigy), `/api/timeline?range=today` went from 0 → 5+ sessions.
+
+**Cleanup + CLAUDE.md sync** (this commit)
+Deleted `functions/_scheduled.js` (legacy in-Pages cron handler — confirmed unused, no `[triggers]` in `wrangler.toml`, dropping it ends the "dead code preserved for reference" footnote). Stripped the temporary `_kick_debug` field from `uk-rp-live.js`. Refreshed Active Functions count, D1 tables status, data-pipeline description, KV keys list, and conventions/gotchas to match today's reality. Flipped scene_snapshots `[~]` → `[x]` on the Phase 4 roadmap and added two Phase 2 multi-view checkboxes that the drawer rebuild closed out.
