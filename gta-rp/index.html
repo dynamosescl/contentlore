@@ -14,7 +14,7 @@
 :root{
   --bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);
   --card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);
-  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
+  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 190);
   --signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);
   --border:oklch(0.28 0.06 190);--live:oklch(0.82 0.20 195);
   --twitch:oklch(0.65 0.25 295);--kick:oklch(0.82 0.22 145);
@@ -63,7 +63,7 @@ body>*{position:relative;z-index:3}
 @keyframes wobble{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
 
 /* RANDOMISER MODAL */
-.rmodal{position:fixed;inset:0;background:oklch(0.05 0.03 295/.94);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)}
+.rmodal{position:fixed;inset:0;background:oklch(0.05 0.03 190/.94);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)}
 .rmodal.open{display:flex;animation:rfade .25s ease}
 @keyframes rfade{from{opacity:0}to{opacity:1}}
 .rinner{position:relative;width:100%;max-width:640px;background:var(--card);border:1px solid var(--signal);clip-path:var(--cut);overflow:hidden}
@@ -125,7 +125,7 @@ body>*{position:relative;z-index:3}
 .feat-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
 .featured:hover .feat-thumb img{transform:scale(1.03)}
 .feat-thumb .placeholder{display:flex;align-items:center;justify-content:center;height:100%}
-.feat-thumb .placeholder span{font-family:var(--font-d);font-size:120px;color:oklch(0.55 0.06 295/.3)}
+.feat-thumb .placeholder span{font-family:var(--font-d);font-size:120px;color:oklch(0.55 0.06 190/.3)}
 .feat-live-badge{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;background:var(--live);padding:4px 10px}
 .feat-live-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--fg);animation:lp 2s infinite}
 .feat-live-badge span{font-family:var(--font-m);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--fg)}
@@ -153,7 +153,7 @@ body>*{position:relative;z-index:3}
 .sc-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
 .scard:hover .sc-thumb img{transform:scale(1.05)}
 .sc-thumb .ph{display:flex;align-items:center;justify-content:center;height:100%}
-.sc-thumb .ph span{font-family:var(--font-d);font-size:64px;color:oklch(0.55 0.06 295/.4)}
+.sc-thumb .ph span{font-family:var(--font-d);font-size:64px;color:oklch(0.55 0.06 190/.4)}
 .sc-badge{position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:4px;background:var(--live);padding:2px 8px}
 .sc-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--fg);animation:lp 2s infinite}
 .sc-badge span{font-family:var(--font-m);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--fg)}
@@ -176,7 +176,7 @@ body>*{position:relative;z-index:3}
 .rcard{display:flex;align-items:center;gap:10px;border:1px solid var(--border);background:var(--card);padding:12px;text-decoration:none;color:var(--fg);transition:all .25s;clip-path:var(--cut)}
 .rcard:hover{border-color:var(--signal);box-shadow:0 0 16px oklch(0.82 0.20 195/.45);transform:translateY(-2px)}
 .r-av{width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--card2);flex-shrink:0}
-.r-av-ph{width:44px;height:44px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:20px;color:oklch(0.55 0.06 295/.8);flex-shrink:0}
+.r-av-ph{width:44px;height:44px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:20px;color:oklch(0.55 0.06 190/.8);flex-shrink:0}
 .r-info{min-width:0;flex:1}
 .r-name{font-family:var(--font-d);font-size:22px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1;margin-bottom:4px;transition:color .2s}
 .rcard:hover .r-name{color:var(--signal)}

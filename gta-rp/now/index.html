@@ -14,7 +14,7 @@
 :root{
   --bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);
   --card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);
-  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
+  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 190);
   --signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);
   --border:oklch(0.28 0.06 190);--live:oklch(0.82 0.20 195);
   --twitch:oklch(0.65 0.25 295);--kick:oklch(0.82 0.22 145);
@@ -86,7 +86,7 @@ body>*{position:relative;z-index:3}
 .srv-bar{height:6px;background:oklch(0.10 0.04 190/.6);overflow:hidden}
 .srv-fill{height:100%;transition:width .7s}
 .srv-fill.active{background:var(--signal)}
-.srv-fill.quiet{background:oklch(0.55 0.06 295/.3)}
+.srv-fill.quiet{background:oklch(0.55 0.06 190/.3)}
 .srv-pov{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* TRENDING */

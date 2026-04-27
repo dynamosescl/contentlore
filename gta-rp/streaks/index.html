@@ -14,7 +14,7 @@
 :root{
   --bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);
   --card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);
-  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
+  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 190);
   --signal:oklch(0.82 0.20 195);--signal-cyan:oklch(0.85 0.18 200);
   --border:oklch(0.28 0.06 190);--success:oklch(0.82 0.22 145);
   --gold:oklch(0.88 0.18 95);
@@ -87,7 +87,7 @@ body>*{position:relative;z-index:3}
 .badge-thresh{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
 .badge-status{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-top:10px;padding:3px 10px;display:inline-block}
 .badge.earned .badge-status{background:oklch(0.82 0.20 195/.15);color:var(--signal);border:1px solid oklch(0.82 0.20 195/.4)}
-.badge.locked .badge-status{background:oklch(0.55 0.06 295/.15);color:var(--ink-faint);border:1px solid var(--border)}
+.badge.locked .badge-status{background:oklch(0.55 0.06 190/.15);color:var(--ink-faint);border:1px solid var(--border)}
 
 /* LEADERBOARD */
 .lb-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}

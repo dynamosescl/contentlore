@@ -17,7 +17,7 @@
   --card:oklch(0.14 0.05 190);
   --card2:oklch(0.19 0.06 190);
   --ink-dim:oklch(0.78 0.05 320);
-  --ink-faint:oklch(0.55 0.06 295);
+  --ink-faint:oklch(0.55 0.06 190);
   --signal:oklch(0.82 0.20 195);
   --signal-dim:oklch(0.65 0.18 195);
   --signal-cyan:oklch(0.85 0.18 200);
@@ -145,7 +145,7 @@ body>*{position:relative;z-index:3}
 .es-card:hover{border-color:var(--signal);transform:translateY(-2px);box-shadow:0 0 20px oklch(0.82 0.20 195/.3)}
 .es-thumb{aspect-ratio:16/9;background:var(--card2);position:relative;overflow:hidden}
 .es-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.es-thumb .ph{display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--font-d);font-size:60px;color:oklch(0.55 0.06 295/.5)}
+.es-thumb .ph{display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--font-d);font-size:60px;color:oklch(0.55 0.06 190/.5)}
 .es-vw{position:absolute;top:6px;right:6px;font-family:var(--font-m);font-size:10px;font-weight:600;padding:2px 6px;background:oklch(0.10 0.04 190/.85);color:var(--signal);border:1px solid oklch(0.82 0.20 195/.4)}
 .es-live{position:absolute;top:6px;left:6px;font-family:var(--font-m);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:2px;padding:2px 6px;background:var(--signal);color:var(--bg);display:inline-flex;align-items:center;gap:4px}
 .es-live .dot{width:5px;height:5px;border-radius:50%;background:var(--bg);animation:lpulse 2s infinite}
