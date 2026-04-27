@@ -71,7 +71,7 @@ function detectServer(title) {
   return null;
 }
 
-export async function onRequestGet({ params, env }) {
+export async function onRequestGet({ params, env, request }) {
   const rawHandle = String(params.handle || '').toLowerCase();
   const entry = ALLOWLIST.find(c => c.handle === rawHandle);
 
