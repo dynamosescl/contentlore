@@ -77,6 +77,11 @@ The site currently tracks Twitch + Kick. Expansion plan:
 **Kick — migrate to official API**
 Now has official public API at `docs.kick.com` with OAuth 2.1. Endpoints: channels, livestreams, categories. Has webhooks for `stream.online` / `stream.offline` events. ContentLore should migrate from v1/v2 endpoint scraping to the official API. `KICK_CLIENT_ID` and `KICK_CLIENT_SECRET` already set in env.
 
+**Known Kick API limitations** (verified against `docs.kick.com/sitemap.md` 2026-04-27):
+- **No clips endpoint.** The Public API exposes only Categories, Users, Channels, Channel Rewards, Chat, Moderation, Livestreams, Public Key, KICKs, FAQs. "KICKs" (`/public/v1/kicks/leaderboard`) is a gifting/tipping leaderboard — *not* video highlights. The Clip Wall (`/api/clips`) is therefore Twitch-only; Kick clips return zero results from `/api/clips` and the Kick clip section on creator profiles renders an explanatory empty state. Re-check Kick docs periodically and wire in when they ship a clips endpoint.
+- **No follower count on the Channels endpoint.** `/public/v1/channels` returns subscriber counts (`active_subscribers_count`, `canceled_subscribers_count`) but not follower count, so the scheduler now writes NULL into the `followers` column for every Kick snapshot. Kick follower history will show flat-zero for any new data captured after Phase 1.
+- **No avatar on the Channels endpoint.** Profile pictures only come from `/public/v1/livestreams` (i.e. when the broadcaster is live). `/api/uk-rp-live` warms a `kick:avatar:{slug}` KV cache (7-day TTL) the first time each broadcaster appears live, then re-uses it for offline displays.
+
 **TikTok — content discovery layer**
 Most UK GTA RP creators post highlights to TikTok. Display API gives profile info + recent videos. Embed API shows TikTok videos inline. Use for surfacing clips/highlights — not live tracking. Requires TikTok developer registration + app review (3-7 days).
 

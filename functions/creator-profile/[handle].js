@@ -80,7 +80,7 @@ export async function onRequestGet({ params, env }) {
   // Pull the warm KV caches and the D1 history in parallel.
   const [liveCache, clipsCache, dbProfile, sessionRows] = await Promise.all([
     env.KV.get('uk-rp-live:cache', 'json').catch(() => null),
-    env.KV.get('clips:30d:cache', 'json').catch(() => null),
+    getClipsCache(env, request),
     lookupDbCreator(env, entry.handle),
     querySessions(env, entry.handle).catch(() => null),
   ]);
@@ -109,6 +109,29 @@ export async function onRequestGet({ params, env }) {
 // ================================================================
 // Data
 // ================================================================
+
+// Clip cache lookup with cold-start fallback. Preference order:
+//   1. clips:30d:cache  — preferred; widest window, freshest 5-min KV value
+//   2. sub-request to /api/clips?range=30d — warms the 30d KV for next time
+//   3. clips:7d:cache  — last resort; populated by every Clip Wall hit
+async function getClipsCache(env, request) {
+  let cache = await env.KV.get('clips:30d:cache', 'json').catch(() => null);
+  if (cache) return cache;
+
+  // Sub-request the API endpoint — the function and the API live on the same
+  // origin, so this hits cache.cloudflare → the worker → KV write-through.
+  try {
+    const url = new URL('/api/clips?range=30d', request.url);
+    const res = await fetch(url.toString(), { headers: { 'cf-pages-internal': '1' } });
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.ok) return json;
+    }
+  } catch { /* swallow — we'll try the 7d cache next */ }
+
+  cache = await env.KV.get('clips:7d:cache', 'json').catch(() => null);
+  return cache;
+}
 
 async function lookupDbCreator(env, handle) {
   try {
