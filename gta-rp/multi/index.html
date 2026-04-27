@@ -6,7 +6,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multi-View — Watch every UK GTA RP POV at once · ContentLore</title>
-<meta name="description" content="Pick up to 6 UK GTA RP streams and watch them side by side with switchable chat. Twitch + Kick.">
+<meta name="description" content="Pick up to 6 UK GTA RP streams and watch them side by side, each with its own chat. Twitch + Kick.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -75,11 +75,8 @@ body>*{position:relative;z-index:3}
 .stage-header .mode-badge{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;padding:4px 8px;border:1px solid var(--border);color:var(--ink-dim)}
 .stage-header .mode-badge.auto{border-color:oklch(0.82 0.20 195/.6);color:var(--signal);background:oklch(0.82 0.20 195/.1)}
 
-.stage-wrap{display:grid;grid-template-columns:1fr 340px;gap:12px;margin-bottom:24px}
-@media(max-width:1100px){.stage-wrap{grid-template-columns:1fr}}
-
 /* LAYOUT PRESETS — clicking caps selected count and sets grid template */
-.layout-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--font-m)}
+.layout-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--font-m);margin-bottom:14px}
 .layout-bar .lb-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-right:2px}
 .layout-btn{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:5px 10px;background:var(--card2);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
 .layout-btn:hover{border-color:var(--signal);color:var(--fg)}
@@ -87,27 +84,43 @@ body>*{position:relative;z-index:3}
 .layout-btn .ico{display:inline-grid;gap:1px;width:14px;height:10px}
 .layout-btn .ico .c{background:currentColor;border-radius:1px}
 
-/* VIDEO GRID — layouts set both columns and rows; selected count is capped to layout slot count */
-.vid-grid{display:grid;gap:8px}
-.vid-grid.layout-focus{grid-template-columns:1fr}
-.vid-grid.layout-duo{grid-template-columns:1fr 1fr}
-.vid-grid.layout-quad{grid-template-columns:1fr 1fr}
-.vid-grid.layout-six{grid-template-columns:1fr 1fr 1fr}
+/* VIDEO GRID — each tile = video + info bar + chat. Chat height varies by layout density.
+   --chat-h is set per layout class so chat stays usable at every density. */
+.vid-grid{display:grid;gap:8px;margin-bottom:24px}
+.vid-grid.layout-focus{grid-template-columns:1fr;--chat-h:360px}
+.vid-grid.layout-duo{grid-template-columns:1fr 1fr;--chat-h:300px}
+.vid-grid.layout-quad{grid-template-columns:1fr 1fr;--chat-h:200px}
+.vid-grid.layout-six{grid-template-columns:1fr 1fr 1fr;--chat-h:150px}
+
+@media(max-width:1100px){
+  .vid-grid.layout-six{grid-template-columns:1fr 1fr;--chat-h:200px}
+}
+@media(max-width:700px){
+  .vid-grid.layout-duo,
+  .vid-grid.layout-quad,
+  .vid-grid.layout-six{grid-template-columns:1fr;--chat-h:240px}
+}
 
 .tile{position:relative;border:1px solid var(--border);background:transparent;overflow:hidden;transition:all .2s;display:flex;flex-direction:column}
 .tile.top-tile{border-color:var(--signal);box-shadow:0 0 24px oklch(0.82 0.20 195/.55)}
 .tile-video{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
 .tile-video iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
-.tile iframe{width:100%;height:100%;border:none}
-/* Persistent info bar below each tile — creator, game, viewers, uptime */
-.tile-info{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--card);border-top:1px solid var(--border);font-family:var(--font-m);font-size:11px;color:var(--ink-dim);min-height:32px;flex-wrap:wrap}
+
+/* Persistent info bar between video and chat — creator, game, viewers, uptime */
+.tile-info{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);font-family:var(--font-m);font-size:11px;color:var(--ink-dim);min-height:32px;flex-wrap:wrap}
 .tile-info .ti-name{font-family:var(--font-d);font-size:14px;letter-spacing:1px;color:var(--fg);text-decoration:none}
 .tile-info .ti-name:hover{color:var(--signal)}
 .tile-info .ti-game{color:var(--signal-cyan);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tile-info .ti-stat{display:inline-flex;align-items:center;gap:4px}
 .tile-info .ti-stat.viewers{color:var(--signal);font-weight:600}
 .tile-info .ti-stat.uptime{color:var(--ink-faint);margin-left:auto}
-.tile-overlay{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:linear-gradient(180deg,rgba(0,0,0,.8),transparent);pointer-events:none;flex-wrap:wrap;gap:4px}
+
+/* Per-tile chat */
+.tile-chat{background:#000;height:var(--chat-h,200px);position:relative;overflow:hidden}
+.tile-chat iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.tile-chat .chat-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-faint);font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase}
+
+.tile-overlay{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:linear-gradient(180deg,rgba(0,0,0,.8),transparent);pointer-events:none;flex-wrap:wrap;gap:4px;z-index:2}
 .tile-overlay>*{pointer-events:auto}
 .tile-badge{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;padding:2px 6px;background:rgba(0,0,0,.6);display:inline-flex;align-items:center;gap:4px}
 .tile-badge.live-b{color:var(--signal)}
@@ -120,18 +133,6 @@ body>*{position:relative;z-index:3}
 .tile-btn{font-family:var(--font-m);font-size:10px;text-transform:uppercase;color:var(--fg);background:rgba(0,0,0,.6);border:none;padding:4px 8px;cursor:pointer;transition:background .2s}
 .tile-btn:hover{background:oklch(0.82 0.20 195/.3)}
 .tile-btn.remove:hover{background:oklch(0.68 0.27 25/.8)}
-
-/* CHAT PANEL */
-.chat-panel{border:1px solid var(--border);background:var(--card);display:flex;flex-direction:column;min-height:480px}
-.chat-tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--border)}
-.chat-tab{flex-shrink:0;padding:8px 12px;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-dim);background:none;border:none;border-right:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s}
-.chat-tab:hover{color:var(--fg);background:oklch(0.13 0.05 295/.6)}
-.chat-tab.active{color:var(--signal);background:oklch(0.82 0.20 195/.15)}
-.chat-tab .plat{font-size:8px}
-.chat-tab .plat.tw{color:oklch(0.82 0.20 195/.5)}
-.chat-tab .plat.ki{color:oklch(0.82 0.22 145/.5)}
-.chat-tab.active .plat{color:oklch(0.82 0.20 195/.7)}
-.chat-frame{flex:1;width:100%;border:none;background:#000}
 
 /* EMPTY STAGE — when nothing's selected we show live thumbnails with one-click add */
 .empty-stage{border:1px dashed var(--border);background:oklch(0.13 0.05 295/.4);padding:36px 24px;margin-bottom:24px}
@@ -229,7 +230,7 @@ body>*{position:relative;z-index:3}
     <div class="header-left">
       <div class="kicker">Multi-View · live</div>
       <h1>Every angle. <span class="neon">One screen.</span></h1>
-      <p class="sub">Pick up to 6 streams across Twitch + Kick. All start muted — click a tile to unmute.</p>
+      <p class="sub">Pick up to 6 streams across Twitch + Kick. Each tile carries its own chat. All start muted — click a tile to unmute.</p>
     </div>
     <div class="header-right">
       <span class="count" id="sel-count">0/6 selected</span>
@@ -244,9 +245,9 @@ body>*{position:relative;z-index:3}
   </div>
 
   <!-- LAYOUT PRESETS -->
-  <div class="layout-bar" style="margin-bottom:14px">
+  <div class="layout-bar">
     <span class="lb-label">Layout</span>
-    <button class="layout-btn" data-layout="focus" onclick="setLayout('focus')" title="Focus — single stream"><span class="ico" style="grid-template-columns:1fr;grid-template-rows:1fr"><span class="c"></span></span>Focus</button>
+    <button class="layout-btn" data-layout="focus" onclick="setLayout('focus')" title="Focus — single stream, tall chat"><span class="ico" style="grid-template-columns:1fr;grid-template-rows:1fr"><span class="c"></span></span>Focus</button>
     <button class="layout-btn" data-layout="duo" onclick="setLayout('duo')" title="Duo — two streams side by side"><span class="ico" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr"><span class="c"></span><span class="c"></span></span>Duo</button>
     <button class="layout-btn" data-layout="quad" onclick="setLayout('quad')" title="Quad — 2×2"><span class="ico" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr"><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span></span>Quad</button>
     <button class="layout-btn active" data-layout="six" onclick="setLayout('six')" title="Six — 3×2 (max)"><span class="ico" style="grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr"><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span></span>Six</button>
@@ -282,7 +283,6 @@ const LAYOUT_STORAGE_KEY = 'cl:multi:layout:v1';
 let streams = [];
 let selected = [];
 let layoutMode = 'six';
-let activeChat = null;
 let autoMode = true;     // flips false once user makes any manual choice OR a saved selection is restored
 let audioFollow = false;
 let unmutedKey = null;
@@ -381,7 +381,6 @@ async function loadData() {
       if (urlHandles.length > 0) {
         selected = handlesToKeys(urlHandles).slice(0, layoutCap());
         autoMode = false;
-        if (selected.length) activeChat = selected[0];
         saveSelection();
       } else {
         const saved = loadSavedSelection();
@@ -389,7 +388,6 @@ async function loadData() {
           // Filter saved selection against current allowlist (handles may have been removed)
           selected = saved.filter(k => streams.some(s => skey(s) === k)).slice(0, layoutCap());
           autoMode = false;
-          if (selected.length) activeChat = selected[0];
         }
       }
     }
@@ -417,7 +415,6 @@ function autoSelect() {
   lastLabel = label;
   lastPicks = keys;
   selected = keys;
-  if (!activeChat || !keys.includes(activeChat)) activeChat = keys[0] || null;
   saveSelection();
 }
 
@@ -435,11 +432,9 @@ function toggle(stream) {
   const cap = layoutCap();
   if (selected.includes(key)) {
     selected = selected.filter(k => k !== key);
-    if (activeChat === key) activeChat = selected[0] || null;
   } else {
     if (selected.length >= cap) return;
     selected.push(key);
-    if (!activeChat) activeChat = key;
   }
   saveSelection();
   renderAll();
@@ -448,7 +443,6 @@ function toggle(stream) {
 function clearAll() {
   autoMode = false;
   selected = [];
-  activeChat = null;
   unmutedKey = null;
   lastLabel = null;
   lastPicks = [];
@@ -467,7 +461,6 @@ function addStreamByKey(key) {
   lastLabel = null;
   lastPicks = [];
   selected.push(key);
-  if (!activeChat) activeChat = key;
   saveSelection();
   renderAll();
 }
@@ -484,7 +477,6 @@ function setLayout(mode) {
       .slice(0, cap)
       .map(x => x.k);
     selected = ranked;
-    if (!selected.includes(activeChat)) activeChat = selected[0] || null;
     saveSelection();
   }
   document.querySelectorAll('.layout-btn').forEach(b => b.classList.toggle('active', b.dataset.layout === mode));
@@ -498,12 +490,6 @@ function toggleAudioFollow(on) {
   document.getElementById('af-icon').textContent = on ? '🔊' : '🔇';
   document.getElementById('af-toggle').classList.toggle('on', on);
   renderStage();
-}
-
-function setChat(key) {
-  activeChat = key;
-  renderChat();
-  renderChatTabs();
 }
 
 function unmuteTile(key) {
@@ -568,6 +554,14 @@ function renderEmptyStage() {
   </div>`;
 }
 
+function chatSrcFor(stream) {
+  const plat = (stream.platform || 'twitch').toLowerCase();
+  if (plat === 'twitch') {
+    return `https://www.twitch.tv/embed/${encodeURIComponent(stream.handle)}/chat?parent=${PARENT}&parent=www.${PARENT}&parent=contentlore.com&parent=www.contentlore.com&darkpopout`;
+  }
+  return `https://kick.com/${encodeURIComponent(stream.handle)}/chatroom`;
+}
+
 function renderStage() {
   const area = document.getElementById('stage-area');
   const selStreams = selected.map(k => streams.find(s => skey(s)===k)).filter(s => s && s.is_live);
@@ -593,13 +587,14 @@ function renderStage() {
     const isAudio = k === audioKey;
     const plat = (s.platform||'twitch').toLowerCase();
     const twitchParents = `parent=${PARENT}&parent=www.${PARENT}&parent=contentlore.com&parent=www.contentlore.com`;
-    const src = plat === 'twitch'
+    const videoSrc = plat === 'twitch'
       ? `https://player.twitch.tv/?channel=${encodeURIComponent(s.handle)}&${twitchParents}&muted=${muted}&autoplay=true`
       : `https://player.kick.com/${encodeURIComponent(s.handle)}?muted=${muted}&autoplay=true`;
+    const chatSrc = chatSrcFor(s);
 
     return `<div class="tile${isTop?' top-tile':''}">
       <div class="tile-video">
-        <iframe src="${src}" key="${k}-${muted?'m':'u'}" allowfullscreen allow="autoplay;fullscreen;picture-in-picture"></iframe>
+        <iframe src="${videoSrc}" key="${k}-${muted?'m':'u'}" allowfullscreen allow="autoplay;fullscreen;picture-in-picture"></iframe>
         <div class="tile-overlay">
           <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
             <span class="tile-badge live-b"><span class="dot"></span>Live</span>
@@ -619,45 +614,13 @@ function renderStage() {
         ${s.viewers != null ? `<span class="ti-stat viewers">${fmtBig(s.viewers)} watching</span>` : ''}
         ${s.uptime_mins ? `<span class="ti-stat uptime">${fmtUptime(s.uptime_mins)}</span>` : ''}
       </div>
+      <div class="tile-chat">
+        <iframe src="${chatSrc}" title="${s.display_name} chat"></iframe>
+      </div>
     </div>`;
   }).join('');
 
-  area.innerHTML = stageHeader + `<div class="stage-wrap">
-    <div class="${gridClass}">${tiles}</div>
-    <div class="chat-panel">
-      <div class="chat-tabs" id="chat-tabs"></div>
-      <iframe class="chat-frame" id="chat-frame"></iframe>
-    </div>
-  </div>`;
-
-  renderChatTabs();
-  renderChat();
-}
-
-function renderChatTabs() {
-  const tabs = document.getElementById('chat-tabs');
-  if (!tabs) return;
-  const selStreams = selected.map(k => streams.find(s => skey(s)===k)).filter(s => s && s.is_live);
-  tabs.innerHTML = selStreams.map(s => {
-    const k = skey(s);
-    const isActive = k === activeChat;
-    const plat = (s.platform||'twitch').toLowerCase();
-    return `<button class="chat-tab${isActive?' active':''}" onclick="setChat('${k}')">
-      <span>${s.display_name}</span>
-      <span class="plat ${plat==='twitch'?'tw':'ki'}">· ${plat}</span>
-    </button>`;
-  }).join('');
-}
-
-function renderChat() {
-  const frame = document.getElementById('chat-frame');
-  if (!frame) return;
-  const active = streams.find(s => skey(s) === activeChat);
-  if (!active) return;
-  const plat = (active.platform||'twitch').toLowerCase();
-  frame.src = plat === 'twitch'
-    ? `https://www.twitch.tv/embed/${encodeURIComponent(active.handle)}/chat?parent=${PARENT}&parent=www.${PARENT}&parent=contentlore.com&parent=www.contentlore.com&darkpopout`
-    : `https://kick.com/${encodeURIComponent(active.handle)}/chatroom`;
+  area.innerHTML = stageHeader + `<div class="${gridClass}">${tiles}</div>`;
 }
 
 function renderEnded() {
