@@ -6,7 +6,7 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 
 ## 1. Project Overview
 
-**ContentLore** is a UK GTA RP streaming intelligence platform. It tracks a curated 22-creator allowlist across Twitch and Kick, surfaces who's live, and provides a multi-stream viewer for the UK roleplay scene. The differentiator vs. competitors (HasRoot, StreamsCharts, etc.) is **UK-scene focus** — none of them specialise in British GTA RP.
+**ContentLore** is a UK GTA RP streaming intelligence platform. It tracks a curated 26-creator allowlist across Twitch and Kick, surfaces who's live, and provides a multi-stream viewer for the UK roleplay scene. The differentiator vs. competitors (HasRoot, StreamsCharts, etc.) is **UK-scene focus** — none of them specialise in British GTA RP.
 
 **Stack**
 - **Hosting:** Cloudflare Pages (static + Functions) at `contentlore.com`
@@ -19,7 +19,7 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 
 **Key URLs**
 - `https://contentlore.com/` — homepage
-- `https://contentlore.com/gta-rp/` — live hub (the curated 22)
+- `https://contentlore.com/gta-rp/` — live hub (the curated 26)
 - `https://contentlore.com/gta-rp/now/` — real-time scene ticker
 - `https://contentlore.com/gta-rp/multi/` — 6-tile multi-view
 - `https://contentlore.com/gta-rp/clips/` — Clip Wall (Twitch clips, masonry)
@@ -49,10 +49,10 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 
 | Endpoint | File | Purpose |
 |---|---|---|
-| `GET /api/uk-rp-live` | `api/uk-rp-live.js` | Curated 22 live state (direct platform APIs, 30s KV cache) |
+| `GET /api/uk-rp-live` | `api/uk-rp-live.js` | Curated 26 live state (direct platform APIs, 30s KV cache) |
 | `GET /api/live-now` | `api/live-now.js` | DB-backed live list (anyone in `creators` table) |
-| `GET /api/clips?range=24h\|7d\|30d` | `api/clips.js` | Top Twitch clips for the 16 Twitch handles, GTA V + Just Chatting filtered, 5-min KV cache |
-| `GET /api/timeline?range=today\|yesterday\|7d` | `api/timeline.js` | `stream_sessions` rows overlapping window for the 22, server-id annotated, 5-min KV |
+| `GET /api/clips?range=24h\|7d\|30d` | `api/clips.js` | Top Twitch clips for the 20 Twitch handles, GTA V + Just Chatting filtered, 5-min KV cache |
+| `GET /api/timeline?range=today\|yesterday\|7d` | `api/timeline.js` | `stream_sessions` rows overlapping window for the 26, server-id annotated, 5-min KV |
 | `GET /api/cfx-populations` | `api/cfx-populations.js` | Live FiveM player counts for 5 known UK server CFX IDs, 60s KV |
 | `POST /api/streaks/check-in` | `api/streaks/check-in.js` | Idempotent daily-visit increment (anonymous UUID), badge state |
 | `GET /api/streaks/leaderboard?order=current\|max` | `api/streaks/leaderboard.js` | Top opt-in users with display names, 5-min KV |
@@ -69,8 +69,8 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 | _helper_ | `_lib.js` | `jsonResponse`, `getTwitchToken`, `getKickToken`, `fetchKickChannel`, etc. |
 | _dead code_ | `_scheduled.js` | Legacy in-Pages cron handler — kept for reference, doesn't fire (Pages doesn't run crons) |
 
-**22-creator allowlist** (source of truth: `functions/api/uk-rp-live.js`)
-- 16 Twitch: tyrone, lbmm, reeclare, stoker, samham, deggyuk, megsmary, tazzthegeeza, wheelydev, rexality, steeel, justj0hnnyhd, cherish_remedy, lorddorro, jck0__, absthename
+**26-creator allowlist** (source of truth: `functions/api/uk-rp-live.js`; mirrored in `contentlore-scheduler/src/discovery.js` as `ALLOWLIST_HANDLES`)
+- 20 Twitch: tyrone, lbmm, reeclare, stoker, samham, deggyuk, megsmary, tazzthegeeza, wheelydev, rexality, steeel, justj0hnnyhd, cherish_remedy, lorddorro, jck0__, absthename, essellz, lewthescot, angels365, fantasiasfantasy
 - 6 Kick: kavsual, shammers, bags, dynamoses, dcampion, elliewaller
 
 **12 UK servers tracked** (source of truth: `SERVERS` array in `gta-rp/servers/index.html`, mirrored in `functions/api/cfx-populations.js` for live populations)
@@ -89,7 +89,7 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 - `watch_streaks` (Phase 3 — anon UUID, current/max streak, total_visits, optional display_name)
 - `gta6_pulse_votes` (Phase 4 — anon UUID, choice ∈ {ready, optimistic, worried, not-thinking}, voted_at)
 
-**Data pipeline:** Scheduler worker (every 15 min) → polls Twitch/Kick → `snapshots` → `stream_sessions` → `scene_snapshots`. `/api/uk-rp-live` bypasses DB entirely and queries Twitch + Kick official APIs directly for the 22 allowlisted creators (30s KV cache).
+**Data pipeline:** Scheduler worker (every 15 min) → polls Twitch/Kick → `snapshots` → `stream_sessions` → `scene_snapshots`. `/api/uk-rp-live` bypasses DB entirely and queries Twitch + Kick official APIs directly for the 26 allowlisted creators (30s KV cache).
 
 ---
 
@@ -228,7 +228,7 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
        ▼                    ▼                       ▼
 ┌─────────────────────────┐  ┌──────────────────────────────────────┐
 │  contentlore-scheduler  │  │  Pages Functions (live, per-request) │
-│  (Cloudflare Worker)    │  │   /api/uk-rp-live    (curated 22)    │
+│  (Cloudflare Worker)    │  │   /api/uk-rp-live    (curated 26)    │
 │  cron */15 * * * *      │  │   /api/clips         (Twitch helix)  │
 │                         │  │   /api/cfx-populations (FiveM master)│
 │  polling → snapshots    │  │   /api/streaks/check-in  (D1 write)  │
@@ -285,7 +285,7 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 ```
 
 **Two live-state paths exist by design:**
-- `/api/uk-rp-live` for the **curated 22** — direct platform API, deterministic, bypasses noisy DB
+- `/api/uk-rp-live` for the **curated 26** — direct platform API, deterministic, bypasses noisy DB
 - `/api/live-now` for **anyone in the DB** — used by `/now` because it wants to surface non-allowlist activity (servers page now uses uk-rp-live too, post-Phase-2 rebuild)
 
 **Routing rule:** `_routes.json` `include` list determines which paths hit Functions vs. fall through to static + the `_redirects` catch-all. Currently includes `/api/*` and `/creator-profile/*`. Any new Function path **must** be added here or it 404s into the homepage.
@@ -383,7 +383,7 @@ All should return non-zero. The scheduler `/status` shows the most recent poll s
 - **`_redirects` has a SPA-style catch-all** (`/* /index.html 200`). Any unmatched route returns the homepage with HTTP 200, never a real 404. Useful for SEO continuity, but means broken links don't surface as errors.
 - **`_routes.json` controls Function routing.** `include` list captures paths for Functions; everything else is static. New Function paths (e.g. `/creator-profile/*`, `/api/streaks/*`) must be added or they fall through to the catch-all and serve the homepage.
 - **D1 platform records can drift from the curated allowlist.** Always source-of-truth the allowlist; treat `creator_platforms.platform` as a hint that needs reconciling. Tyrone (was `kick`+`rising`) and reeclare (was `kick`) got fixed in 2026-04-27 — they're now both `twitch`+`creator`.
-- **16 of 22 allowlisted creators aren't in the `creators` table yet.** Only bags, dynamoses, kavsual, reeclare, samham, tyrone exist there as of 2026-04-27. Profile stats / server affinity / timeline rows are empty for the other 16 until the scheduler discovers and adds them. Code path is correct; data is sparse.
+- **20 of 26 allowlisted creators aren't in the `creators` table yet.** Only bags, dynamoses, kavsual, reeclare, samham, tyrone exist there as of 2026-04-27. Profile stats / server affinity / timeline rows are empty for the other 20 until the scheduler discovers and adds them. Code path is correct; data is sparse.
 - **`scene_snapshots` was empty for weeks** because the scheduler's `scenes.js` queried a non-existent `creator_snapshots` table with wrong column names AND used a US-server keyword registry. Fix deployed 2026-04-27 — `scenes.js` now reads `snapshots` joined to `creators`/`creator_platforms` with the canonical UK 12-server list (mirrored from `functions/api/timeline.js`'s SERVERS array). If `scene_snapshots` ever stalls again, check (1) whether `snapshots` has fresh `is_live=1` rows in the last 30 minutes, (2) whether `stream_title` actually contains a UK server keyword — non-RP titles (e.g. just "GTA RP UK") will skip the row.
 - **Twitch iframe autoplay warning** — Twitch refuses `autoplay=true` if the iframe was hidden when the `src` was set. If multi-view loads tiles before the container is rendered, console fills with "Couldn't autoplay because of style visibility checks". Phase 2 multi-view improvements include the fix as an open item.
 - **`functions/_scheduled.js`** is the legacy in-Pages cron handler. **Cloudflare Pages doesn't fire crons for Pages Functions** — only the standalone Worker (`contentlore-scheduler`) actually runs on a schedule. The Pages-side file is dead code preserved for reference until safely removed.
@@ -399,7 +399,7 @@ Brief notes on what shipped each working session. Dates are UTC.
 ### 2026-04-26 — Foundation cleanup + project bible
 - **Cleanup sweep** (`7d02190`): removed 28 orphaned Functions, 12 dead asset files, 11k+ lines of stale CSS (~75% codebase reduction)
 - **Critical fixes**: homepage nav (dead `/the-platform/` and `/about/` links), `/api/admin/discovery` schema mismatch, dropped duplicate `migrations/007_scene_snapshots.sql`
-- **CLAUDE.md authored** (`998be77` initial, `63f8065` complete) — established the 22-creator allowlist, 12 UK servers, competitive landscape, 5-phase roadmap
+- **CLAUDE.md authored** (`998be77` initial, `63f8065` complete) — established the original 22-creator allowlist (later expanded to 26), 12 UK servers, competitive landscape, 5-phase roadmap
 
 ### 2026-04-27 — Phase 1 + Phase 2 + Phase 3 #1-2 (single-day push)
 The big day. One working session shipped most of the roadmap.

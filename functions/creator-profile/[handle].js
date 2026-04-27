@@ -2,7 +2,7 @@
 // functions/creator-profile/[handle].js
 // GET /creator-profile/{handle}
 //
-// Server-rendered HTML profile page for one of the curated 22.
+// Server-rendered HTML profile page for one of the curated 26.
 // Off-allowlist handles return a branded 404. Data sources:
 //   - Live state: KV `uk-rp-live:cache` (warmed by /api/uk-rp-live)
 //   - Clips:      KV `clips:30d:cache`  (warmed by /api/clips)

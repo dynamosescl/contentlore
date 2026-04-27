@@ -3,7 +3,7 @@
 // GET /api/timeline?range=today|yesterday|7d
 //
 // Returns every stream_sessions row that overlaps the requested
-// window for any of the curated 22 handles. Each row is enriched
+// window for any of the curated 26 handles. Each row is enriched
 // with detected server id (keyword-match over final_title) and
 // resolved end timestamp (now() for ongoing sessions). The page
 // at /gta-rp/timeline/ does the rendering.

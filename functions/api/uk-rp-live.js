@@ -35,6 +35,11 @@ const ALLOWLIST = [
   { handle: 'lorddorro',      platform: 'twitch', name: 'LordDorro' },
   { handle: 'jck0__',         platform: 'twitch', name: 'JCK0__' },
   { handle: 'absthename',     platform: 'twitch', name: 'ABsTheName' },
+  // Added 2026-04-27 via scheduler discovery + admin triage
+  { handle: 'essellz',          platform: 'twitch', name: 'Essellz' },
+  { handle: 'lewthescot',       platform: 'twitch', name: 'LewTheScot' },
+  { handle: 'angels365',        platform: 'twitch', name: 'Angels365' },
+  { handle: 'fantasiasfantasy', platform: 'twitch', name: 'FantasiasFantasy' },
   { handle: 'kavsual',        platform: 'kick',   name: 'Kavsual' },
   { handle: 'shammers',       platform: 'kick',   name: 'Shammers' },
   { handle: 'bags',           platform: 'kick',   name: 'Bags' },
