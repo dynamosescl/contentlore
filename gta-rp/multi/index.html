@@ -85,20 +85,23 @@ body>*{position:relative;z-index:3}
 .layout-btn .ico .c{background:currentColor;border-radius:1px}
 
 /* VIDEO GRID — each tile = video + info bar + chat. Chat height varies by layout density.
-   --chat-h is set per layout class so chat stays usable at every density. */
+   --chat-h is set per layout class so chat stays usable at every density.
+   Twitch chat embed eats ~80px of vertical space for its own header + community
+   points bar — that's why these values look generous. */
 .vid-grid{display:grid;gap:8px;margin-bottom:24px}
-.vid-grid.layout-focus{grid-template-columns:1fr;--chat-h:360px}
-.vid-grid.layout-duo{grid-template-columns:1fr 1fr;--chat-h:300px}
-.vid-grid.layout-quad{grid-template-columns:1fr 1fr;--chat-h:200px}
-.vid-grid.layout-six{grid-template-columns:1fr 1fr 1fr;--chat-h:150px}
+.vid-grid.layout-focus{grid-template-columns:1fr;--chat-h:500px}
+.vid-grid.layout-duo{grid-template-columns:1fr 1fr;--chat-h:400px}
+.vid-grid.layout-quad{grid-template-columns:1fr 1fr;--chat-h:300px}
+.vid-grid.layout-six{grid-template-columns:1fr 1fr 1fr;--chat-h:250px}
 
 @media(max-width:1100px){
-  .vid-grid.layout-six{grid-template-columns:1fr 1fr;--chat-h:200px}
+  .vid-grid.layout-six{grid-template-columns:1fr 1fr;--chat-h:300px}
 }
 @media(max-width:700px){
   .vid-grid.layout-duo,
   .vid-grid.layout-quad,
-  .vid-grid.layout-six{grid-template-columns:1fr;--chat-h:240px}
+  .vid-grid.layout-six{grid-template-columns:1fr;--chat-h:300px}
+  .vid-grid.layout-focus{--chat-h:300px}
 }
 
 .tile{position:relative;border:1px solid var(--border);background:transparent;overflow:hidden;transition:all .2s;display:flex;flex-direction:column}
@@ -115,9 +118,10 @@ body>*{position:relative;z-index:3}
 .tile-info .ti-stat.viewers{color:var(--signal);font-weight:600}
 .tile-info .ti-stat.uptime{color:var(--ink-faint);margin-left:auto}
 
-/* Per-tile chat */
-.tile-chat{background:#000;height:var(--chat-h,200px);position:relative;overflow:hidden}
-.tile-chat iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+/* Per-tile chat — iframe absolute-fills the container so it's edge-to-edge
+   inside the tile's 1px border. No padding, no margin, no scroll wrapper. */
+.tile-chat{background:#000;height:var(--chat-h,300px);position:relative;overflow:hidden;width:100%}
+.tile-chat iframe{position:absolute;inset:0;display:block;width:100%;height:100%;margin:0;padding:0;border:none}
 .tile-chat .chat-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-faint);font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase}
 
 .tile-overlay{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:linear-gradient(180deg,rgba(0,0,0,.8),transparent);pointer-events:none;flex-wrap:wrap;gap:4px;z-index:2}
