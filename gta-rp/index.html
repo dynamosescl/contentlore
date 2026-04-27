@@ -55,6 +55,57 @@ body>*{position:relative;z-index:3}
 .hero-stat .lbl{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:3px;color:var(--ink-faint);margin-top:4px}
 .hero-desc{margin-top:28px;max-width:640px;font-size:15px;color:var(--ink-dim);line-height:1.6}
 
+/* RANDOMISER CTA */
+.hero-cta{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.cta-spin{font-family:var(--font-d);font-size:18px;letter-spacing:2px;padding:14px 28px;background:linear-gradient(135deg,oklch(0.82 0.20 195),oklch(0.85 0.18 200));color:var(--bg);border:none;cursor:pointer;clip-path:var(--cut);transition:all .2s;display:inline-flex;align-items:center;gap:10px;box-shadow:0 0 0 1px var(--signal),0 0 24px oklch(0.82 0.20 195/.4)}
+.cta-spin:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--signal),0 0 32px oklch(0.82 0.20 195/.7)}
+.cta-spin .ico{font-size:24px;line-height:1;animation:wobble 3.5s ease-in-out infinite}
+@keyframes wobble{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+
+/* RANDOMISER MODAL */
+.rmodal{position:fixed;inset:0;background:oklch(0.05 0.03 295/.94);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)}
+.rmodal.open{display:flex;animation:rfade .25s ease}
+@keyframes rfade{from{opacity:0}to{opacity:1}}
+.rinner{position:relative;width:100%;max-width:640px;background:var(--card);border:1px solid var(--signal);clip-path:var(--cut);overflow:hidden}
+.rclose{position:absolute;top:-1px;right:-1px;width:40px;height:40px;background:var(--signal);color:var(--bg);border:none;font-family:var(--font-d);font-size:22px;cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center}
+.rclose:hover{background:var(--signal-cyan)}
+.rstage{padding:36px 24px 24px;text-align:center;position:relative;background:radial-gradient(ellipse at top,oklch(0.18 0.06 295) 0%,var(--card) 60%)}
+.rkicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:18px}
+.rreel{position:relative;width:100%;height:240px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:oklch(0.09 0.04 295/.6);overflow:hidden}
+.rreel::before,.rreel::after{content:'';position:absolute;left:0;right:0;height:48px;pointer-events:none;z-index:2}
+.rreel::before{top:0;background:linear-gradient(180deg,var(--card) 0%,transparent 100%)}
+.rreel::after{bottom:0;background:linear-gradient(0deg,var(--card) 0%,transparent 100%)}
+.rreel-av{width:140px;height:140px;border-radius:50%;border:3px solid var(--signal);box-shadow:0 0 32px oklch(0.82 0.20 195/.5);object-fit:cover;background:var(--card2);transition:filter .15s,transform .15s}
+.rreel-av-ph{width:140px;height:140px;border-radius:50%;border:3px solid var(--signal);box-shadow:0 0 32px oklch(0.82 0.20 195/.5);background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:64px;color:var(--ink-faint)}
+.rreel-name{font-family:var(--font-d);font-size:36px;letter-spacing:2px;color:var(--fg);min-height:36px}
+.rreel.spinning .rreel-av,.rreel.spinning .rreel-av-ph{filter:blur(2px) brightness(1.3);animation:reelpulse .25s linear infinite}
+.rreel.spinning .rreel-name{animation:nameglitch .15s linear infinite;color:var(--signal-cyan)}
+@keyframes reelpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes nameglitch{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+.rreel.locked .rreel-av,.rreel.locked .rreel-av-ph{animation:lockpop .5s ease}
+.rreel.locked .rreel-name{animation:locktext .5s ease;color:var(--signal)}
+@keyframes lockpop{0%{transform:scale(1.3);filter:brightness(2)}100%{transform:scale(1);filter:none}}
+@keyframes locktext{0%{opacity:0;transform:scale(0.8)}100%{opacity:1;transform:scale(1)}}
+.rmeta{padding:18px 24px;text-align:center;border-bottom:1px solid var(--border);min-height:90px}
+.rmeta .rplat{display:inline-block;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;padding:3px 10px;border:1px solid;margin-bottom:8px}
+.rmeta .rplat.twitch{color:var(--twitch);border-color:var(--twitch)}
+.rmeta .rplat.kick{color:var(--kick);border-color:var(--kick)}
+.rmeta .rstats{font-family:var(--font-m);font-size:12px;color:var(--ink-dim);margin-bottom:8px}
+.rmeta .rstats .views{color:var(--signal);font-weight:600}
+.rmeta .rstats .game{color:var(--signal-cyan)}
+.rmeta .rtitle{font-size:13px;color:var(--fg);line-height:1.45;max-width:480px;margin:0 auto;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ractions{display:flex;gap:8px;padding:18px 24px;flex-wrap:wrap;justify-content:center}
+.ract{font-family:var(--font-d);font-size:14px;letter-spacing:2px;padding:12px 22px;border:none;cursor:pointer;clip-path:var(--cut);transition:all .2s;text-decoration:none;text-align:center}
+.ract.watch{background:var(--signal);color:var(--bg);flex:1;min-width:160px}
+.ract.watch:hover{box-shadow:0 0 24px oklch(0.82 0.20 195/.6);transform:translateY(-1px)}
+.ract.spin{background:var(--card2);border:1px solid var(--border);color:var(--fg)}
+.ract.spin:hover{border-color:var(--signal);color:var(--signal)}
+.ract.profile{background:transparent;border:1px solid var(--border);color:var(--ink-dim);font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;padding:10px 18px}
+.ract.profile:hover{border-color:var(--signal-cyan);color:var(--signal-cyan)}
+.rempty{padding:48px 24px;text-align:center}
+.rempty h3{font-family:var(--font-d);font-size:32px;letter-spacing:1px;color:var(--fg);margin-bottom:8px}
+.rempty p{font-size:13px;color:var(--ink-dim);max-width:360px;margin:0 auto;line-height:1.55}
+
 .mx{max-width:1400px;margin:0 auto;padding:0 24px}
 
 /* SECTION HEADER */
@@ -186,6 +237,30 @@ body>*{position:relative;z-index:3}
       <div class="hero-stat"><div class="val" id="s-plat">0</div><div class="lbl">platforms</div></div>
     </div>
     <p class="hero-desc">Who's live, what they're playing, why it matters. ContentLore tracks every UK creator worth watching — across Twitch and Kick — so you never miss the storyline.</p>
+    <div class="hero-cta">
+      <button class="cta-spin" type="button" onclick="openRandomiser()" id="spin-cta">
+        <span class="ico">🎰</span><span>Who Should I Watch?</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- RANDOMISER MODAL -->
+<div class="rmodal" id="rmodal" role="dialog" aria-modal="true" aria-label="Random creator picker">
+  <div class="rinner">
+    <button class="rclose" id="rclose" type="button" aria-label="Close">×</button>
+    <div class="rstage">
+      <div class="rkicker" id="rkicker">Spinning the wheel…</div>
+      <div class="rreel" id="rreel">
+        <div class="rreel-av-ph" id="rreel-av">?</div>
+        <div class="rreel-name" id="rreel-name">—</div>
+      </div>
+    </div>
+    <div class="rmeta" id="rmeta">
+      <div class="rstats">&nbsp;</div>
+      <div class="rtitle">&nbsp;</div>
+    </div>
+    <div class="ractions" id="ractions"></div>
   </div>
 </div>
 
@@ -381,6 +456,121 @@ function renderEmptyState() {
 
 loadAll();
 setInterval(loadAll, 90000);
+
+// ===== RANDOMISER =====
+// Reads from the same `streams` array loadAll() populates, so it's always
+// in sync with what the live page is showing.
+let spinTimer = null;
+let spinning = false;
+
+function openRandomiser() {
+  const modal = document.getElementById('rmodal');
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  spin();
+}
+
+function closeRandomiser() {
+  const modal = document.getElementById('rmodal');
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+  if (spinTimer) { clearTimeout(spinTimer); spinTimer = null; }
+  spinning = false;
+}
+
+function renderEmptyRandomiser() {
+  const h = new Date().getHours();
+  let msg = "No UK GTA RP creators are live right now. The scene usually fires up around 6pm UK time.";
+  if (h >= 2 && h < 10) msg = "It's the small hours. Most of the UK scene is asleep — try again from 6pm.";
+  else if (h >= 18 && h < 23) msg = "Unusually quiet for prime time. Could be a server event pulling everyone elsewhere.";
+  else if (h >= 23 || h < 2) msg = "Late night — most have logged off. A few stragglers might still be on though.";
+
+  document.getElementById('rkicker').textContent = 'Scene is quiet';
+  document.getElementById('rreel').innerHTML = `<div style="font-size:64px">😴</div>`;
+  document.getElementById('rmeta').innerHTML = `<div class="rempty"><h3>Nobody's live</h3><p>${msg}</p></div>`;
+  document.getElementById('ractions').innerHTML = `
+    <button class="ract spin" type="button" onclick="closeRandomiser()">Close</button>
+  `;
+}
+
+function spin() {
+  if (spinTimer) { clearTimeout(spinTimer); spinTimer = null; }
+  const live = liveCreators.filter(c => c.is_live);
+  if (live.length === 0) {
+    renderEmptyRandomiser();
+    return;
+  }
+
+  spinning = true;
+  document.getElementById('rkicker').textContent = 'Spinning the wheel…';
+  const reel = document.getElementById('rreel');
+  reel.classList.remove('locked');
+  reel.classList.add('spinning');
+  reel.innerHTML = `
+    <div class="rreel-av-ph" id="rreel-av">?</div>
+    <div class="rreel-name" id="rreel-name">—</div>
+  `;
+  document.getElementById('rmeta').innerHTML = '<div class="rstats">&nbsp;</div><div class="rtitle">&nbsp;</div>';
+  document.getElementById('ractions').innerHTML = '';
+
+  const finalPick = live[Math.floor(Math.random() * live.length)];
+  // Total animation: ~2.2s. Start fast (60ms tick), decelerate by 25ms per
+  // tick so the eye can lock onto the final pick.
+  let delay = 60;
+  const lock = () => {
+    spinning = false;
+    reel.classList.remove('spinning');
+    showCreatorOnReel(finalPick);
+    reel.classList.add('locked');
+    revealCard(finalPick);
+  };
+
+  const tick = () => {
+    if (!spinning) return;
+    showCreatorOnReel(live[Math.floor(Math.random() * live.length)]);
+    delay += 25;
+    if (delay >= 420) {
+      spinTimer = setTimeout(lock, delay);
+    } else {
+      spinTimer = setTimeout(tick, delay);
+    }
+  };
+  tick();
+}
+
+function showCreatorOnReel(c) {
+  const av = c.avatar_url
+    ? `<img class="rreel-av" src="${esc(c.avatar_url)}" alt="">`
+    : `<div class="rreel-av-ph">${esc((c.display_name || '?').charAt(0))}</div>`;
+  document.getElementById('rreel').innerHTML = `${av}<div class="rreel-name">${esc(c.display_name)}</div>`;
+}
+
+function revealCard(c) {
+  document.getElementById('rkicker').textContent = 'Your pick';
+  const plat = (c.platform || 'twitch').toLowerCase();
+  const platUrl = plat === 'kick' ? `https://kick.com/${c.handle}` : `https://twitch.tv/${c.handle}`;
+  const profileUrl = `/creator-profile/${c.handle}`;
+  const viewers = c.viewers != null ? `<span class="views">${fmtBig(c.viewers)} watching</span>` : '';
+  const game = c.game_name ? ` · <span class="game">${esc(c.game_name)}</span>` : '';
+  document.getElementById('rmeta').innerHTML = `
+    <span class="rplat ${plat}">on ${plat}</span>
+    <div class="rstats">${viewers}${game}</div>
+    <div class="rtitle">${c.stream_title ? esc(c.stream_title) : 'No title'}</div>
+  `;
+  document.getElementById('ractions').innerHTML = `
+    <a class="ract watch" href="${esc(platUrl)}" target="_blank" rel="noopener">▶ Watch Now</a>
+    <button class="ract spin" type="button" onclick="spin()">🎰 Spin Again</button>
+    <a class="ract profile" href="${esc(profileUrl)}">Profile</a>
+  `;
+}
+
+document.getElementById('rclose').addEventListener('click', closeRandomiser);
+document.getElementById('rmodal').addEventListener('click', e => {
+  if (e.target.id === 'rmodal') closeRandomiser();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('rmodal').classList.contains('open')) closeRandomiser();
+});
 </script>
 <script src="/streak-checkin.js" defer></script>
 </body>
