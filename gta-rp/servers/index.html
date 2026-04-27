@@ -61,7 +61,7 @@ body>*{position:relative;z-index:3}
 .board-meta .last-up{color:var(--signal)}
 .board-meta .refresh-dot{width:6px;height:6px;border-radius:50%;background:var(--signal);animation:lp 2s infinite}
 .board-table{width:100%;font-family:var(--font-m)}
-.board-row{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1.6fr;gap:0;align-items:center;padding:14px 20px;border-bottom:1px solid oklch(0.28 0.08 295/.4);transition:background .15s,border-color .15s}
+.board-row{display:grid;grid-template-columns:1.6fr 0.9fr 0.9fr 1fr 1fr 1.6fr;gap:0;align-items:center;padding:14px 20px;border-bottom:1px solid oklch(0.28 0.08 295/.4);transition:background .15s,border-color .15s}
 .board-row.head{background:#000;border-bottom:1px solid var(--border);padding:10px 20px;color:var(--ink-faint);font-size:10px;text-transform:uppercase;letter-spacing:2px;font-weight:600;position:sticky;top:48px;z-index:5}
 .board-row.live{background:oklch(0.82 0.20 195/.04)}
 .board-row.live:hover{background:oklch(0.82 0.20 195/.10)}
@@ -83,23 +83,31 @@ body>*{position:relative;z-index:3}
 .cell.num.zero{color:var(--ink-faint);opacity:.5}
 .cell.num.streamers{color:var(--signal)}
 .cell.num.viewers{color:var(--signal-cyan)}
+.cell.num.players{color:oklch(0.82 0.22 145);font-size:18px;font-family:var(--font-m);font-weight:600;letter-spacing:0;font-variant-numeric:tabular-nums}
+.cell.num.players .max{color:var(--ink-faint);font-weight:400}
+.cell.num.players.unknown{color:var(--ink-faint);opacity:.5;font-size:14px;font-style:italic;font-weight:400}
 .cell.top-streamer{font-size:13px;color:var(--ink-dim)}
 .cell.top-streamer a{color:var(--signal-cyan);text-decoration:none;display:inline-flex;align-items:center;gap:8px;font-weight:500}
 .cell.top-streamer a:hover{color:var(--signal);text-decoration:underline}
 .cell.top-streamer .vc{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);font-weight:600}
 .cell.top-streamer .empty{color:var(--ink-faint);font-style:italic;font-size:11px;text-transform:uppercase;letter-spacing:1px}
 
-@media(max-width:850px){
-  .board-row{grid-template-columns:1.4fr 0.9fr 0.7fr 1fr;padding:12px 14px;font-size:12px;gap:0}
+@media(max-width:1000px){
+  .board-row{grid-template-columns:1.4fr 0.9fr 0.9fr 0.7fr 1fr;padding:12px 16px;font-size:12px;gap:0}
   .board-row .cell.num.streamers{display:none}
   .board-row.head .cell.streamers-head{display:none}
   .cell.sname{font-size:16px;letter-spacing:1px}
   .cell.num{font-size:18px}
 }
-@media(max-width:520px){
-  .board-row{grid-template-columns:1.2fr 0.8fr 1fr;gap:0}
+@media(max-width:700px){
+  .board-row{grid-template-columns:1.2fr 0.8fr 0.8fr 1fr;gap:0}
   .board-row .cell.num.viewers{display:none}
   .board-row.head .cell.viewers-head{display:none}
+}
+@media(max-width:520px){
+  .board-row{grid-template-columns:1.1fr 0.8fr 1fr}
+  .board-row .cell.num.players{display:none}
+  .board-row.head .cell.players-head{display:none}
 }
 
 /* SERVER CARDS (below board) */
@@ -172,6 +180,7 @@ body>*{position:relative;z-index:3}
       <div class="board-row head">
         <div class="cell sname-head">Server</div>
         <div class="cell">Status</div>
+        <div class="cell players-head">Players</div>
         <div class="cell streamers-head">Streamers</div>
         <div class="cell viewers-head">Viewers</div>
         <div class="cell">Top Streamer</div>
@@ -191,19 +200,23 @@ body>*{position:relative;z-index:3}
 <div class="footer">ContentLore · UK GTA RP · Server Directory</div>
 
 <script>
+// `cfx_id` is the public CFX server shortcode (cfx.re/join/{id}). When set,
+// /api/cfx-populations fetches live player counts from the FiveM master.
+// Mirror of the CFX_IDS map in functions/api/cfx-populations.js — keep
+// both in sync when you add a new ID.
 const SERVERS = [
-  {id:'unique',name:'Unique RP',tag:'The big one. Drama factory of the UK scene.',blurb:'The flagship UK GTA RP server. High creator density, long-running storylines, and a constant rotation of beef, businesses and police chases.',keywords:['unique rp','uniquerp','unique'],roster:['kavsual','shammers','deggyuk','tyrone','samham','stoker','reeclare','megsmary'],vibes:['serious','criminal','civ-heavy']},
-  {id:'tng',name:'TNG RP',tag:'The new kid making noise.',blurb:'Fresh UK server with launch energy and a growing creator roster. Currently running launch storylines pulling people in from the bigger servers.',keywords:['tng rp','tngrp','tng'],roster:['deggyuk','tazzthegeeza','wheelydev','absthename'],vibes:['serious','newbie-friendly']},
-  {id:'orbit',name:'Orbit RP',tag:'Heads-down serious RP, UK base.',blurb:'UK serious-RP server with a focus on character-driven storylines and quality over volume. Lower noise floor, higher RP standard.',keywords:['orbit rp','orbitrp','orbit'],roster:['lbmm','reeclare','cherish_remedy','stoker'],vibes:['serious','civ-heavy']},
-  {id:'new-era',name:'New Era RP',tag:'Fresh chapter, fresh storylines.',blurb:'Newer UK GTA RP server pitching itself as a clean-slate scene. Building roster and storylines from the ground up.',keywords:['new era rp','newera rp','new era','newera'],roster:[],vibes:['serious','newbie-friendly']},
-  {id:'prodigy',name:'Prodigy RP',tag:'Up-and-comer with momentum.',blurb:'UK GTA RP server building a name on character-driven RP and a growing creator pull. One to watch.',keywords:['prodigy rp','prodigyrp','prodigy'],roster:[],vibes:['serious','criminal']},
-  {id:'d10',name:'D10 RP',tag:'Tight-knit, story-first server.',blurb:'UK GTA RP server with a focused roster and an emphasis on long-form character work over high-volume action.',keywords:['d10 rp','d10rp','d10'],roster:[],vibes:['serious','civ-heavy']},
-  {id:'unmatched',name:'Unmatched RP',tag:'Action-first, drama always.',blurb:"UK GTA RP server leaning into high-tempo content — chases, beefs and PD activity. Shammers' home turf.",keywords:['unmatched rp','unmatchedrp','unmatched'],roster:['shammers','kavsual','absthename','rexality','steeel','justj0hnnyhd'],vibes:['criminal','stunt']},
-  {id:'verarp',name:'VeraRP',tag:'Community-focused UK roleplay.',blurb:'UK server with a strong community focus and an emphasis on organic storyline development.',keywords:['vera rp','verarp','vera'],roster:[],vibes:['serious']},
-  {id:'endz',name:'The Endz',tag:'Street-level UK RP.',blurb:'UK GTA RP server with a gritty, street-level vibe. Drill culture meets roleplay.',keywords:['the endz','endz rp','endz'],roster:[],vibes:['criminal']},
-  {id:'letsrp',name:"Let's RP",tag:'Welcoming to all levels.',blurb:'Beginner-friendly UK RP server with lower barriers to entry and a welcoming community.',keywords:["let's rp","letsrp","lets rp"],roster:[],vibes:['newbie-friendly']},
-  {id:'drilluk',name:'Drill UK RP',tag:'UK drill meets GTA RP.',blurb:'UK server fusing drill culture aesthetics with GTA RP mechanics.',keywords:['drill uk','drilluk','drill rp'],roster:[],vibes:['criminal']},
-  {id:'britishlife',name:'British Life RP',tag:'Everyday British life, RP-style.',blurb:'UK server offering a slower-paced, civ-heavy roleplay experience rooted in British culture.',keywords:['british life','britishlife'],roster:[],vibes:['civ-heavy','newbie-friendly']},
+  {id:'unique',name:'Unique RP',cfx_id:'ok4qzr',tag:'The big one. Drama factory of the UK scene.',blurb:'The flagship UK GTA RP server. High creator density, long-running storylines, and a constant rotation of beef, businesses and police chases.',keywords:['unique rp','uniquerp','unique'],roster:['kavsual','shammers','deggyuk','tyrone','samham','stoker','reeclare','megsmary'],vibes:['serious','criminal','civ-heavy']},
+  {id:'tng',name:'TNG RP',cfx_id:null,tag:'The new kid making noise.',blurb:'Fresh UK server with launch energy and a growing creator roster. Currently running launch storylines pulling people in from the bigger servers.',keywords:['tng rp','tngrp','tng'],roster:['deggyuk','tazzthegeeza','wheelydev','absthename'],vibes:['serious','newbie-friendly']},
+  {id:'orbit',name:'Orbit RP',cfx_id:'5j8edz',tag:'Heads-down serious RP, UK base.',blurb:'UK serious-RP server with a focus on character-driven storylines and quality over volume. Lower noise floor, higher RP standard.',keywords:['orbit rp','orbitrp','orbit'],roster:['lbmm','reeclare','cherish_remedy','stoker'],vibes:['serious','civ-heavy']},
+  {id:'new-era',name:'New Era RP',cfx_id:'z5okp5',tag:'Fresh chapter, fresh storylines.',blurb:'Newer UK GTA RP server pitching itself as a clean-slate scene. Building roster and storylines from the ground up.',keywords:['new era rp','newera rp','new era','newera'],roster:[],vibes:['serious','newbie-friendly']},
+  {id:'prodigy',name:'Prodigy RP',cfx_id:'775kda',tag:'Up-and-comer with momentum.',blurb:'UK GTA RP server building a name on character-driven RP and a growing creator pull. One to watch.',keywords:['prodigy rp','prodigyrp','prodigy'],roster:[],vibes:['serious','criminal']},
+  {id:'d10',name:'D10 RP',cfx_id:null,tag:'Tight-knit, story-first server.',blurb:'UK GTA RP server with a focused roster and an emphasis on long-form character work over high-volume action.',keywords:['d10 rp','d10rp','d10'],roster:[],vibes:['serious','civ-heavy']},
+  {id:'unmatched',name:'Unmatched RP',cfx_id:'r43qej',tag:'Action-first, drama always.',blurb:"UK GTA RP server leaning into high-tempo content — chases, beefs and PD activity. Shammers' home turf.",keywords:['unmatched rp','unmatchedrp','unmatched'],roster:['shammers','kavsual','absthename','rexality','steeel','justj0hnnyhd'],vibes:['criminal','stunt']},
+  {id:'verarp',name:'VeraRP',cfx_id:null,tag:'Community-focused UK roleplay.',blurb:'UK server with a strong community focus and an emphasis on organic storyline development.',keywords:['vera rp','verarp','vera'],roster:[],vibes:['serious']},
+  {id:'endz',name:'The Endz',cfx_id:null,tag:'Street-level UK RP.',blurb:'UK GTA RP server with a gritty, street-level vibe. Drill culture meets roleplay.',keywords:['the endz','endz rp','endz'],roster:[],vibes:['criminal']},
+  {id:'letsrp',name:"Let's RP",cfx_id:null,tag:'Welcoming to all levels.',blurb:'Beginner-friendly UK RP server with lower barriers to entry and a welcoming community.',keywords:["let's rp","letsrp","lets rp"],roster:[],vibes:['newbie-friendly']},
+  {id:'drilluk',name:'Drill UK RP',cfx_id:null,tag:'UK drill meets GTA RP.',blurb:'UK server fusing drill culture aesthetics with GTA RP mechanics.',keywords:['drill uk','drilluk','drill rp'],roster:[],vibes:['criminal']},
+  {id:'britishlife',name:'British Life RP',cfx_id:null,tag:'Everyday British life, RP-style.',blurb:'UK server offering a slower-paced, civ-heavy roleplay experience rooted in British culture.',keywords:['british life','britishlife'],roster:[],vibes:['civ-heavy','newbie-friendly']},
 ];
 
 // Match longest keyword first so "newera rp" beats "newera"/"new era".
@@ -230,18 +243,23 @@ function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;',
 
 async function load() {
   try {
-    const r = await fetch('/api/uk-rp-live');
-    const d = await r.json();
-    const live = ((d.ok && d.live) ? d.live : []).filter(s => s.is_live);
+    // Live streamer state + CFX populations in parallel — neither blocks the other.
+    const [liveJson, popsJson] = await Promise.all([
+      fetch('/api/uk-rp-live').then(r => r.json()).catch(() => ({})),
+      fetch('/api/cfx-populations').then(r => r.json()).catch(() => ({})),
+    ]);
+    const live = ((liveJson.ok && liveJson.live) ? liveJson.live : []).filter(s => s.is_live);
+    const populations = (popsJson.ok && popsJson.populations) ? popsJson.populations : {};
 
-    // Map each server → its current live streamers
+    // Map each server → its current live streamers + live CFX population
     const srvData = SERVERS.map(srv => {
       const streams = live.filter(s => {
         const det = detectServer(s.stream_title || s.game_name);
         return det && det.id === srv.id;
       }).sort((a, b) => (b.viewers || 0) - (a.viewers || 0));
       const viewers = streams.reduce((n, s) => n + (s.viewers || 0), 0);
-      return { ...srv, streams, liveCount: streams.length, viewers };
+      const pop = populations[srv.id] || null;
+      return { ...srv, streams, liveCount: streams.length, viewers, pop };
     });
 
     const activeCount = srvData.filter(s => s.liveCount > 0).length;
@@ -253,10 +271,17 @@ async function load() {
     document.getElementById('last-update').textContent =
       'Updated ' + new Date().toLocaleTimeString('en-GB', { hour12: false });
 
-    // Sort: live first by viewers desc, then idle alphabetical
+    // Sort: live (streamers OR populated server) first by combined signal,
+    // then idle by player count desc, then alphabetical.
     srvData.sort((a, b) => {
-      if (a.liveCount !== b.liveCount) return a.liveCount > 0 ? -1 : 1;
-      if (a.liveCount > 0 && b.liveCount > 0) return b.viewers - a.viewers;
+      const aActive = a.liveCount > 0;
+      const bActive = b.liveCount > 0;
+      if (aActive !== bActive) return aActive ? -1 : 1;
+      if (aActive && bActive) return b.viewers - a.viewers;
+      // Both idle — break ties on CFX population so populated servers float up
+      const aPop = a.pop?.clients || 0;
+      const bPop = b.pop?.clients || 0;
+      if (aPop !== bPop) return bPop - aPop;
       return a.name.localeCompare(b.name);
     });
 
@@ -274,6 +299,12 @@ async function load() {
              <span class="vc">${fmtBig(top.viewers)}</span>
            </a>`
         : '<span class="empty">— quiet —</span>';
+      const playersCell = srv.pop
+        ? `<span>${srv.pop.clients}<span class="max"> / ${srv.pop.max_clients}</span></span>`
+        : srv.cfx_id
+          ? '<span>—</span>'                  // CFX ID known but server unreachable right now
+          : '<span title="CFX server ID unknown — usually whitelist-only">private</span>';
+      const playersClass = srv.pop ? '' : 'unknown';
       return `
         <div class="board-row ${isLive ? 'live' : 'idle'}">
           <div class="cell sname"><div class="stack"><span>${esc(srv.name)}</span><span class="stag">${esc(srv.tag)}</span></div></div>
@@ -282,6 +313,7 @@ async function load() {
               <span class="dot"></span>${isLive ? 'UP' : 'IDLE'}
             </span>
           </div>
+          <div class="cell num players ${playersClass}">${playersCell}</div>
           <div class="cell num streamers ${srv.liveCount === 0 ? 'zero' : ''}">${srv.liveCount}</div>
           <div class="cell num viewers ${srv.viewers === 0 ? 'zero' : ''}">${fmtBig(srv.viewers)}</div>
           <div class="cell top-streamer">${topCell}</div>
