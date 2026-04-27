@@ -18,10 +18,20 @@ import { jsonResponse, getTwitchToken } from '../_lib.js';
 
 const RANGES = { '24h': 86400, '7d': 604800, '30d': 2592000 };
 const DEFAULT_RANGE = '7d';
-const PER_CREATOR = 10;
+// Over-fetch then filter: Twitch returns the broadcaster's top N clips by views
+// regardless of category, so we pull a wider slice and discard non-RP content
+// below. Twitch caps `first` at 100; 20 is plenty for our 16 broadcasters.
+const PER_CREATOR = 20;
 const KV_TTL = 300;
 const EDGE_TTL = 120;
 const PARENT_DOMAINS = ['contentlore.com', 'localhost'];
+
+// Keep the wall on-brand: only surface clips from GTA V or Just Chatting
+// (RP streamers commonly switch to Just Chatting during downtime / lobby /
+// behind-the-scenes moments while still talking RP).
+//   32982  = Grand Theft Auto V
+//   509658 = Just Chatting
+const ALLOWED_GAME_IDS = new Set(['32982', '509658']);
 
 const TWITCH_HANDLES = [
   'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
@@ -118,7 +128,7 @@ async function resolveTwitchUserIds(env, handles) {
 async function fetchClipsForBroadcaster(env, handle, broadcasterId, startedAt) {
   const url = `https://api.twitch.tv/helix/clips?broadcaster_id=${broadcasterId}&started_at=${encodeURIComponent(startedAt)}&first=${PER_CREATOR}`;
   const data = await twitchFetch(env, url);
-  const clips = data?.data || [];
+  const clips = (data?.data || []).filter(c => c.game_id && ALLOWED_GAME_IDS.has(c.game_id));
   return clips.map(c => ({
     id: c.id,
     creator_handle: handle,
