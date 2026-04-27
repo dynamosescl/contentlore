@@ -343,6 +343,7 @@ body>*{position:relative;z-index:3}
     <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
     <a href="/gta-rp/clips/" class="nav-link">Clips</a>
     <a href="/gta-rp/timeline/" class="nav-link">Timeline</a>
+    <a href="/gta-rp/streaks/" class="nav-link">Streaks</a>
     <a href="/gta-rp/servers/" class="nav-link">Servers</a>
   </div>
 </nav>

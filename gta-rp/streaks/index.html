@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watch Streaks — UK GTA RP | ContentLore</title>
+<meta name="description" content="Track your daily visits to the UK GTA RP scene. Earn badges, climb the leaderboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:oklch(0.09 0.04 295);--fg:oklch(0.97 0.02 320);
+  --card:oklch(0.13 0.05 295);--card2:oklch(0.18 0.06 295);
+  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
+  --signal:oklch(0.82 0.20 195);--signal-cyan:oklch(0.85 0.18 200);
+  --border:oklch(0.28 0.08 295);--success:oklch(0.82 0.22 145);
+  --gold:oklch(0.88 0.18 95);
+  --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
+  --cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
+}
+html{background:var(--bg);color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body>*{position:relative;z-index:3}
+
+.nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
+.nav-links{display:flex}
+.nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-link:hover{color:var(--ink-dim)}
+.nav-link.active{color:var(--signal);border-bottom-color:var(--signal)}
+@media(max-width:700px){.nav-links{overflow-x:auto}}
+
+.hero{border-bottom:1px solid var(--border);padding:36px 24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
+.hero-inner{max-width:1100px;margin:0 auto}
+.hero-kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px}
+.hero h1{font-family:var(--font-d);font-size:clamp(40px,7vw,72px);line-height:.95;letter-spacing:1px}
+.hero h1 .neon{color:var(--signal);text-shadow:0 0 6px oklch(0.82 0.20 195/.4),0 0 18px oklch(0.82 0.20 195/.25)}
+.hero-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;max-width:640px;line-height:1.55}
+
+.mx{max-width:1100px;margin:0 auto;padding:24px}
+
+/* OPT-IN / YOUR STATS */
+.optin{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:24px;margin-bottom:18px}
+.optin h2{font-family:var(--font-d);font-size:24px;letter-spacing:1px;margin-bottom:8px}
+.optin p{font-size:13px;color:var(--ink-dim);line-height:1.55;margin-bottom:14px;max-width:600px}
+.optin .privacy{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);margin-top:10px;max-width:600px;line-height:1.6}
+.optin .privacy strong{color:var(--signal)}
+.optin-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--font-d);font-size:14px;letter-spacing:2px;padding:10px 20px;border:none;cursor:pointer;clip-path:var(--cut);transition:all .2s;text-decoration:none;display:inline-block;text-align:center}
+.btn-primary{background:var(--signal);color:var(--bg)}
+.btn-primary:hover{box-shadow:0 0 22px oklch(0.82 0.20 195/.5);transform:translateY(-1px)}
+.btn-ghost{background:var(--card2);border:1px solid var(--border);color:var(--fg)}
+.btn-ghost:hover{border-color:var(--signal);color:var(--signal)}
+.btn-danger{background:transparent;border:1px solid oklch(0.65 0.25 25);color:oklch(0.75 0.20 25)}
+.btn-danger:hover{background:oklch(0.65 0.25 25/.15)}
+.name-input{font-family:var(--font-m);font-size:13px;padding:9px 14px;background:var(--bg);border:1px solid var(--border);color:var(--fg);outline:none;min-width:200px;transition:border-color .15s}
+.name-input:focus{border-color:var(--signal)}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+@media(max-width:700px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--card2);border:1px solid var(--border);clip-path:var(--cut);padding:16px}
+.stat-card .v{font-family:var(--font-d);font-size:38px;letter-spacing:1px;line-height:1;color:var(--signal)}
+.stat-card .v.gold{color:var(--gold)}
+.stat-card .l{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:8px}
+.stat-card .extra{font-family:var(--font-m);font-size:10px;color:var(--ink-dim);margin-top:4px}
+
+/* BADGES */
+.section{margin-top:32px}
+.section-h{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:18px;gap:12px;flex-wrap:wrap}
+.section-h h2{font-family:var(--font-d);font-size:28px;letter-spacing:1px}
+.section-h .sub{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.badges{grid-template-columns:1fr}}
+.badge{position:relative;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:24px 20px;text-align:center;transition:all .25s;overflow:hidden}
+.badge.earned{border-color:var(--signal);box-shadow:0 0 24px oklch(0.82 0.20 195/.25)}
+.badge.locked{opacity:.55}
+.badge-icon{font-size:48px;line-height:1;margin-bottom:10px;filter:grayscale(0.6)}
+.badge.earned .badge-icon{filter:none;animation:bobble 3s ease-in-out infinite}
+@keyframes bobble{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.badge-label{font-family:var(--font-d);font-size:22px;letter-spacing:1.5px;margin-bottom:4px}
+.badge.earned .badge-label{color:var(--signal)}
+.badge-thresh{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
+.badge-status{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-top:10px;padding:3px 10px;display:inline-block}
+.badge.earned .badge-status{background:oklch(0.82 0.20 195/.15);color:var(--signal);border:1px solid oklch(0.82 0.20 195/.4)}
+.badge.locked .badge-status{background:oklch(0.55 0.06 295/.15);color:var(--ink-faint);border:1px solid var(--border)}
+
+/* LEADERBOARD */
+.lb-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lb-tab{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:6px 12px;background:var(--card2);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.lb-tab:hover{border-color:var(--signal);color:var(--fg)}
+.lb-tab.active{background:var(--signal);color:var(--bg);border-color:var(--signal);font-weight:600}
+.lb-meta{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
+.lb-meta strong{color:var(--signal)}
+.lb-table{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);overflow:hidden}
+.lb-row{display:grid;grid-template-columns:60px 1fr 100px 100px 110px;gap:0;align-items:center;padding:12px 18px;border-bottom:1px solid oklch(0.28 0.08 295/.4);transition:background .15s;font-family:var(--font-m);font-size:12px}
+.lb-row.head{background:#000;color:var(--ink-faint);font-size:10px;text-transform:uppercase;letter-spacing:2px;font-weight:600;padding:10px 18px;position:sticky;top:48px;z-index:5}
+.lb-row.you{background:oklch(0.82 0.20 195/.10);border-color:oklch(0.82 0.20 195/.4)}
+.lb-row:last-child{border-bottom:none}
+.lb-row:hover:not(.head){background:oklch(0.18 0.06 295/.4)}
+.lb-rank{font-family:var(--font-d);font-size:18px;letter-spacing:1px;color:var(--signal)}
+.lb-rank.gold{color:var(--gold)}
+.lb-name{font-family:var(--font-d);font-size:16px;letter-spacing:1px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-num{font-variant-numeric:tabular-nums;color:var(--signal-cyan);font-weight:600}
+.lb-num.viewers{color:var(--ink-dim);font-weight:400}
+.lb-when{color:var(--ink-faint);font-size:10px}
+@media(max-width:700px){
+  .lb-row{grid-template-columns:48px 1fr 80px 80px;font-size:11px;padding:10px 12px}
+  .lb-row .lb-num.viewers{display:none}
+  .lb-row.head .lb-visits-head{display:none}
+}
+
+/* STATES */
+.empty{padding:48px 24px;text-align:center;font-family:var(--font-m);font-size:13px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:2px}
+.empty .sub{display:block;margin-top:8px;font-size:11px;color:var(--ink-faint);text-transform:none;letter-spacing:0}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--signal);color:var(--bg);font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;padding:12px 20px;clip-path:var(--cut);z-index:1100;opacity:0;transition:all .3s;font-weight:600;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.error{background:oklch(0.65 0.25 25)}
+
+.footer{border-top:1px solid var(--border);padding:20px;text-align:center;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:30px}
+::selection{background:var(--signal);color:var(--bg)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/gta-rp/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:40px;filter:brightness(1.1)" loading="eager"></a>
+  <div class="nav-links">
+    <a href="/gta-rp/" class="nav-link">Live</a>
+    <a href="/gta-rp/now/" class="nav-link">Now</a>
+    <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/clips/" class="nav-link">Clips</a>
+    <a href="/gta-rp/timeline/" class="nav-link">Timeline</a>
+    <a href="/gta-rp/streaks/" class="nav-link active">Streaks</a>
+    <a href="/gta-rp/servers/" class="nav-link">Servers</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-kicker">Daily ritual · opt-in</div>
+    <h1>Watch <span class="neon">Streaks</span></h1>
+    <p class="hero-sub">Show up every day, build the streak, earn the badges. Pure opt-in — we keep an anonymous ID in your browser, nothing more. Add a display name if you want a spot on the leaderboard.</p>
+  </div>
+</div>
+
+<div class="mx">
+
+  <!-- OPT-IN + STATS -->
+  <div id="optin-area"></div>
+
+  <!-- BADGES -->
+  <div class="section">
+    <div class="section-h"><h2>Badges</h2><span class="sub">Three tiers · stack them up</span></div>
+    <div class="badges" id="badges-area">
+      <div class="badge locked"><div class="badge-icon">🔥</div><div class="badge-label">Week Warrior</div><div class="badge-thresh">7 days</div><span class="badge-status">Opt in to start</span></div>
+      <div class="badge locked"><div class="badge-icon">🌟</div><div class="badge-label">Month Regular</div><div class="badge-thresh">30 days</div><span class="badge-status">Opt in to start</span></div>
+      <div class="badge locked"><div class="badge-icon">👑</div><div class="badge-label">Scene Veteran</div><div class="badge-thresh">100 days</div><span class="badge-status">Opt in to start</span></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="section">
+    <div class="section-h">
+      <div>
+        <h2>Leaderboard</h2>
+        <span class="sub">Display name required to appear · ranks across the curated 22 scene</span>
+      </div>
+      <div class="lb-controls">
+        <button class="lb-tab active" data-order="current">Current streak</button>
+        <button class="lb-tab" data-order="max">All-time best</button>
+      </div>
+    </div>
+    <div class="lb-meta" id="lb-meta">Loading…</div>
+    <div class="lb-table" id="lb-table" style="margin-top:10px">
+      <div class="empty">Loading leaderboard…</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="footer">ContentLore · UK GTA RP · Watch Streaks</div>
+
+<script>
+const KEY_OPT  = 'cl:streak:optin';
+const KEY_UID  = 'cl:streak:uid';
+const KEY_NAME = 'cl:streak:name';
+const SESS_FLAG = 'cl:streak:checked';
+
+const state = {
+  optedIn: localStorage.getItem(KEY_OPT) === '1',
+  uid: localStorage.getItem(KEY_UID),
+  displayName: localStorage.getItem(KEY_NAME) || '',
+  myStreak: null,
+  lbOrder: 'current',
+  lbData: null,
+};
+
+// ---------- Init ----------
+async function init() {
+  renderOptin();
+  if (state.optedIn && state.uid) {
+    await checkIn();
+  }
+  await loadLeaderboard();
+}
+
+// ---------- Opt-in / Check-in ----------
+async function checkIn() {
+  try {
+    const r = await fetch('/api/streaks/check-in', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        user_id: state.uid,
+        display_name: state.displayName || null,
+      }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'check-in failed');
+    state.myStreak = d;
+    try { sessionStorage.setItem(SESS_FLAG, '1'); } catch (_) {}
+    renderOptin();
+    renderBadges();
+  } catch (e) {
+    showToast('Check-in failed: ' + e.message, 'error');
+  }
+}
+
+async function startTracking() {
+  state.uid = generateUUID();
+  state.optedIn = true;
+  try {
+    localStorage.setItem(KEY_OPT, '1');
+    localStorage.setItem(KEY_UID, state.uid);
+  } catch (_) {
+    showToast('Storage unavailable — opt-in failed', 'error');
+    return;
+  }
+  showToast('Streak started — see you tomorrow');
+  await checkIn();
+  await loadLeaderboard();
+}
+
+async function saveDisplayName() {
+  const input = document.getElementById('name-input');
+  const name = input.value.trim();
+  if (name && !/^[\w. -]{1,24}$/.test(name)) {
+    showToast('Name: 1–24 chars · letters/numbers/_-. /space', 'error');
+    return;
+  }
+  state.displayName = name;
+  try { localStorage.setItem(KEY_NAME, name); } catch (_) {}
+  if (state.optedIn && state.uid) {
+    await checkIn(); // immediately POST to update display_name on the row
+    await loadLeaderboard();
+  }
+  showToast(name ? 'Display name saved' : 'Display name cleared');
+}
+
+function stopTracking() {
+  if (!confirm('Stop tracking and remove your local opt-in? Your D1 record stays (we can\'t delete it without auth) but you\'ll vanish from the leaderboard if you also clear your display name.')) return;
+  try {
+    localStorage.removeItem(KEY_OPT);
+    sessionStorage.removeItem(SESS_FLAG);
+  } catch (_) {}
+  state.optedIn = false;
+  state.myStreak = null;
+  showToast('Stopped tracking');
+  renderOptin();
+  renderBadges();
+}
+
+// ---------- Render ----------
+function renderOptin() {
+  const area = document.getElementById('optin-area');
+  if (!state.optedIn) {
+    area.innerHTML = `
+      <div class="optin">
+        <h2>Start tracking</h2>
+        <p>Open this page (or any other ContentLore hub page) once a day to keep your streak alive. Miss a day, and the counter resets to 1.</p>
+        <div class="optin-actions">
+          <button class="btn btn-primary" onclick="startTracking()">Start my streak</button>
+        </div>
+        <div class="privacy"><strong>Privacy:</strong> opt-in only. We generate an anonymous UUID and store it in your browser's localStorage. It's sent to our API on every visit so we can count your days. No cookies, no tracking pixels, no third parties. Add a display name only if you want to appear on the leaderboard — anonymous streaks stay anonymous.</div>
+      </div>`;
+    return;
+  }
+
+  const s = state.myStreak?.streak;
+  const next = state.myStreak?.next_badge;
+  const cur = s?.current_streak ?? '—';
+  const max = s?.max_streak ?? '—';
+  const total = s?.total_visits ?? '—';
+  const days = s?.first_visit_at ? Math.max(1, Math.floor((Date.now()/1000 - s.first_visit_at) / 86400) + 1) : '—';
+
+  area.innerHTML = `
+    <div class="optin">
+      <h2>Your streak</h2>
+      <p>Anonymous ID active. ${state.displayName ? `Showing on the leaderboard as <strong style="color:var(--signal)">${escHtml(state.displayName)}</strong>.` : 'Add a display name to appear on the leaderboard.'}</p>
+      <div class="optin-actions">
+        <input class="name-input" id="name-input" placeholder="Display name (optional)" value="${escAttr(state.displayName)}" maxlength="24">
+        <button class="btn btn-ghost" onclick="saveDisplayName()">Save name</button>
+        <button class="btn btn-danger" onclick="stopTracking()">Stop tracking</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="v">${cur}</div><div class="l">Current streak</div><div class="extra">${cur === 1 ? 'day' : 'days'} in a row</div></div>
+        <div class="stat-card"><div class="v gold">${max}</div><div class="l">All-time best</div><div class="extra">your record</div></div>
+        <div class="stat-card"><div class="v">${total}</div><div class="l">Total visits</div><div class="extra">across ${days} days since opt-in</div></div>
+        <div class="stat-card"><div class="v">${next ? next.days_to_go : '✓'}</div><div class="l">${next ? 'Days to ' + next.label : 'All badges earned'}</div><div class="extra">${next ? '@ ' + next.threshold + '-day streak' : 'Scene Veteran unlocked'}</div></div>
+      </div>
+    </div>`;
+}
+
+function renderBadges() {
+  const badges = state.myStreak?.badges;
+  if (!badges) return;
+  const icons = { 'week-warrior': '🔥', 'month-regular': '🌟', 'scene-veteran': '👑' };
+  document.getElementById('badges-area').innerHTML = badges.map(b => {
+    const earned = b.earned_now;
+    const everEarned = b.earned_ever;
+    const cur = state.myStreak.streak.current_streak;
+    const status = earned ? 'Earned · active'
+      : (everEarned ? 'Earned previously' : `${b.threshold - cur} days to unlock`);
+    return `
+      <div class="badge ${earned ? 'earned' : 'locked'}">
+        <div class="badge-icon">${icons[b.id] || '🏅'}</div>
+        <div class="badge-label">${escHtml(b.label)}</div>
+        <div class="badge-thresh">${b.threshold} days</div>
+        <span class="badge-status">${status}</span>
+      </div>`;
+  }).join('');
+}
+
+// ---------- Leaderboard ----------
+async function loadLeaderboard() {
+  try {
+    const r = await fetch(`/api/streaks/leaderboard?order=${state.lbOrder}&limit=50`);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'leaderboard failed');
+    state.lbData = d;
+    renderLeaderboard();
+  } catch (e) {
+    document.getElementById('lb-table').innerHTML = `<div class="empty">Failed to load leaderboard.<span class="sub">${escHtml(e.message)}</span></div>`;
+  }
+}
+
+function renderLeaderboard() {
+  const d = state.lbData;
+  const meta = document.getElementById('lb-meta');
+  meta.innerHTML = `<strong>${d.total_users}</strong> tracked users · <strong>${d.total_visits}</strong> total visits across the scene`;
+
+  const tbl = document.getElementById('lb-table');
+  if (!d.entries.length) {
+    tbl.innerHTML = `<div class="empty">No public streaks yet.<span class="sub">Be the first — add a display name to appear here.</span></div>`;
+    return;
+  }
+  const myName = state.displayName.toLowerCase();
+  const head = `<div class="lb-row head"><div>Rank</div><div>Name</div><div>${state.lbOrder === 'max' ? 'Best' : 'Current'}</div><div>${state.lbOrder === 'max' ? 'Current' : 'Best'}</div><div class="lb-visits-head">Visits</div></div>`;
+  const rows = d.entries.map(e => {
+    const isMe = myName && e.display_name.toLowerCase() === myName;
+    const rankClass = e.rank === 1 ? 'gold' : '';
+    const primary = state.lbOrder === 'max' ? e.max_streak : e.current_streak;
+    const secondary = state.lbOrder === 'max' ? e.current_streak : e.max_streak;
+    return `<div class="lb-row${isMe ? ' you' : ''}">
+      <div class="lb-rank ${rankClass}">#${e.rank}</div>
+      <div class="lb-name">${escHtml(e.display_name)}${isMe ? ' (you)' : ''}</div>
+      <div class="lb-num">${primary}d</div>
+      <div class="lb-num viewers">${secondary}d</div>
+      <div class="lb-num viewers">${e.total_visits}</div>
+    </div>`;
+  }).join('');
+  tbl.innerHTML = head + rows;
+}
+
+document.querySelectorAll('.lb-tab[data-order]').forEach(b => {
+  b.addEventListener('click', () => {
+    if (state.lbOrder === b.dataset.order) return;
+    document.querySelectorAll('.lb-tab[data-order]').forEach(x => x.classList.toggle('active', x === b));
+    state.lbOrder = b.dataset.order;
+    loadLeaderboard();
+  });
+});
+
+// ---------- Helpers ----------
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type === 'error' ? ' error' : '');
+  setTimeout(() => { t.className = 'toast'; }, 2400);
+}
+function escHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function escAttr(s) { return escHtml(s); }
+function generateUUID() {
+  if (crypto && crypto.randomUUID) return crypto.randomUUID();
+  // RFC 4122 v4 fallback
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

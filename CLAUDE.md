@@ -127,21 +127,28 @@ Phase boundaries are guidelines, not contracts. Reorder freely. `[x]` = done, `[
 
 ### PHASE 2 — ENGAGEMENT (the features that drive repeat visits)
 
-- [ ] **Clip Wall** — auto-pull top clips from Twitch Clips API + Kick clips for all 22 creators. Masonry grid, filterable by creator/server/platform/date. Click to play inline. Share button. **#1 traffic driver.**
-- [ ] **Creator Profiles** — individual page per creator at `/creator/{handle}`. Multi-platform presence (Twitch, Kick, TikTok, YouTube links with follower counts). Stream history heatmap (30 days). Stats (avg viewers, peak, hours, top servers). Recent clips. Server affinity from title detection. Social links. "Claim this profile" flow for creators to verify and add info.
-- [ ] **Server Status Dashboard** — "flight departures board" aesthetic. CFX API integration for real-time player counts (`https://servers-frontend.fivem.net/api/servers/single/{server_id}`). Rows: Server Name | Status | Players/Max | Peak Today | Top Streamer. Historical population line charts. Health indicator (growing/stable/declining from 30-day trend). Alert when server hits peak. Refreshes every 60s.
-- [ ] **Scene Timeline / "What Happened Today"** — visual timeline showing who was live when, which server, how long. Like a TV guide for RP. Review yesterday's scene at a glance. Uses `scene_snapshots` data from scheduler.
+- [x] **Clip Wall** — `/gta-rp/clips/` masonry grid + `/api/clips?range=24h|7d|30d`. Twitch-only (Kick has no clips API — see Section 4). Filtered to GTA V + Just Chatting. Modal player with embed, share-link button. CSP allows `clips.twitch.tv` for the iframe.
+- [x] **Creator Profiles** — implemented at `/creator-profile/{handle}` (note: not `/creator/{handle}` as initially planned — CSS-prefixed path makes the routing rule clearer in `_routes.json`). Server-rendered HTML via `functions/creator-profile/[handle].js`. Hero, conditional live banner with embed, multi-platform link row (TikTok/YouTube fields ready in the allowlist), stats panel from `stream_sessions` (90-day window, weighted-avg viewers), server affinity chips, top 6 recent clips with cold-cache fallback to `/api/clips?range=30d`.
+- [x] **Server Status Dashboard** — `/gta-rp/servers/` rebuilt as departures-board: Server / Status (UP·IDLE) / Streamers / Viewers / Top Streamer. Auto-refresh 60s. Uses `/api/uk-rp-live` (curated 22) not `/api/live-now`. **Peak Today column omitted** — `scene_snapshots` is empty in prod (the scheduler's scene capture isn't producing rows). TODO comment in code with the SQL ready.
+- [x] **Scene Timeline / "What Happened Today"** — `/gta-rp/timeline/` Gantt-row visualisation per creator from `stream_sessions` + `/api/timeline?range=today|yesterday|7d`. Server-coloured bars (12-server palette), hover tooltip, ongoing sessions pulse. Summary stats: total hours, peak concurrent (sweep-line), most active server, busiest local hour.
 
 #### Multi-View Improvements
+- [x] Stream info overlay — persistent info bar below each tile (creator/game/viewers/uptime), separate from the top-overlay badges
+- [x] Layout presets — 1×1 (Focus), 2×1 (Duo), 2×2 (Quad), 3×2 (Six). Caps selected count and trims by viewer rank when shrinking.
+- [x] Persistent selections — `localStorage` keys `cl:multi:selected:v1` and `cl:multi:layout:v1`
+- [x] Better empty state — live-creator thumbnail cards with one-click "+ Add to stage" replacing the text fallback (only used now when literally nobody is live)
+- [x] URL share — `?add=tyrone,stoker` (comma-list or repeated `?add=`) overrides saved selection on load and writes through to localStorage
 - [ ] Mobile layout — single stream with swipeable tabs for switching creators + chat
-- [ ] Bigger tiles — when only 1-2 streams selected, make them fill the screen properly
-- [ ] Stream info overlay — show game name, viewer count, uptime below each tile (not just badges)
+- [ ] Bigger tiles in Focus mode — partly addressed by Focus preset (1×1 stretches to viewport) but no dedicated full-bleed mode yet
 - [ ] Picture-in-picture mode — pop out a stream while browsing other pages
 - [ ] Quick-add from live page — button on each stream card that adds directly to multi-view without navigating
-- [ ] Layout presets — 1×1 (focus), 2×1 (side by side), 2×2 (quad), 3×2 (six pack)
-- [ ] Persistent selections — remember your last multi-view setup across sessions (localStorage)
-- [ ] Better empty state — show previews/thumbnails of who's live with one-click add buttons instead of just "Stage's empty"
 - [ ] Fix Twitch autoplay warning — ensure iframe is visible before loading `src` to satisfy Twitch's style-visibility requirement
+
+**Phase 2 retrospective (2026-04-27):**
+- Built four major surfaces (Clip Wall · Creator Profiles · Server Status · Scene Timeline) and the bulk of the Multi-View improvements in one session.
+- D1 data is the binding constraint for stats/affinity/timeline. Only 6 of the 22 allowlisted creators were in the `creators` table at start — Tyrone and reeclare were also wrongly recorded as `platform=kick` (fixed). Most profiles will show empty stats/affinity/timeline rows until the scheduler accumulates more sessions.
+- `scene_snapshots` is still empty in prod, blocking "Peak Today" on Server Status and limiting the Timeline summary stats. Investigating why the scheduler's `scenes.js` isn't producing rows is a Phase 2 follow-up.
+- Routing gotcha: `_routes.json` must explicitly include any new Function path (e.g. `/creator-profile/*`) — otherwise the catch-all in `_redirects` (`/* /index.html 200`) intercepts and serves the homepage. Burned an iteration on this.
 
 ### PHASE 3 — GAMIFICATION (community stickiness)
 - [ ] **Watch Streaks** — track daily visits (opt-in, persistent storage API). Streak counter. Badges: Week Warrior (7d), Month Regular (30d), Scene Veteran (100d). Leaderboard. Could tie into Discord roles for verified streak holders.
@@ -318,6 +325,6 @@ All three should return non-zero numbers. The scheduler `/status` shows the most
 - **Allowlist source of truth** is `functions/api/uk-rp-live.js`. Phase 2's "in-UI allowlist editor" task will move it to D1/KV for editability
 - **Kick v1/v2 endpoint scraping** is the current fallback chain after the HTML regex died (Kick switched to Next.js streaming hydration in April 2026). Phase 1's official API migration replaces both
 - **`_redirects` has a SPA-style catch-all** (`/* /index.html 200`). Any unmatched route returns the homepage with HTTP 200, never a real 404. Useful for SEO continuity, but means broken links don't surface as errors
-- **Tyrone's record has `role='rising'`** in the live D1, which excludes him from `/api/live-now` (that query filters `WHERE role = 'creator'`). One-off oddity — fix manually in the dashboard if it matters; or rely on `/api/uk-rp-live` which doesn't touch the DB
+- **D1 platform records can drift from the curated allowlist.** Always source-of-truth the allowlist in `functions/api/uk-rp-live.js`; treat `creator_platforms.platform` as a hint that needs reconciling. Tyrone (was `kick`+`rising`) and reeclare (was `kick`) got fixed in 2026-04-27 — they're now both `twitch`+`creator` and the scheduler will start producing real Twitch sessions for them on its next pass.
 - **Twitch iframe autoplay warning** — Twitch refuses `autoplay=true` if the iframe was hidden when the `src` was set. If the multi-view loads tiles before the container is rendered, console fills with "Couldn't autoplay because of style visibility checks". Phase 2 multi-view improvements include the fix
 - **`functions/_scheduled.js`** is the legacy in-Pages cron handler. **Cloudflare Pages doesn't fire crons for Pages Functions** — only the standalone Worker (`contentlore-scheduler`) actually runs on a schedule. The Pages-side file is dead code preserved for reference until safely removed

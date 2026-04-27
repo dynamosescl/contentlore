@@ -1,0 +1,68 @@
+// ================================================================
+// functions/api/streaks/leaderboard.js
+// GET /api/streaks/leaderboard?order=current|max&limit=50
+//
+// Returns the top streak holders. Privacy filter: only rows with
+// a non-empty display_name are surfaced (anonymous users never
+// appear). 5-minute KV cache per (order, limit) tuple.
+// ================================================================
+
+import { jsonResponse } from '../../_lib.js';
+
+const KV_TTL = 300;
+const EDGE_TTL = 120;
+
+export async function onRequestGet({ request, env }) {
+  const url = new URL(request.url);
+  const order = url.searchParams.get('order') === 'max' ? 'max' : 'current';
+  const limitRaw = parseInt(url.searchParams.get('limit') || '50', 10);
+  const limit = Math.min(Math.max(isNaN(limitRaw) ? 50 : limitRaw, 1), 100);
+  const cacheKey = `streaks:leaderboard:${order}:${limit}:cache`;
+
+  try {
+    const cached = await env.KV.get(cacheKey, 'json');
+    if (cached) return jsonResponse(cached, 200, { 'cache-control': `public, s-maxage=${EDGE_TTL}` });
+  } catch { /* ignore */ }
+
+  const orderColumn = order === 'max' ? 'max_streak' : 'current_streak';
+
+  try {
+    const res = await env.DB.prepare(`
+      SELECT display_name, current_streak, max_streak, total_visits, last_visit_at
+      FROM watch_streaks
+      WHERE display_name IS NOT NULL AND display_name <> ''
+      ORDER BY ${orderColumn} DESC, last_visit_at DESC
+      LIMIT ?
+    `).bind(limit).all();
+
+    const entries = (res.results || []).map((r, i) => ({
+      rank: i + 1,
+      display_name: r.display_name,
+      current_streak: r.current_streak,
+      max_streak: r.max_streak,
+      total_visits: r.total_visits,
+      last_visit_at: r.last_visit_at,
+    }));
+
+    const totalsRes = await env.DB.prepare(
+      'SELECT COUNT(*) AS users, SUM(total_visits) AS visits FROM watch_streaks'
+    ).first();
+
+    const payload = {
+      ok: true,
+      order,
+      limit,
+      count: entries.length,
+      total_users: totalsRes?.users || 0,
+      total_visits: totalsRes?.visits || 0,
+      entries,
+      fetched_at: new Date().toISOString(),
+    };
+
+    try { await env.KV.put(cacheKey, JSON.stringify(payload), { expirationTtl: KV_TTL }); } catch { /* ignore */ }
+
+    return jsonResponse(payload, 200, { 'cache-control': `public, s-maxage=${EDGE_TTL}` });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
+  }
+}
