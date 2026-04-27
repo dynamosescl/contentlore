@@ -4,14 +4,14 @@
 //
 // Returns the curated UK GTA RP allowlist with live state pulled
 // directly from Twitch + Kick APIs (bypasses the DB / scheduler).
-// 30s KV cache to keep latency down without hammering platform APIs.
+// 90s edge cache (Cache API) to keep latency down without hammering
+// platform APIs. KV is reserved for genuine state (tokens, kick avatars).
 // ================================================================
 
 import { jsonResponse, getTwitchToken, getKickToken } from '../_lib.js';
 
-const CACHE_KEY = 'uk-rp-live:cache';
+const CACHE_URL = 'https://contentlore.com/cache/uk-rp-live';
 const CACHE_TTL = 90; // seconds
-const CACHE_HEADERS = { 'cache-control': 'public, s-maxage=60' };
 const THUMB_SIZE = { w: 1280, h: 720 };
 const KICK_AVATAR_TTL = 86400 * 7; // 7 days
 
@@ -51,12 +51,12 @@ const ALLOWLIST = [
 const TWITCH_HANDLES = ALLOWLIST.filter(c => c.platform === 'twitch').map(c => c.handle);
 const KICK_HANDLES   = ALLOWLIST.filter(c => c.platform === 'kick').map(c => c.handle);
 
-export async function onRequestGet({ env }) {
-  // 1. KV cache check
-  try {
-    const cached = await env.KV.get(CACHE_KEY, 'json');
-    if (cached) return jsonResponse(cached, 200, CACHE_HEADERS);
-  } catch { /* fall through to fresh fetch */ }
+export async function onRequestGet({ env, waitUntil }) {
+  // 1. Cache API check (edge cache, unlimited writes vs KV's 1k/day cap)
+  const cache = caches.default;
+  const cacheKey = new Request(CACHE_URL);
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
 
   try {
     // 2. Fetch live data from both platforms in parallel — single batched
@@ -89,12 +89,15 @@ export async function onRequestGet({ env }) {
       live,
     };
 
-    // 5. Cache for 30s (non-fatal on failure)
-    try {
-      await env.KV.put(CACHE_KEY, JSON.stringify(payload), { expirationTtl: CACHE_TTL });
-    } catch { /* ignore */ }
-
-    return jsonResponse(payload, 200, CACHE_HEADERS);
+    const response = new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': `public, s-maxage=${CACHE_TTL}`,
+      },
+    });
+    waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }

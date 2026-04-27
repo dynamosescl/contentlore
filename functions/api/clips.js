@@ -22,8 +22,7 @@ const DEFAULT_RANGE = '7d';
 // regardless of category, so we pull a wider slice and discard non-RP content
 // below. Twitch caps `first` at 100; 20 is plenty for our 16 broadcasters.
 const PER_CREATOR = 20;
-const KV_TTL = 300;
-const EDGE_TTL = 120;
+const CACHE_TTL = 300;
 const PARENT_DOMAINS = ['contentlore.com', 'localhost'];
 
 // Keep the wall on-brand: only surface clips from GTA V or Just Chatting
@@ -51,17 +50,15 @@ const HANDLE_TO_NAME = {
   fantasiasfantasy: 'FantasiasFantasy',
 };
 
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet({ request, env, waitUntil }) {
   const url = new URL(request.url);
   const rangeParam = url.searchParams.get('range');
   const range = RANGES[rangeParam] ? rangeParam : DEFAULT_RANGE;
-  const cacheKey = `clips:${range}:cache`;
 
-  // KV cache check
-  try {
-    const cached = await env.KV.get(cacheKey, 'json');
-    if (cached) return jsonResponse(cached, 200, { 'cache-control': `public, s-maxage=${EDGE_TTL}` });
-  } catch { /* fall through */ }
+  const cache = caches.default;
+  const cacheKey = new Request(`https://contentlore.com/cache/clips/${range}`);
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
 
   try {
     const startedAt = new Date(Date.now() - RANGES[range] * 1000).toISOString();
@@ -90,11 +87,15 @@ export async function onRequestGet({ request, env }) {
       clips: allClips,
     };
 
-    try {
-      await env.KV.put(cacheKey, JSON.stringify(payload), { expirationTtl: KV_TTL });
-    } catch { /* ignore */ }
-
-    return jsonResponse(payload, 200, { 'cache-control': `public, s-maxage=${EDGE_TTL}` });
+    const response = new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': `public, s-maxage=${CACHE_TTL}`,
+      },
+    });
+    waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }

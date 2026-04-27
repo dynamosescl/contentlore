@@ -12,8 +12,6 @@
 // to justify a tighter window) plus 30s edge cache.
 // ================================================================
 
-import { jsonResponse } from '../_lib.js';
-
 // CFX server IDs verified 2026-04-27 against servers-frontend.fivem.net.
 // `null` = no public CFX ID known yet (whitelist-only / private).
 // Keep in sync with SERVERS in gta-rp/servers/index.html.
@@ -32,15 +30,14 @@ const CFX_IDS = {
   'britishlife': null,
 };
 
-const CACHE_KEY = 'cfx:populations:cache';
-const KV_TTL = 180;
-const EDGE_TTL = 60;
+const CACHE_URL = 'https://contentlore.com/cache/cfx-populations';
+const CACHE_TTL = 180;
 
-export async function onRequestGet({ env }) {
-  try {
-    const cached = await env.KV.get(CACHE_KEY, 'json');
-    if (cached) return jsonResponse(cached, 200, { 'cache-control': `public, s-maxage=${EDGE_TTL}` });
-  } catch { /* fall through */ }
+export async function onRequestGet({ waitUntil }) {
+  const cache = caches.default;
+  const cacheKey = new Request(CACHE_URL);
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
 
   const entries = Object.entries(CFX_IDS).filter(([, id]) => id);
 
@@ -65,11 +62,15 @@ export async function onRequestGet({ env }) {
     total_returned: Object.keys(populations).length,
   };
 
-  try {
-    await env.KV.put(CACHE_KEY, JSON.stringify(payload), { expirationTtl: KV_TTL });
-  } catch { /* ignore */ }
-
-  return jsonResponse(payload, 200, { 'cache-control': `public, s-maxage=${EDGE_TTL}` });
+  const response = new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': `public, s-maxage=${CACHE_TTL}`,
+    },
+  });
+  waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
 }
 
 async function fetchOne(serverId, cfxId) {

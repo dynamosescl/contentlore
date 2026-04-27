@@ -67,16 +67,17 @@ function detectServer(title) {
   return null;
 }
 
-export async function onRequestGet({ request, env }) {
+const CACHE_TTL = 300;
+
+export async function onRequestGet({ request, env, waitUntil }) {
   const url = new URL(request.url);
   const rangeKey = RANGES[url.searchParams.get('range')] ? url.searchParams.get('range') : 'today';
   const window = RANGES[rangeKey]();
-  const cacheKey = `timeline:${rangeKey}:cache`;
 
-  try {
-    const cached = await env.KV.get(cacheKey, 'json');
-    if (cached) return jsonResponse(cached, 200, { 'cache-control': 'public, s-maxage=120' });
-  } catch { /* ignore */ }
+  const cache = caches.default;
+  const cacheKey = new Request(`https://contentlore.com/cache/timeline/${rangeKey}`);
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
 
   try {
     // Sessions whose [started_at, ended_at) interval overlaps [windowStart, windowEnd).
@@ -114,8 +115,15 @@ export async function onRequestGet({ request, env }) {
       sessions,
     };
 
-    try { await env.KV.put(cacheKey, JSON.stringify(payload), { expirationTtl: 300 }); } catch { /* ignore */ }
-    return jsonResponse(payload, 200, { 'cache-control': 'public, s-maxage=120' });
+    const response = new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': `public, s-maxage=${CACHE_TTL}`,
+      },
+    });
+    waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }

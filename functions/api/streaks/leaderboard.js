@@ -9,20 +9,18 @@
 
 import { jsonResponse } from '../../_lib.js';
 
-const KV_TTL = 300;
-const EDGE_TTL = 120;
+const CACHE_TTL = 300;
 
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet({ request, env, waitUntil }) {
   const url = new URL(request.url);
   const order = url.searchParams.get('order') === 'max' ? 'max' : 'current';
   const limitRaw = parseInt(url.searchParams.get('limit') || '50', 10);
   const limit = Math.min(Math.max(isNaN(limitRaw) ? 50 : limitRaw, 1), 100);
-  const cacheKey = `streaks:leaderboard:${order}:${limit}:cache`;
 
-  try {
-    const cached = await env.KV.get(cacheKey, 'json');
-    if (cached) return jsonResponse(cached, 200, { 'cache-control': `public, s-maxage=${EDGE_TTL}` });
-  } catch { /* ignore */ }
+  const cache = caches.default;
+  const cacheKey = new Request(`https://contentlore.com/cache/streaks-leaderboard/${order}/${limit}`);
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
 
   const orderColumn = order === 'max' ? 'max_streak' : 'current_streak';
 
@@ -59,9 +57,15 @@ export async function onRequestGet({ request, env }) {
       fetched_at: new Date().toISOString(),
     };
 
-    try { await env.KV.put(cacheKey, JSON.stringify(payload), { expirationTtl: KV_TTL }); } catch { /* ignore */ }
-
-    return jsonResponse(payload, 200, { 'cache-control': `public, s-maxage=${EDGE_TTL}` });
+    const response = new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': `public, s-maxage=${CACHE_TTL}`,
+      },
+    });
+    waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err?.message || err) }, 500);
   }
