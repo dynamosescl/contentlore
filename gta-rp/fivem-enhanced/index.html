@@ -58,7 +58,6 @@ body>*{position:relative;z-index:3}
 ::selection{background:var(--signal);color:var(--bg)}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes glitch{0%,92%,94%,96%,100%{transform:none;opacity:1}93%{transform:translateX(-2px) skewX(-0.5deg);opacity:.9}95%{transform:translateX(2px) skewX(0.5deg);opacity:.85}97%{transform:translateX(-1px)}}
 @keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
 @keyframes glow-pulse{0%,100%{box-shadow:0 0 4px oklch(0.82 0.20 195/.4)}50%{box-shadow:0 0 16px oklch(0.82 0.20 195/.6),0 0 32px oklch(0.82 0.20 195/.2)}}
 .card:hover,.sc:hover,.scard:hover,.rcard:hover,.featured:hover{animation:glow-pulse 1.5s ease infinite}

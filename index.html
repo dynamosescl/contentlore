@@ -24,8 +24,6 @@
 html{background:var(--bg);color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2;background:oklch(0.85 0.18 200/.015);animation:crt 7s steps(1,end) infinite}
-@keyframes crt{0%,92%,94%,96%,100%{opacity:0}93%{opacity:1}95%{opacity:.6}97%{opacity:.9}}
 body>*{position:relative;z-index:3}
 
 .nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:100}
@@ -39,8 +37,7 @@ body>*{position:relative;z-index:3}
 .hero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
 .hero h1{font-family:var(--font-d);font-size:clamp(48px,10vw,96px);line-height:.92;letter-spacing:3px}
-.hero h1 .accent{color:var(--signal);animation:flicker 4.5s steps(1,end) infinite}
-@keyframes flicker{0%,19%,21%,23%,100%{opacity:1;text-shadow:0 0 6px oklch(0.82 0.20 195/.7),0 0 18px oklch(0.82 0.20 195/.45)}20%,22%{opacity:.85;text-shadow:none}}
+.hero h1 .accent{color:var(--signal);text-shadow:0 0 6px oklch(0.82 0.20 195/.4),0 0 18px oklch(0.82 0.20 195/.25)}
 .hero-tag{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:4px;color:var(--ink-dim);margin-top:12px}
 .hero-cta{display:flex;gap:12px;margin-top:28px}
 .cta{font-family:var(--font-d);font-size:16px;letter-spacing:2px;padding:12px 28px;text-decoration:none;clip-path:var(--cut);transition:all .25s}
@@ -100,7 +97,6 @@ body>*{position:relative;z-index:3}
 @media(max-width:600px){.grid{grid-template-columns:1fr 1fr}.hero{padding:48px 24px 36px}.pulse-stats{gap:12px}}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes glitch{0%,92%,94%,96%,100%{transform:none;opacity:1}93%{transform:translateX(-2px) skewX(-0.5deg);opacity:.9}95%{transform:translateX(2px) skewX(0.5deg);opacity:.85}97%{transform:translateX(-1px)}}
 @keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
 @keyframes glow-pulse{0%,100%{box-shadow:0 0 4px oklch(0.82 0.20 195/.4)}50%{box-shadow:0 0 16px oklch(0.82 0.20 195/.6),0 0 32px oklch(0.82 0.20 195/.2)}}
 .card:hover,.sc:hover,.scard:hover,.rcard:hover,.featured:hover{animation:glow-pulse 1.5s ease infinite}

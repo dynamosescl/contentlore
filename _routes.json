@@ -1,8 +1,9 @@
 {
   "version": 1,
-  "description": "Route /api/* through Pages Functions; everything else served as static.",
+  "description": "Route /api/* and /creator-profile/* through Pages Functions; everything else served as static.",
   "include": [
-    "/api/*"
+    "/api/*",
+    "/creator-profile/*"
   ],
   "exclude": []
 }
