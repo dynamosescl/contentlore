@@ -360,9 +360,9 @@ function renderRosterCard(s) {
   const avHtml = av
     ? `<img class="r-av" src="${av}" alt="" loading="lazy">`
     : `<div class="r-av-ph">${(s.display_name||'?').charAt(0)}</div>`;
-  const url = plat==='kick'?`https://kick.com/${s.handle}`:`https://twitch.tv/${s.handle}`;
+  const url = s.profile_url || (plat==='kick'?`https://kick.com/${s.handle}`:`https://twitch.tv/${s.handle}`);
 
-  return `<a class="rcard" href="${url}" target="_blank">
+  return `<a class="rcard" href="${url}">
     ${avHtml}
     <div class="r-info">
       <div class="r-name">${s.display_name}</div>

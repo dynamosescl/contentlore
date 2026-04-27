@@ -405,7 +405,7 @@ function renderStage() {
       <div class="tile-overlay">
         <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           <span class="tile-badge live-b"><span class="dot"></span>Live</span>
-          <span class="tile-badge name-b">${s.display_name}</span>
+          <a class="tile-badge name-b" href="/creator-profile/${s.handle}" title="View ${s.display_name}'s profile" style="text-decoration:none">${s.display_name}</a>
           <span class="tile-badge plat-b ${plat}">${plat}</span>
           ${isTop ? '<span class="tile-badge top-b">★ Most Active POV</span>' : ''}
           ${isAudio ? '<span class="tile-badge audio-b">🔊 Audio</span>' : ''}
