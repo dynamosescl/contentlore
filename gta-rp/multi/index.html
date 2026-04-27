@@ -79,17 +79,35 @@ body>*{position:relative;z-index:3}
 .stage-wrap{display:grid;grid-template-columns:1fr 340px;gap:12px;margin-bottom:24px}
 @media(max-width:1100px){.stage-wrap{grid-template-columns:1fr}}
 
-/* VIDEO GRID */
-.vid-grid{display:grid;gap:8px}
-.vid-grid.g1{grid-template-columns:1fr}
-.vid-grid.g2{grid-template-columns:1fr 1fr}
-.vid-grid.g3{grid-template-columns:1fr 1fr 1fr}
-.vid-grid.g4{grid-template-columns:1fr 1fr}
-.vid-grid.g5,.vid-grid.g6{grid-template-columns:1fr 1fr 1fr}
+/* LAYOUT PRESETS — clicking caps selected count and sets grid template */
+.layout-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--font-m)}
+.layout-bar .lb-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-right:2px}
+.layout-btn{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:5px 10px;background:var(--card2);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.layout-btn:hover{border-color:var(--signal);color:var(--fg)}
+.layout-btn.active{background:var(--signal);color:var(--bg);border-color:var(--signal);font-weight:600}
+.layout-btn .ico{display:inline-grid;gap:1px;width:14px;height:10px}
+.layout-btn .ico .c{background:currentColor;border-radius:1px}
 
-.tile{position:relative;border:1px solid var(--border);background:#000;aspect-ratio:16/9;overflow:hidden;transition:all .2s}
+/* VIDEO GRID — layouts set both columns and rows; selected count is capped to layout slot count */
+.vid-grid{display:grid;gap:8px}
+.vid-grid.layout-focus{grid-template-columns:1fr}
+.vid-grid.layout-duo{grid-template-columns:1fr 1fr}
+.vid-grid.layout-quad{grid-template-columns:1fr 1fr}
+.vid-grid.layout-six{grid-template-columns:1fr 1fr 1fr}
+
+.tile{position:relative;border:1px solid var(--border);background:transparent;overflow:hidden;transition:all .2s;display:flex;flex-direction:column}
 .tile.top-tile{border-color:var(--signal);box-shadow:0 0 24px oklch(0.82 0.20 195/.55)}
+.tile-video{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
+.tile-video iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 .tile iframe{width:100%;height:100%;border:none}
+/* Persistent info bar below each tile — creator, game, viewers, uptime */
+.tile-info{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--card);border-top:1px solid var(--border);font-family:var(--font-m);font-size:11px;color:var(--ink-dim);min-height:32px;flex-wrap:wrap}
+.tile-info .ti-name{font-family:var(--font-d);font-size:14px;letter-spacing:1px;color:var(--fg);text-decoration:none}
+.tile-info .ti-name:hover{color:var(--signal)}
+.tile-info .ti-game{color:var(--signal-cyan);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile-info .ti-stat{display:inline-flex;align-items:center;gap:4px}
+.tile-info .ti-stat.viewers{color:var(--signal);font-weight:600}
+.tile-info .ti-stat.uptime{color:var(--ink-faint);margin-left:auto}
 .tile-overlay{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:linear-gradient(180deg,rgba(0,0,0,.8),transparent);pointer-events:none;flex-wrap:wrap;gap:4px}
 .tile-overlay>*{pointer-events:auto}
 .tile-badge{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;padding:2px 6px;background:rgba(0,0,0,.6);display:inline-flex;align-items:center;gap:4px}
@@ -116,10 +134,26 @@ body>*{position:relative;z-index:3}
 .chat-tab.active .plat{color:oklch(0.82 0.20 195/.7)}
 .chat-frame{flex:1;width:100%;border:none;background:#000}
 
-/* EMPTY STAGE */
-.empty-stage{border:1px dashed var(--border);background:oklch(0.13 0.05 295/.4);padding:48px;text-align:center;margin-bottom:24px}
-.empty-stage h3{font-family:var(--font-d);font-size:clamp(28px,4vw,42px);color:var(--fg);margin-bottom:8px}
-.empty-stage p{font-size:13px;color:var(--ink-dim);max-width:400px;margin:0 auto}
+/* EMPTY STAGE — when nothing's selected we show live thumbnails with one-click add */
+.empty-stage{border:1px dashed var(--border);background:oklch(0.13 0.05 295/.4);padding:36px 24px;margin-bottom:24px}
+.empty-stage.no-live{text-align:center;padding:48px}
+.empty-stage h3{font-family:var(--font-d);font-size:clamp(26px,4vw,40px);color:var(--fg);margin-bottom:6px;letter-spacing:1px}
+.empty-stage p{font-size:13px;color:var(--ink-dim);max-width:520px;margin:0 0 22px}
+.empty-stage.no-live p{margin:0 auto;max-width:400px}
+.es-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:16px}
+.es-card{position:relative;background:var(--card);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:all .2s;text-align:left}
+.es-card:hover{border-color:var(--signal);transform:translateY(-2px);box-shadow:0 0 20px oklch(0.82 0.20 195/.3)}
+.es-thumb{aspect-ratio:16/9;background:var(--card2);position:relative;overflow:hidden}
+.es-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.es-thumb .ph{display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--font-d);font-size:60px;color:oklch(0.55 0.06 295/.5)}
+.es-vw{position:absolute;top:6px;right:6px;font-family:var(--font-m);font-size:10px;font-weight:600;padding:2px 6px;background:oklch(0.09 0.04 295/.85);color:var(--signal);border:1px solid oklch(0.82 0.20 195/.4)}
+.es-live{position:absolute;top:6px;left:6px;font-family:var(--font-m);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:2px;padding:2px 6px;background:var(--signal);color:var(--bg);display:inline-flex;align-items:center;gap:4px}
+.es-live .dot{width:5px;height:5px;border-radius:50%;background:var(--bg);animation:lpulse 2s infinite}
+.es-body{padding:10px 12px}
+.es-name{font-family:var(--font-d);font-size:18px;letter-spacing:1px;color:var(--fg);margin-bottom:2px}
+.es-meta{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-faint)}
+.es-add{display:block;width:100%;padding:8px;background:oklch(0.82 0.20 195/.12);border:none;border-top:1px solid oklch(0.82 0.20 195/.4);color:var(--signal);font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:600;cursor:pointer;transition:background .15s}
+.es-add:hover{background:oklch(0.82 0.20 195/.25)}
 
 /* ENDED SCENES */
 .ended{margin-bottom:24px}
@@ -199,7 +233,7 @@ body>*{position:relative;z-index:3}
       <p class="sub">Pick up to 6 streams across Twitch + Kick. All start muted — click a tile to unmute.</p>
     </div>
     <div class="header-right">
-      <span class="count" id="sel-count">0/4 selected</span>
+      <span class="count" id="sel-count">0/6 selected</span>
       <button class="clear" id="clear-btn" onclick="clearAll()" style="display:none">Clear</button>
       <label class="af-toggle" id="af-toggle" title="Auto-unmute the most active POV">
         <input type="checkbox" onchange="toggleAudioFollow(this.checked)">
@@ -208,6 +242,15 @@ body>*{position:relative;z-index:3}
       </label>
       <button class="watch-btn" onclick="watchLiveScene()">🔥 Watch Live Scene</button>
     </div>
+  </div>
+
+  <!-- LAYOUT PRESETS -->
+  <div class="layout-bar" style="margin-bottom:14px">
+    <span class="lb-label">Layout</span>
+    <button class="layout-btn" data-layout="focus" onclick="setLayout('focus')" title="Focus — single stream"><span class="ico" style="grid-template-columns:1fr;grid-template-rows:1fr"><span class="c"></span></span>Focus</button>
+    <button class="layout-btn" data-layout="duo" onclick="setLayout('duo')" title="Duo — two streams side by side"><span class="ico" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr"><span class="c"></span><span class="c"></span></span>Duo</button>
+    <button class="layout-btn" data-layout="quad" onclick="setLayout('quad')" title="Quad — 2×2"><span class="ico" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr"><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span></span>Quad</button>
+    <button class="layout-btn active" data-layout="six" onclick="setLayout('six')" title="Six — 3×2 (max)"><span class="ico" style="grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr"><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span></span>Six</button>
   </div>
 
   <!-- STAGE -->
@@ -228,17 +271,70 @@ body>*{position:relative;z-index:3}
 const MAX = 6;
 const PARENT = location.hostname;
 
+const LAYOUTS = {
+  focus: { cap: 1, label: 'Focus' },
+  duo:   { cap: 2, label: 'Duo' },
+  quad:  { cap: 4, label: 'Quad' },
+  six:   { cap: 6, label: 'Six' },
+};
+const STORAGE_KEY = 'cl:multi:selected:v1';
+const LAYOUT_STORAGE_KEY = 'cl:multi:layout:v1';
+
 let streams = [];
 let selected = [];
+let layoutMode = 'six';
 let activeChat = null;
-let autoMode = true;
+let autoMode = true;     // flips false once user makes any manual choice OR a saved selection is restored
 let audioFollow = false;
 let unmutedKey = null;
 let endedScenes = [];
 let lastLabel = null;
 let lastPicks = [];
+let initialized = false; // guards init logic so it runs once after first loadData
 
 function skey(s) { return s.platform + ':' + (s.handle || s.display_name.toLowerCase()); }
+function layoutCap() { return LAYOUTS[layoutMode]?.cap ?? MAX; }
+
+// === PERSISTENCE ===
+function saveSelection() {
+  try {
+    if (selected.length === 0) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(selected));
+  } catch { /* storage may be unavailable in private mode */ }
+}
+function loadSavedSelection() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function saveLayout() {
+  try { localStorage.setItem(LAYOUT_STORAGE_KEY, layoutMode); } catch { /* ignore */ }
+}
+function loadSavedLayout() {
+  try {
+    const v = localStorage.getItem(LAYOUT_STORAGE_KEY);
+    return LAYOUTS[v] ? v : null;
+  } catch { return null; }
+}
+
+// === URL PARAMS ===
+// Supports both ?add=tyrone&add=stoker (multiple params) and ?add=tyrone,stoker (comma list).
+function parseAddParams() {
+  const params = new URLSearchParams(location.search);
+  const all = params.getAll('add').flatMap(v => v.split(',')).map(v => v.trim().toLowerCase()).filter(Boolean);
+  return [...new Set(all)];
+}
+
+// Resolve a list of handles to skeys against currently-loaded streams.
+function handlesToKeys(handles) {
+  const keys = [];
+  for (const h of handles) {
+    const s = streams.find(s => (s.handle || '').toLowerCase() === h);
+    if (s) keys.push(skey(s));
+  }
+  return keys;
+}
 
 function fmtBig(n) {
   if (n == null) return '—';
@@ -273,7 +369,32 @@ async function loadData() {
     const r = await fetch('/api/uk-rp-live');
     const d = await r.json();
     streams = (d.ok && d.live) ? d.live : [];
-    // Server pre-sorts: live by viewers desc, then offline alphabetical
+
+    // First-run init: hydrate state from URL ?add= or localStorage before any rendering.
+    if (!initialized) {
+      initialized = true;
+      const savedLayout = loadSavedLayout();
+      if (savedLayout) {
+        layoutMode = savedLayout;
+        document.querySelectorAll('.layout-btn').forEach(b => b.classList.toggle('active', b.dataset.layout === layoutMode));
+      }
+      const urlHandles = parseAddParams();
+      if (urlHandles.length > 0) {
+        selected = handlesToKeys(urlHandles).slice(0, layoutCap());
+        autoMode = false;
+        if (selected.length) activeChat = selected[0];
+        saveSelection();
+      } else {
+        const saved = loadSavedSelection();
+        if (saved && saved.length > 0) {
+          // Filter saved selection against current allowlist (handles may have been removed)
+          selected = saved.filter(k => streams.some(s => skey(s) === k)).slice(0, layoutCap());
+          autoMode = false;
+          if (selected.length) activeChat = selected[0];
+        }
+      }
+    }
+
     if (autoMode) autoSelect();
     renderAll();
   } catch(e) {
@@ -285,7 +406,7 @@ async function loadData() {
 function autoSelect() {
   const live = streams.filter(s => s.is_live).sort((a,b) => (b.viewers||0)-(a.viewers||0));
   if (live.length === 0) return;
-  const picks = live.slice(0, MAX);
+  const picks = live.slice(0, layoutCap());
   const keys = picks.map(skey);
   const label = 'Top viewers';
 
@@ -298,6 +419,7 @@ function autoSelect() {
   lastPicks = keys;
   selected = keys;
   if (!activeChat || !keys.includes(activeChat)) activeChat = keys[0] || null;
+  saveSelection();
 }
 
 function watchLiveScene() {
@@ -311,14 +433,16 @@ function toggle(stream) {
   lastLabel = null;
   lastPicks = [];
   const key = skey(stream);
+  const cap = layoutCap();
   if (selected.includes(key)) {
     selected = selected.filter(k => k !== key);
     if (activeChat === key) activeChat = selected[0] || null;
   } else {
-    if (selected.length >= MAX) return;
+    if (selected.length >= cap) return;
     selected.push(key);
     if (!activeChat) activeChat = key;
   }
+  saveSelection();
   renderAll();
 }
 
@@ -329,6 +453,43 @@ function clearAll() {
   unmutedKey = null;
   lastLabel = null;
   lastPicks = [];
+  saveSelection();
+  renderAll();
+}
+
+// Adding from the empty-state live-card grid — same as toggle(stream) but always ADD,
+// never remove (you can't see an "add" button for a stream that's already on stage).
+function addStreamByKey(key) {
+  const s = streams.find(x => skey(x) === key);
+  if (!s) return;
+  if (selected.includes(key)) return;
+  if (selected.length >= layoutCap()) return;
+  autoMode = false;
+  lastLabel = null;
+  lastPicks = [];
+  selected.push(key);
+  if (!activeChat) activeChat = key;
+  saveSelection();
+  renderAll();
+}
+
+function setLayout(mode) {
+  if (!LAYOUTS[mode] || mode === layoutMode) return;
+  layoutMode = mode;
+  const cap = layoutCap();
+  // Trim selection if the new layout is smaller — keep highest-viewer streams.
+  if (selected.length > cap) {
+    const ranked = selected
+      .map(k => ({ k, viewers: streams.find(s => skey(s) === k)?.viewers || 0 }))
+      .sort((a, b) => b.viewers - a.viewers)
+      .slice(0, cap)
+      .map(x => x.k);
+    selected = ranked;
+    if (!selected.includes(activeChat)) activeChat = selected[0] || null;
+    saveSelection();
+  }
+  document.querySelectorAll('.layout-btn').forEach(b => b.classList.toggle('active', b.dataset.layout === mode));
+  saveLayout();
   renderAll();
 }
 
@@ -360,7 +521,7 @@ function removeTile(stream) { toggle(stream); }
 // === RENDER ===
 function renderAll() {
   // Header
-  document.getElementById('sel-count').textContent = selected.length + '/' + MAX + ' selected';
+  document.getElementById('sel-count').textContent = selected.length + '/' + layoutCap() + ' selected';
   document.getElementById('clear-btn').style.display = selected.length > 0 ? '' : 'none';
 
   renderStage();
@@ -368,16 +529,52 @@ function renderAll() {
   renderRoster();
 }
 
+function renderEmptyStage() {
+  const area = document.getElementById('stage-area');
+  const live = streams.filter(s => s.is_live).sort((a, b) => (b.viewers || 0) - (a.viewers || 0));
+
+  if (live.length === 0) {
+    area.innerHTML = `<div class="empty-stage no-live">
+      <h3>Stage's empty</h3>
+      <p>Nobody from the roster is live right now. Come back when the scene wakes up — usually around 6pm UK time.</p>
+    </div>`;
+    return;
+  }
+
+  const cards = live.map(s => {
+    const k = skey(s);
+    const plat = (s.platform || 'twitch').toLowerCase();
+    const thumbResolved = s.thumbnail_url || '';
+    const thumbHtml = thumbResolved
+      ? `<img src="${thumbResolved}" alt="" loading="lazy">`
+      : `<div class="ph">${(s.display_name || '?').charAt(0)}</div>`;
+    return `<div class="es-card">
+      <div class="es-thumb">
+        ${thumbHtml}
+        <span class="es-live"><span class="dot"></span>Live</span>
+        ${s.viewers != null ? `<span class="es-vw">${fmtBig(s.viewers)} viewers</span>` : ''}
+      </div>
+      <div class="es-body">
+        <div class="es-name">${s.display_name}</div>
+        <div class="es-meta">${plat}${s.game_name ? ' · ' + s.game_name : ''}${s.uptime_mins ? ' · ' + fmtUptime(s.uptime_mins) : ''}</div>
+      </div>
+      <button class="es-add" onclick="addStreamByKey('${k}')">+ Add to stage</button>
+    </div>`;
+  }).join('');
+
+  area.innerHTML = `<div class="empty-stage">
+    <h3>Stage's empty</h3>
+    <p>One-click add any of the ${live.length} creator${live.length === 1 ? '' : 's'} live right now, or pick from the full roster below. Layout: <strong style="color:var(--fg);text-transform:uppercase">${LAYOUTS[layoutMode].label}</strong> (max ${layoutCap()}).</p>
+    <div class="es-grid">${cards}</div>
+  </div>`;
+}
+
 function renderStage() {
   const area = document.getElementById('stage-area');
   const selStreams = selected.map(k => streams.find(s => skey(s)===k)).filter(s => s && s.is_live);
 
   if (selStreams.length === 0) {
-    const hasLive = streams.some(s => s.is_live);
-    area.innerHTML = `<div class="empty-stage">
-      <h3>Stage's empty</h3>
-      <p>${hasLive ? 'Pick up to '+MAX+' streams from the roster below to load them onto the stage.' : "Nobody from the roster is live right now. Come back when the scene wakes up."}</p>
-    </div>`;
+    renderEmptyStage();
     return;
   }
 
@@ -389,7 +586,7 @@ function renderStage() {
     <span class="mode-badge${autoMode?' auto':''}">${autoMode ? 'Auto · Top viewers' : 'Manual'}</span>
   </div>`;
 
-  const gridClass = 'vid-grid g' + Math.min(selStreams.length, 6);
+  const gridClass = 'vid-grid layout-' + layoutMode;
   const tiles = selStreams.map(s => {
     const k = skey(s);
     const isTop = k === topKey;
@@ -402,19 +599,26 @@ function renderStage() {
       : `https://player.kick.com/${encodeURIComponent(s.handle)}?muted=${muted}&autoplay=true`;
 
     return `<div class="tile${isTop?' top-tile':''}">
-      <iframe src="${src}" key="${k}-${muted?'m':'u'}" allowfullscreen allow="autoplay;fullscreen;picture-in-picture"></iframe>
-      <div class="tile-overlay">
-        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <span class="tile-badge live-b"><span class="dot"></span>Live</span>
-          <a class="tile-badge name-b" href="/creator-profile/${s.handle}" title="View ${s.display_name}'s profile" style="text-decoration:none">${s.display_name}</a>
-          <span class="tile-badge plat-b ${plat}">${plat}</span>
-          ${isTop ? '<span class="tile-badge top-b">★ Most Active POV</span>' : ''}
-          ${isAudio ? '<span class="tile-badge audio-b">🔊 Audio</span>' : ''}
+      <div class="tile-video">
+        <iframe src="${src}" key="${k}-${muted?'m':'u'}" allowfullscreen allow="autoplay;fullscreen;picture-in-picture"></iframe>
+        <div class="tile-overlay">
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <span class="tile-badge live-b"><span class="dot"></span>Live</span>
+            <span class="tile-badge plat-b ${plat}">${plat}</span>
+            ${isTop ? '<span class="tile-badge top-b">★ Most Active POV</span>' : ''}
+            ${isAudio ? '<span class="tile-badge audio-b">🔊 Audio</span>' : ''}
+          </div>
+          <div style="display:flex;gap:4px">
+            ${muted ? `<button class="tile-btn" onclick="unmuteTile('${k}')" title="Unmute">🔊</button>` : ''}
+            <button class="tile-btn remove" onclick="removeTile(streams.find(s=>skey(s)==='${k}'))" title="Remove">✕</button>
+          </div>
         </div>
-        <div style="display:flex;gap:4px">
-          ${muted ? `<button class="tile-btn" onclick="unmuteTile('${k}')" title="Unmute">🔊</button>` : ''}
-          <button class="tile-btn remove" onclick="removeTile(streams.find(s=>skey(s)==='${k}'))" title="Remove">✕</button>
-        </div>
+      </div>
+      <div class="tile-info">
+        <a class="ti-name" href="/creator-profile/${s.handle}" title="View ${s.display_name}'s profile">${s.display_name}</a>
+        ${s.game_name ? `<span class="ti-game">${s.game_name}</span>` : ''}
+        ${s.viewers != null ? `<span class="ti-stat viewers">${fmtBig(s.viewers)} watching</span>` : ''}
+        ${s.uptime_mins ? `<span class="ti-stat uptime">${fmtUptime(s.uptime_mins)}</span>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -476,10 +680,11 @@ function renderEnded() {
 
 function renderRoster() {
   const grid = document.getElementById('roster-grid');
+  const cap = layoutCap();
   grid.innerHTML = streams.map(s => {
     const k = skey(s);
     const isSel = selected.includes(k);
-    const disabled = !isSel && selected.length >= MAX;
+    const disabled = !isSel && selected.length >= cap;
     const plat = (s.platform||'twitch').toLowerCase();
 
     return `<button class="rc${isSel?' selected':''}${disabled?' disabled':''}" onclick="${disabled?'':(`toggle(streams.find(s=>skey(s)==='${k}'))`)}">
