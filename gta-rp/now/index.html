@@ -12,11 +12,11 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:oklch(0.09 0.04 295);--fg:oklch(0.97 0.02 320);
-  --card:oklch(0.13 0.05 295);--card2:oklch(0.18 0.06 295);
+  --bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);
+  --card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);
   --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
   --signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);
-  --border:oklch(0.28 0.08 295);--live:oklch(0.82 0.20 195);
+  --border:oklch(0.28 0.06 190);--live:oklch(0.82 0.20 195);
   --twitch:oklch(0.65 0.25 295);--kick:oklch(0.82 0.22 145);
   --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
 }
@@ -83,7 +83,7 @@ body>*{position:relative;z-index:3}
 .srv-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
 .srv-name{font-family:var(--font-d);font-size:18px}
 .srv-stat{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-dim)}
-.srv-bar{height:6px;background:oklch(0.09 0.04 295/.6);overflow:hidden}
+.srv-bar{height:6px;background:oklch(0.10 0.04 190/.6);overflow:hidden}
 .srv-fill{height:100%;transition:width .7s}
 .srv-fill.active{background:var(--signal)}
 .srv-fill.quiet{background:oklch(0.55 0.06 295/.3)}
@@ -101,7 +101,7 @@ body>*{position:relative;z-index:3}
 .ticker-head .th-label .dot{width:6px;height:6px;border-radius:50%;background:var(--live);animation:lp 2s infinite}
 .ticker-head .th-count{font-family:var(--font-m);font-size:10px;color:var(--ink-faint)}
 .ticker-list{flex:1;overflow-y:auto;padding:8px 12px}
-.te{padding:8px 0;border-bottom:1px solid oklch(0.28 0.08 295/.4);display:flex;gap:8px}
+.te{padding:8px 0;border-bottom:1px solid oklch(0.28 0.06 190/.4);display:flex;gap:8px}
 .te:last-child{border:none}
 .te-time{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);flex-shrink:0;min-width:40px;padding-top:2px}
 .te-text{font-size:12px;color:var(--ink-dim);line-height:1.4}

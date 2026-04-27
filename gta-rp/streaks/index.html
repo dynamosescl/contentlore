@@ -12,11 +12,11 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:oklch(0.09 0.04 295);--fg:oklch(0.97 0.02 320);
-  --card:oklch(0.13 0.05 295);--card2:oklch(0.18 0.06 295);
+  --bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);
+  --card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);
   --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 295);
   --signal:oklch(0.82 0.20 195);--signal-cyan:oklch(0.85 0.18 200);
-  --border:oklch(0.28 0.08 295);--success:oklch(0.82 0.22 145);
+  --border:oklch(0.28 0.06 190);--success:oklch(0.82 0.22 145);
   --gold:oklch(0.88 0.18 95);
   --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
   --cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
@@ -97,11 +97,11 @@ body>*{position:relative;z-index:3}
 .lb-meta{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
 .lb-meta strong{color:var(--signal)}
 .lb-table{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);overflow:hidden}
-.lb-row{display:grid;grid-template-columns:60px 1fr 100px 100px 110px;gap:0;align-items:center;padding:12px 18px;border-bottom:1px solid oklch(0.28 0.08 295/.4);transition:background .15s;font-family:var(--font-m);font-size:12px}
+.lb-row{display:grid;grid-template-columns:60px 1fr 100px 100px 110px;gap:0;align-items:center;padding:12px 18px;border-bottom:1px solid oklch(0.28 0.06 190/.4);transition:background .15s;font-family:var(--font-m);font-size:12px}
 .lb-row.head{background:#000;color:var(--ink-faint);font-size:10px;text-transform:uppercase;letter-spacing:2px;font-weight:600;padding:10px 18px;position:sticky;top:48px;z-index:5}
 .lb-row.you{background:oklch(0.82 0.20 195/.10);border-color:oklch(0.82 0.20 195/.4)}
 .lb-row:last-child{border-bottom:none}
-.lb-row:hover:not(.head){background:oklch(0.18 0.06 295/.4)}
+.lb-row:hover:not(.head){background:oklch(0.19 0.06 190/.4)}
 .lb-rank{font-family:var(--font-d);font-size:18px;letter-spacing:1px;color:var(--signal)}
 .lb-rank.gold{color:var(--gold)}
 .lb-name{font-family:var(--font-d);font-size:16px;letter-spacing:1px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
