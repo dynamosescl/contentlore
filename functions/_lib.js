@@ -119,7 +119,7 @@ export async function getTwitchToken(env) {
   }
   const data = await res.json();
   await env.KV.put('twitch:app_token', data.access_token, {
-    expirationTtl: 3300, // 55 min
+    expirationTtl: 3000, // 50 min
   });
   return data.access_token;
 }
@@ -148,7 +148,7 @@ export async function getKickToken(env) {
   }
   const data = await res.json();
   await env.KV.put('kick:app_token', data.access_token, {
-    expirationTtl: 3300,
+    expirationTtl: 3000,
   });
   return data.access_token;
 }

@@ -33,8 +33,8 @@ const CFX_IDS = {
 };
 
 const CACHE_KEY = 'cfx:populations:cache';
-const KV_TTL = 60;
-const EDGE_TTL = 30;
+const KV_TTL = 180;
+const EDGE_TTL = 60;
 
 export async function onRequestGet({ env }) {
   try {

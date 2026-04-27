@@ -12,7 +12,7 @@ import { jsonResponse } from '../_lib.js';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const VALID_CHOICES = new Set(['ready', 'optimistic', 'worried', 'not-thinking']);
 const TALLY_CACHE_KEY = 'gta6:pulse:tallies:cache';
-const TALLY_TTL = 30;
+const TALLY_TTL = 300;
 
 export async function onRequestOptions() {
   return new Response(null, {

@@ -10,8 +10,8 @@
 import { jsonResponse, getTwitchToken, getKickToken } from '../_lib.js';
 
 const CACHE_KEY = 'uk-rp-live:cache';
-const CACHE_TTL = 30; // seconds
-const CACHE_HEADERS = { 'cache-control': 'public, s-maxage=20' };
+const CACHE_TTL = 90; // seconds
+const CACHE_HEADERS = { 'cache-control': 'public, s-maxage=60' };
 const THUMB_SIZE = { w: 1280, h: 720 };
 const KICK_AVATAR_TTL = 86400 * 7; // 7 days
 
@@ -227,6 +227,17 @@ async function fetchKick(env) {
     .then(r => r.ok ? r.json() : null)
     .catch(() => null);
 
+  // Read existing cached avatars FIRST so we can compare against any fresh
+  // values from /livestreams. Without this we used to rewrite the same URL
+  // every 30s — at ~3 live Kick creators that's 8.6k pointless KV writes/day.
+  const avatarsBySlug = {};
+  await Promise.all(KICK_HANDLES.map(async slug => {
+    try {
+      const v = await env.KV.get(`kick:avatar:${slug}`);
+      if (v) avatarsBySlug[slug] = v;
+    } catch { /* ignore */ }
+  }));
+
   const [channelsJson, liveJson] = await Promise.all([channelsPromise, livePromise]);
 
   const channelsBySlug = {};
@@ -239,25 +250,19 @@ async function fetchKick(env) {
   }
 
   // Fold livestream data back into our channel shape (matches by user id).
+  // Only write back to KV when the avatar URL has actually changed — Kick's
+  // CDN URLs are stable so this is effectively zero writes after warmup.
   for (const ls of (liveJson?.data || [])) {
     const slug = idToSlug[ls.broadcaster_user_id] || String(ls.slug || '').toLowerCase();
     if (!slug || !channelsBySlug[slug]) continue;
     channelsBySlug[slug]._livestream = ls;
-    if (ls.profile_picture) {
+    if (ls.profile_picture && avatarsBySlug[slug] !== ls.profile_picture) {
       try {
         await env.KV.put(`kick:avatar:${slug}`, ls.profile_picture, { expirationTtl: KICK_AVATAR_TTL });
+        avatarsBySlug[slug] = ls.profile_picture;
       } catch { /* ignore — cache is best-effort */ }
     }
   }
-
-  // Pre-load any cached avatars for slugs that didn't come back live.
-  const avatarsBySlug = {};
-  await Promise.all(KICK_HANDLES.map(async slug => {
-    try {
-      const v = await env.KV.get(`kick:avatar:${slug}`);
-      if (v) avatarsBySlug[slug] = v;
-    } catch { /* ignore */ }
-  }));
 
   return { channelsBySlug, avatarsBySlug };
 }
