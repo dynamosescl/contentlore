@@ -4,43 +4,48 @@
 //
 // Server-rendered HTML profile page for one of the curated 26.
 // Off-allowlist handles return a branded 404. Data sources:
-//   - Live state: KV `uk-rp-live:cache` (warmed by /api/uk-rp-live)
+//   - Live state: sub-request to /api/uk-rp-live  (Cache-API hit at edge)
 //   - Clips:      KV `clips:30d:cache`  (warmed by /api/clips)
 //   - History:    D1 `stream_sessions`  (joined via creator_platforms.handle)
 //   - Server affinity: keyword-match over recent stream titles
 //
-// We intentionally read the warm KV caches rather than re-call the
-// platform APIs so this page is cheap to serve and stays consistent
-// with what the rest of the site shows.
+// /api/uk-rp-live moved off KV to Cache API in commit 7bf7940 — we
+// now reach it via a same-origin sub-request, which the Cloudflare
+// edge cache short-circuits when warm.
 // ================================================================
 
+// Mirrors the ALLOWLIST in functions/api/uk-rp-live.js — keep `socials` in
+// sync between the two files. dynamoses + bags are the two confirmed
+// dual-platform creators (Twitch + Kick); everyone else gets the primary
+// handle in `socials.{primary}` and null for the rest.
 const ALLOWLIST = [
-  { handle: 'tyrone',         platform: 'twitch', name: 'Tyrone' },
-  { handle: 'lbmm',           platform: 'twitch', name: 'LBMM' },
-  { handle: 'reeclare',       platform: 'twitch', name: 'Reeclare' },
-  { handle: 'stoker',         platform: 'twitch', name: 'Stoker' },
-  { handle: 'samham',         platform: 'twitch', name: 'SamHam' },
-  { handle: 'deggyuk',        platform: 'twitch', name: 'DeggyUK' },
-  { handle: 'megsmary',       platform: 'twitch', name: 'MegsMary' },
-  { handle: 'tazzthegeeza',   platform: 'twitch', name: 'TaZzTheGeeza' },
-  { handle: 'wheelydev',      platform: 'twitch', name: 'WheelyDev' },
-  { handle: 'rexality',       platform: 'twitch', name: 'RexaliTy' },
-  { handle: 'steeel',         platform: 'twitch', name: 'Steeel' },
-  { handle: 'justj0hnnyhd',   platform: 'twitch', name: 'JustJ0hnnyHD' },
-  { handle: 'cherish_remedy', platform: 'twitch', name: 'Cherish_Remedy' },
-  { handle: 'lorddorro',      platform: 'twitch', name: 'LordDorro' },
-  { handle: 'jck0__',         platform: 'twitch', name: 'JCK0__' },
-  { handle: 'absthename',     platform: 'twitch', name: 'ABsTheName' },
-  { handle: 'essellz',          platform: 'twitch', name: 'Essellz' },
-  { handle: 'lewthescot',       platform: 'twitch', name: 'LewTheScot' },
-  { handle: 'angels365',        platform: 'twitch', name: 'Angels365' },
-  { handle: 'fantasiasfantasy', platform: 'twitch', name: 'FantasiasFantasy' },
-  { handle: 'kavsual',        platform: 'kick',   name: 'Kavsual' },
-  { handle: 'shammers',       platform: 'kick',   name: 'Shammers' },
-  { handle: 'bags',           platform: 'kick',   name: 'Bags' },
-  { handle: 'dynamoses',      platform: 'kick',   name: 'Dynamoses' },
-  { handle: 'dcampion',       platform: 'kick',   name: 'DCampion' },
-  { handle: 'elliewaller',    platform: 'kick',   name: 'EllieWaller' },
+  { handle: 'tyrone',           platform: 'twitch', name: 'Tyrone',           socials: { twitch: 'tyrone',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'lbmm',             platform: 'twitch', name: 'LBMM',             socials: { twitch: 'lbmm',             kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'reeclare',         platform: 'twitch', name: 'Reeclare',         socials: { twitch: 'reeclare',         kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'stoker',           platform: 'twitch', name: 'Stoker',           socials: { twitch: 'stoker',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'samham',           platform: 'twitch', name: 'SamHam',           socials: { twitch: 'samham',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'deggyuk',          platform: 'twitch', name: 'DeggyUK',          socials: { twitch: 'deggyuk',          kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'megsmary',         platform: 'twitch', name: 'MegsMary',         socials: { twitch: 'megsmary',         kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'tazzthegeeza',     platform: 'twitch', name: 'TaZzTheGeeza',     socials: { twitch: 'tazzthegeeza',     kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'wheelydev',        platform: 'twitch', name: 'WheelyDev',        socials: { twitch: 'wheelydev',        kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'rexality',         platform: 'twitch', name: 'RexaliTy',         socials: { twitch: 'rexality',         kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'steeel',           platform: 'twitch', name: 'Steeel',           socials: { twitch: 'steeel',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'justj0hnnyhd',     platform: 'twitch', name: 'JustJ0hnnyHD',     socials: { twitch: 'justj0hnnyhd',     kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'cherish_remedy',   platform: 'twitch', name: 'Cherish_Remedy',   socials: { twitch: 'cherish_remedy',   kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'lorddorro',        platform: 'twitch', name: 'LordDorro',        socials: { twitch: 'lorddorro',        kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'jck0__',           platform: 'twitch', name: 'JCK0__',           socials: { twitch: 'jck0__',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'absthename',       platform: 'twitch', name: 'ABsTheName',       socials: { twitch: 'absthename',       kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'essellz',          platform: 'twitch', name: 'Essellz',          socials: { twitch: 'essellz',          kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'lewthescot',       platform: 'twitch', name: 'LewTheScot',       socials: { twitch: 'lewthescot',       kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'angels365',        platform: 'twitch', name: 'Angels365',        socials: { twitch: 'angels365',        kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'fantasiasfantasy', platform: 'twitch', name: 'FantasiasFantasy', socials: { twitch: 'fantasiasfantasy', kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'kavsual',          platform: 'kick',   name: 'Kavsual',          socials: { twitch: null,               kick: 'kavsual',     tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'shammers',         platform: 'kick',   name: 'Shammers',         socials: { twitch: null,               kick: 'shammers',    tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  // Confirmed multi-platform via D1 migration 010.
+  { handle: 'bags',             platform: 'kick',   name: 'Bags',             socials: { twitch: 'bags',             kick: 'bags',        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'dynamoses',        platform: 'kick',   name: 'Dynamoses',        socials: { twitch: 'dynamoses',        kick: 'dynamoses',   tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'dcampion',         platform: 'kick',   name: 'DCampion',         socials: { twitch: null,               kick: 'dcampion',    tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'elliewaller',      platform: 'kick',   name: 'EllieWaller',      socials: { twitch: null,               kick: 'elliewaller', tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
 ];
 
 // Subset of SERVERS data needed for affinity detection. Kept in sync with
@@ -81,9 +86,9 @@ export async function onRequestGet({ params, env, request }) {
 
   if (!entry) return notFoundPage(rawHandle);
 
-  // Pull the warm KV caches and the D1 history in parallel.
+  // Pull the live state, clips cache, and D1 history in parallel.
   const [liveCache, clipsCache, dbProfile, sessionRows] = await Promise.all([
-    env.KV.get('uk-rp-live:cache', 'json').catch(() => null),
+    getLiveCache(env, request),
     getClipsCache(env, request),
     lookupDbCreator(env, entry.handle),
     querySessions(env, entry.handle).catch(() => null),
@@ -115,6 +120,22 @@ export async function onRequestGet({ params, env, request }) {
 // ================================================================
 // Data
 // ================================================================
+
+// Sub-request /api/uk-rp-live for fresh live state. The endpoint is on
+// the same origin and uses Cache API internally (commit 7bf7940), so a
+// warm edge cache short-circuits this in ~1ms; cold path costs one
+// platform API round-trip which we'd be paying anyway.
+async function getLiveCache(env, request) {
+  try {
+    const url = new URL('/api/uk-rp-live', request.url);
+    const res = await fetch(url.toString(), { headers: { 'cf-pages-internal': '1' } });
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.ok) return json;
+    }
+  } catch { /* swallow — profile still renders without live state */ }
+  return null;
+}
 
 // Clip cache lookup with cold-start fallback. Preference order:
 //   1. clips:30d:cache  — preferred; widest window, freshest 5-min KV value
@@ -436,7 +457,7 @@ body>*{position:relative;z-index:3}
       <div class="hero-actions">
         <a class="btn btn-primary" href="${esc(platUrl)}" target="_blank" rel="noopener">Follow on ${platLabel} ↗</a>
         ${isLive ? `<a class="btn btn-ghost" href="#live">Watch now ↓</a>` : ''}
-        <span data-cl-notify="${esc(entry.handle)}" style="display:inline-block;vertical-align:middle"></span>
+        <span data-cl-notify="${esc(handle)}" style="display:inline-block;vertical-align:middle"></span>
       </div>
     </div>
   </div>
