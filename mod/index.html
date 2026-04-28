@@ -193,22 +193,32 @@ function fmtBig(n) {
 }
 
 async function loadDashboard() {
-  // KPIs
+  // KPIs — keyed off the curated 26 (the only set we care about), not
+  // the full creators table which is full of legacy/discovery rows.
   try {
-    const [liveR, statsR] = await Promise.all([
+    const [liveR, curatedR] = await Promise.all([
       fetch('/api/live-now'),
-      fetch('/api/admin/backfill-avatars', {headers:{Authorization:'Bearer '+TOKEN}}),
+      fetch('/api/uk-rp-live'),
     ]);
     const liveD = await liveR.json();
-    const statsD = await statsR.json();
+    const curatedD = await curatedR.json();
     const live = (liveD.ok && liveD.live) ? liveD.live : [];
     const viewers = live.reduce((s,c) => s+(c.viewers||0), 0);
+
+    // Missing avatars = curated entries whose avatar_url is null OR
+    // is the Twitch "previews-ttv" placeholder. Source-of-truth count
+    // is whatever /api/uk-rp-live returns (always the curated 26).
+    const curatedAll = (curatedD.ok && curatedD.live) ? curatedD.live : [];
+    const totalCurated = curatedD.count || curatedAll.length || 26;
+    const missingAv = curatedAll.filter(c =>
+      !c.avatar_url || /previews-ttv/.test(c.avatar_url)
+    ).length;
 
     document.getElementById('kpis').innerHTML = `
       <div class="kpi"><div class="v ${live.length>0?'ok':'warn'}">${live.length}</div><div class="l">live now</div></div>
       <div class="kpi"><div class="v signal">${fmtBig(viewers)}</div><div class="l">viewers</div></div>
-      <div class="kpi"><div class="v">${statsD.total_creators||'?'}</div><div class="l">total creators</div></div>
-      <div class="kpi"><div class="v ${statsD.missing_avatars>100?'warn':'ok'}">${statsD.missing_avatars||0}</div><div class="l">missing avatars</div></div>
+      <div class="kpi"><div class="v">${totalCurated}</div><div class="l">curated creators</div></div>
+      <div class="kpi"><div class="v ${missingAv>0?'warn':'ok'}">${missingAv}</div><div class="l">missing avatars</div></div>
     `;
 
     // Live table
@@ -228,15 +238,53 @@ async function loadDashboard() {
     document.getElementById('kpis').innerHTML = '<div class="kpi"><div class="v warn">ERR</div><div class="l">Failed to load</div></div>';
   }
 
-  // Scheduler status
+  // Scheduler status — parses the actual /status response shape:
+  //   { ok: true, curated: { started_at, creators, twitch:{ok,live,offline,error},
+  //                          kick:{...}, snapshots_written, creators_missing_id,
+  //                          discord:{transitions,sent,skipped},
+  //                          push:{transitions,sent,errors,pruned,skipped},
+  //                          duration_ms } }
   try {
     const r = await fetch(SCHED_URL+'/status');
+    if (!r.ok) throw new Error('HTTP '+r.status);
     const d = await r.json();
-    const lastPoll = d.poll ? new Date(d.poll.timestamp || d.poll.at || 0).toLocaleString() : 'Never';
-    const lastSessions = d.sessions ? new Date(d.sessions.timestamp || d.sessions.at || 0).toLocaleString() : 'Never';
-    document.getElementById('scheduler-panel').innerHTML = `<div class="log">Last poll: ${lastPoll}\nLast session rebuild: ${lastSessions}\nCursor: ${d.cursor || 'none'}\n\nFull response:\n${JSON.stringify(d, null, 2)}</div>`;
+    const c = d.curated || {};
+    const startedAt = c.started_at ? new Date(c.started_at).toLocaleString() : 'Never';
+    const ageStr = c.started_at
+      ? ((Date.now() - new Date(c.started_at).getTime()) / 60000).toFixed(1) + ' min ago'
+      : '—';
+    const tw = c.twitch || {};
+    const kk = c.kick || {};
+    const dc = c.discord || {};
+    const pu = c.push || {};
+    const platStatus = (p) => p.error
+      ? `<span style="color:var(--red)">error: ${escapeHtml(p.error)}</span>`
+      : `<span style="color:var(--green)">${p.live||0} live</span> · ${p.offline||0} offline`;
+
+    document.getElementById('scheduler-panel').innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:12px">
+        <div class="kpi"><div class="v" style="font-size:18px;color:var(--signal)">${escapeHtml(ageStr)}</div><div class="l">last poll</div></div>
+        <div class="kpi"><div class="v" style="font-size:24px">${c.snapshots_written||0}</div><div class="l">snapshots written</div></div>
+        <div class="kpi"><div class="v" style="font-size:24px">${c.duration_ms||0}<span style="font-size:13px;color:var(--ink-faint)"> ms</span></div><div class="l">tick duration</div></div>
+        <div class="kpi"><div class="v" style="font-size:24px">${dc.sent||0}<span style="font-size:13px;color:var(--ink-faint)">/${dc.transitions||0}</span></div><div class="l">discord posts (sent/transitions)</div></div>
+        <div class="kpi"><div class="v" style="font-size:24px">${pu.sent||0}<span style="font-size:13px;color:var(--ink-faint)">/${pu.transitions||0}</span></div><div class="l">push posts (sent/transitions)</div></div>
+      </div>
+      <table>
+        <thead><tr><th>Platform</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Twitch</td><td>${platStatus(tw)}</td></tr>
+          <tr><td>Kick</td><td>${platStatus(kk)}</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:8px;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px">
+        Started ${escapeHtml(startedAt)} · ${(c.creators||0)} curated creators polled
+        ${(c.creators_missing_id && c.creators_missing_id.length) ? ` · <span style="color:var(--red)">missing id: ${c.creators_missing_id.map(escapeHtml).join(', ')}</span>` : ''}
+      </div>
+      <details style="margin-top:10px"><summary style="cursor:pointer;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-faint)">Raw response</summary>
+        <div class="log" style="margin-top:6px">${escapeHtml(JSON.stringify(d, null, 2))}</div>
+      </details>`;
   } catch(e) {
-    document.getElementById('scheduler-panel').innerHTML = `<div class="log" style="color:var(--red)">Failed to reach scheduler: ${e.message}</div>`;
+    document.getElementById('scheduler-panel').innerHTML = `<div class="log" style="color:var(--red)">Failed to reach scheduler: ${escapeHtml(e.message)}</div>`;
   }
 }
 
