@@ -38,24 +38,48 @@ export async function onRequestGet(context) {
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 200);
 
   let orderBy;
+  let whereExtra = '';
   switch (sort) {
     case 'viewers': orderBy = 'discovered_viewers DESC'; break;
     case 'recent': orderBy = 'last_seen DESC'; break;
+    case 'recommended':
+      // Raid/host targets only, ranked by distinct sources then by
+      // discovery_count then by recency. The distinct-source count is
+      // computed in JS below since SQLite has no JSON_ARRAY_LENGTH
+      // function in the json1 build D1 ships.
+      whereExtra = "AND source IN ('raid', 'host')";
+      orderBy = 'discovery_count DESC, last_seen DESC';
+      break;
     case 'count': default: orderBy = 'discovery_count DESC, discovered_viewers DESC'; break;
   }
 
   try {
     const result = await env.DB.prepare(`
       SELECT * FROM pending_creators
-      WHERE status = ?
+      WHERE status = ? ${whereExtra}
       ORDER BY ${orderBy}
       LIMIT ?
     `).bind(status, limit).all();
 
-    const pending = (result.results || []).map(row => ({
-      ...row,
-      discovered_tags: JSON.parse(row.discovered_tags || '[]'),
-    }));
+    const pending = (result.results || []).map(row => {
+      let raidSources = [];
+      try { raidSources = JSON.parse(row.raid_sources || '[]'); } catch { raidSources = []; }
+      return {
+        ...row,
+        discovered_tags: JSON.parse(row.discovered_tags || '[]'),
+        raid_sources: raidSources,
+        raid_source_count: raidSources.length,
+      };
+    });
+
+    // For ?sort=recommended, re-rank by distinct source count.
+    if (sort === 'recommended') {
+      pending.sort((a, b) => {
+        if (b.raid_source_count !== a.raid_source_count) return b.raid_source_count - a.raid_source_count;
+        if (b.discovery_count !== a.discovery_count) return b.discovery_count - a.discovery_count;
+        return (b.last_seen || '').localeCompare(a.last_seen || '');
+      });
+    }
 
     // Get counts by status
     const counts = await env.DB.prepare(`

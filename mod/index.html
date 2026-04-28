@@ -153,8 +153,11 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
     </div>
 
     <div class="tab-content" id="tab-discovery">
-      <div class="sh">Discovery Queue</div>
-      <div class="panel" id="discovery-panel"><div class="log">Loading...</div></div>
+      <div class="sh">Recommended <span style="font-family:var(--font-m);font-size:12px;color:var(--ink-faint);font-weight:400;letter-spacing:2px;text-transform:uppercase">raids + hosts from tracked streamers — strongest signal</span></div>
+      <div class="panel" id="recommended-panel"><div class="log">Loading…</div></div>
+
+      <div class="sh" style="margin-top:24px">Discovery Queue <span style="font-family:var(--font-m);font-size:12px;color:var(--ink-faint);font-weight:400;letter-spacing:2px;text-transform:uppercase">auto GTA V scan</span></div>
+      <div class="panel" id="discovery-panel"><div class="log">Loading…</div></div>
     </div>
 
     <!-- ========== Streamer Add/Edit Modal ========== -->
@@ -388,24 +391,69 @@ async function loadCreators() {
 }
 
 async function loadDiscovery() {
+  // Two parallel calls: ?sort=recommended for raid/host targets,
+  // default sort for the auto GTA V queue.
+  const recPanel = document.getElementById('recommended-panel');
+  const queuePanel = document.getElementById('discovery-panel');
+  recPanel.innerHTML = '<div class="log">Loading…</div>';
+  queuePanel.innerHTML = '<div class="log">Loading…</div>';
+
   try {
-    const r = await fetch('/api/admin/discovery', {headers:{Authorization:'Bearer '+TOKEN}});
-    if (!r.ok) throw new Error('Discovery endpoint not available ('+r.status+')');
-    const d = await r.json();
-    const queue = d.queue || d.pending || [];
-    if (queue.length === 0) {
-      document.getElementById('discovery-panel').innerHTML = '<div style="padding:16px;color:var(--ink-dim)">Discovery queue empty — no new creators pending review</div>';
+    const [recR, queueR] = await Promise.all([
+      fetch('/api/admin/discovery?sort=recommended&limit=50', { headers: { Authorization: 'Bearer ' + TOKEN } }),
+      fetch('/api/admin/discovery', { headers: { Authorization: 'Bearer ' + TOKEN } }),
+    ]);
+    if (!recR.ok || !queueR.ok) throw new Error('Discovery endpoint not available (' + recR.status + '/' + queueR.status + ')');
+    const recD = await recR.json();
+    const queueD = await queueR.json();
+    const recommended = recD.creators || [];
+    const queue = queueD.creators || [];
+
+    // ===== Recommended =====
+    if (recommended.length === 0) {
+      recPanel.innerHTML = '<div style="padding:16px;color:var(--ink-dim);font-size:14px;line-height:1.6">No raid or host targets detected yet. The next time a tracked streamer ends a stream by raiding someone, that target will appear here automatically.</div>';
     } else {
-      document.getElementById('discovery-panel').innerHTML = `<table><thead><tr><th>Name</th><th>Platform</th><th>Viewers</th><th>Action</th></tr></thead><tbody>
-        ${queue.map(c => `<tr>
-          <td>${c.display_name||c.name||'?'}</td>
-          <td><span class="badge ${(c.platform||'twitch').toLowerCase()}">${c.platform||'twitch'}</span></td>
-          <td>${c.viewers||'—'}</td>
-          <td><button class="btn" onclick="approveCreator('${c.id||c.handle}')">Approve</button></td>
-        </tr>`).join('')}</tbody></table>`;
+      recPanel.innerHTML = '<table><thead><tr><th>Name</th><th>Platform</th><th>Type</th><th>Raided / Hosted by</th><th>Hits</th><th>Last seen</th><th>Action</th></tr></thead><tbody>'
+        + recommended.map(c => {
+          const sources = (c.raid_sources || []).join(', ') || '—';
+          const sourcesBadge = (c.raid_source_count || 0) >= 2
+            ? `<span style="font-family:var(--font-d);font-size:14px;color:var(--green);margin-right:6px">${c.raid_source_count}×</span>`
+            : '';
+          const link = (c.platform === 'kick' ? 'https://kick.com/' : 'https://twitch.tv/') + c.name;
+          return `<tr>
+            <td><a href="${escapeHtml(link)}" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:none">${escapeHtml(c.name)} ↗</a></td>
+            <td><span class="badge ${(c.platform || 'twitch').toLowerCase()}">${c.platform || 'twitch'}</span></td>
+            <td><span style="font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--signal)">${escapeHtml(c.source || '?')}</span></td>
+            <td style="font-family:var(--font-m);font-size:12px;color:var(--ink-dim)">${sourcesBadge}<span title="${escapeHtml(sources)}">${escapeHtml(sources.length > 50 ? sources.slice(0, 47) + '…' : sources)}</span></td>
+            <td>${c.discovery_count || 1}</td>
+            <td style="color:var(--ink-faint);font-size:12px">${escapeHtml(fmtDate(c.last_seen))}</td>
+            <td><button class="btn" onclick="approveCreator(${c.id})">Approve</button></td>
+          </tr>`;
+        }).join('') + '</tbody></table>'
+        + '<div style="margin-top:10px;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;line-height:1.6">Targets ranked by number of distinct tracked streamers who raided/hosted them. 2× or more is an especially strong signal.</div>';
     }
-  } catch(e) {
-    document.getElementById('discovery-panel').innerHTML = `<div class="log">${e.message}</div>`;
+
+    // ===== Auto GTA V queue =====
+    if (queue.length === 0) {
+      queuePanel.innerHTML = '<div style="padding:16px;color:var(--ink-dim)">Discovery queue empty — no new streamers pending review</div>';
+    } else {
+      queuePanel.innerHTML = '<table><thead><tr><th>Name</th><th>Platform</th><th>Source</th><th>Server</th><th>Viewers</th><th>Hits</th><th>Action</th></tr></thead><tbody>'
+        + queue.map(c => {
+          const link = (c.platform === 'kick' ? 'https://kick.com/' : 'https://twitch.tv/') + c.name;
+          return `<tr>
+            <td><a href="${escapeHtml(link)}" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:none">${escapeHtml(c.name)} ↗</a></td>
+            <td><span class="badge ${(c.platform || 'twitch').toLowerCase()}">${c.platform || 'twitch'}</span></td>
+            <td style="font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:${c.source === 'raid' || c.source === 'host' ? 'var(--signal)' : 'var(--ink-faint)'}">${escapeHtml(c.source || 'discovery')}</td>
+            <td style="font-family:var(--font-m);font-size:12px;color:var(--ink-dim)">${escapeHtml(c.detected_server || '—')}</td>
+            <td>${c.discovered_viewers || '—'}</td>
+            <td>${c.discovery_count || 1}</td>
+            <td><button class="btn" onclick="approveCreator(${c.id})">Approve</button></td>
+          </tr>`;
+        }).join('') + '</tbody></table>';
+    }
+  } catch (e) {
+    recPanel.innerHTML = '<div class="log" style="color:var(--red)">Error: ' + escapeHtml(e.message) + '</div>';
+    queuePanel.innerHTML = '';
   }
 }
 
