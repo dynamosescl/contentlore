@@ -87,17 +87,19 @@ export async function onRequestGet({ params, env, request }) {
   if (!entry) return notFoundPage(rawHandle);
 
   // Pull the live state, clips cache, and D1 history in parallel.
-  const [liveCache, clipsCache, dbProfile, sessionRows] = await Promise.all([
+  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks] = await Promise.all([
     getLiveCache(env, request),
     getClipsCache(env, request),
     lookupDbCreator(env, entry.handle),
     querySessions(env, entry.handle).catch(() => null),
+    queryMonthRanks(env).catch(() => []),
   ]);
 
   const liveEntry = (liveCache?.live || []).find(c => c.handle === entry.handle) || null;
   const clips = (clipsCache?.clips || []).filter(c => c.creator_handle === entry.handle).slice(0, 6);
   const stats = aggregateStats(sessionRows || []);
   const affinity = aggregateServerAffinity(sessionRows || []);
+  const reportCard = buildReportCard(entry.handle, sessionRows || [], monthRanks);
 
   const display = liveEntry?.display_name || dbProfile?.display_name || entry.name;
   const avatar = liveEntry?.avatar_url || dbProfile?.avatar_url || null;
@@ -108,7 +110,7 @@ export async function onRequestGet({ params, env, request }) {
 
   return new Response(renderProfile({
     handle: entry.handle, name: display, platform: entry.platform,
-    avatar, liveEntry, clips, stats, affinity, socials,
+    avatar, liveEntry, clips, stats, affinity, socials, reportCard,
   }), {
     headers: {
       'content-type': 'text/html; charset=utf-8',
@@ -196,6 +198,89 @@ async function querySessions(env, handle) {
   }
 }
 
+// Hours-per-creator across the curated 26 for the current calendar month.
+// Used to compute the report-card rank without loading all 26 profiles.
+// One query, returns at most 26 rows.
+async function queryMonthRanks(env) {
+  const start = monthStartUnix();
+  const res = await env.DB.prepare(`
+    SELECT cp.handle,
+           SUM(ss.duration_mins) AS mins
+    FROM stream_sessions ss
+    INNER JOIN creator_platforms cp ON cp.creator_id = ss.creator_id AND cp.is_primary = 1
+    WHERE ss.started_at >= ?
+    GROUP BY ss.creator_id
+  `).bind(start).all();
+  return (res.results || []).map(r => ({
+    handle: String(r.handle).toLowerCase(),
+    mins: Number(r.mins || 0),
+  })).sort((a, b) => b.mins - a.mins);
+}
+
+// Slice the session list down to the current calendar month and roll up
+// the metrics the report card surfaces. Rank is derived by looking up
+// this creator's position in the precomputed monthRanks list.
+function buildReportCard(handle, sessions, monthRanks) {
+  const start = monthStartUnix();
+  const monthSessions = sessions.filter(s => Number(s.started_at || 0) >= start);
+  const monthLabel = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  if (!monthSessions.length) {
+    return { hasData: false, monthLabel };
+  }
+  const totalMins = monthSessions.reduce((s, r) => s + (r.duration_mins || 0), 0);
+  const peak = monthSessions.reduce((m, r) => Math.max(m, r.peak_viewers || 0), 0);
+  const weighted = monthSessions.reduce((s, r) => s + (r.avg_viewers || 0) * (r.duration_mins || 0), 0);
+  const avg = totalMins > 0 ? Math.round(weighted / totalMins) : 0;
+
+  // Most-played server in this month's sessions.
+  const serverCounts = new Map();
+  for (const s of monthSessions) {
+    const sv = detectServer(s.final_title);
+    if (!sv) continue;
+    serverCounts.set(sv.id, { name: sv.name, n: (serverCounts.get(sv.id)?.n || 0) + 1 });
+  }
+  const topServer = [...serverCounts.values()].sort((a, b) => b.n - a.n)[0] || null;
+
+  // Daily hours sparkline — one bar per day from month-start to today.
+  const today = new Date();
+  const daysInMonth = today.getUTCDate();
+  const dailyMins = new Array(daysInMonth).fill(0);
+  for (const s of monthSessions) {
+    const d = new Date(Number(s.started_at) * 1000);
+    if (d.getUTCMonth() !== today.getUTCMonth() || d.getUTCFullYear() !== today.getUTCFullYear()) continue;
+    const idx = d.getUTCDate() - 1;
+    if (idx >= 0 && idx < daysInMonth) {
+      dailyMins[idx] += (s.duration_mins || 0);
+    }
+  }
+
+  // Rank: find this creator's index in the precomputed monthRanks list.
+  let rank = null;
+  if (Array.isArray(monthRanks) && monthRanks.length) {
+    const idx = monthRanks.findIndex(r => r.handle === handle);
+    if (idx !== -1) rank = idx + 1;
+  }
+
+  return {
+    hasData: true,
+    monthLabel,
+    sessions: monthSessions.length,
+    hours: Math.round(totalMins / 60),
+    minutes: totalMins,
+    avgViewers: avg,
+    peakViewers: peak,
+    topServer: topServer?.name || null,
+    dailyMins,
+    rank,
+    rankOf: monthRanks?.length || 26,
+  };
+}
+
+function monthStartUnix() {
+  const now = new Date();
+  return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1) / 1000);
+}
+
 function aggregateStats(sessions) {
   if (!sessions.length) {
     return { count: 0, hours: 0, avgViewers: 0, peakViewers: 0, lastStreamAt: null, hasData: false };
@@ -281,7 +366,7 @@ function buildPlatformLinks(socials) {
   return out;
 }
 
-function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials }) {
+function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard }) {
   const platUrl = platform === 'kick' ? `https://kick.com/${handle}` : `https://twitch.tv/${handle}`;
   const platLabel = platform === 'kick' ? 'Kick' : 'Twitch';
   const isLive = !!liveEntry?.is_live;
@@ -424,6 +509,35 @@ body>*{position:relative;z-index:3}
 .clip-title{font-size:14px;line-height:1.5;color:var(--fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}
 .clip-when{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;margin-top:6px}
 
+/* MONTHLY REPORT CARD */
+.report-card{background:linear-gradient(135deg,var(--card),oklch(0.18 0.06 295));border:1px solid var(--border);clip-path:var(--cut);padding:24px;position:relative;overflow:hidden}
+.report-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,oklch(0.82 0.20 195/.10),transparent 60%);pointer-events:none}
+.rc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;position:relative}
+.rc-title{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.rc-month{font-family:var(--font-d);font-size:30px;letter-spacing:1px;color:var(--fg)}
+.rc-tag{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--signal);padding:3px 8px;background:oklch(0.82 0.20 195/.12);border:1px solid oklch(0.82 0.20 195/.4)}
+.rc-share{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;padding:8px 14px;background:var(--card2);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.rc-share:hover{border-color:var(--signal);color:var(--signal)}
+.rc-share.copied{border-color:var(--signal);color:var(--signal);background:oklch(0.82 0.20 195/.1)}
+.rc-rank{display:flex;align-items:center;gap:14px;background:var(--card2);border:1px solid var(--border);padding:14px 18px;clip-path:var(--cut);margin-bottom:18px;position:relative}
+.rc-rank-badge{font-family:var(--font-d);font-size:48px;line-height:1;color:var(--signal);text-shadow:0 0 12px oklch(0.82 0.20 195/.5);min-width:90px}
+.rc-rank-badge .of{font-size:18px;color:var(--ink-faint)}
+.rc-rank-text{font-family:var(--font-m);font-size:13px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:2px}
+.rc-rank-text strong{color:var(--fg);font-weight:600}
+.rc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+@media(max-width:700px){.rc-stats{grid-template-columns:repeat(2,1fr)}}
+.rc-stat{background:var(--card2);border:1px solid var(--border);padding:14px;clip-path:var(--cut)}
+.rc-stat .v{font-family:var(--font-d);font-size:30px;letter-spacing:1px;line-height:1;color:var(--signal-cyan)}
+.rc-stat .l{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:6px}
+.rc-stat .e{font-family:var(--font-m);font-size:11px;color:var(--ink-dim);margin-top:4px}
+.rc-spark-wrap{background:var(--card2);border:1px solid var(--border);padding:14px 18px;clip-path:var(--cut);position:relative}
+.rc-spark-h{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px}
+.rc-spark-h strong{color:var(--signal-cyan);font-weight:600}
+.rc-spark{display:flex;align-items:flex-end;gap:2px;height:60px}
+.rc-spark-bar{flex:1;background:oklch(0.82 0.20 195/.4);min-height:2px;transition:background .2s}
+.rc-spark-bar.today{background:var(--signal);box-shadow:0 0 8px var(--signal)}
+.rc-spark-bar.zero{background:oklch(0.18 0.06 295/.6)}
+
 .footer{border-top:1px solid var(--border);padding:24px;margin-top:40px;text-align:center;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
 
 ::selection{background:var(--signal);color:var(--bg)}
@@ -477,6 +591,8 @@ body>*{position:relative;z-index:3}
         </a>`).join('')}
     </div>
   </div>
+
+  ${renderReportCard(handle, name, reportCard)}
 
   <div class="section">
     <div class="sec-h"><h2>Stats</h2><span class="sub">Last 90 days</span></div>
@@ -553,6 +669,90 @@ function renderLiveBanner(handle, platform, e) {
     </div>
     <div class="embed-wrap" id="embed-wrap"><iframe src="${embedUrl}" allow="autoplay; fullscreen" allowfullscreen></iframe></div>
     <a id="live" style="position:absolute;visibility:hidden"></a>
+  `;
+}
+
+function renderReportCard(handle, name, rc) {
+  if (!rc) return '';
+  if (!rc.hasData) {
+    return `
+      <div class="section" id="report-card">
+        <div class="sec-h"><h2>Monthly Report Card</h2><span class="sub">${esc(rc.monthLabel)}</span></div>
+        <div class="empty-block">No activity recorded for ${esc(name)} this month yet. Check back once they next stream.</div>
+      </div>
+    `;
+  }
+
+  const maxMins = Math.max(1, ...rc.dailyMins);
+  const todayIdx = new Date().getUTCDate() - 1;
+  const sparkBars = rc.dailyMins.map((m, i) => {
+    const pct = Math.max(0, Math.round((m / maxMins) * 100));
+    const cls = m === 0 ? 'zero' : (i === todayIdx ? 'today' : '');
+    const title = `Day ${i + 1}: ${(m / 60).toFixed(1)}h`;
+    return `<div class="rc-spark-bar ${cls}" style="height:${Math.max(6, pct)}%" title="${title}"></div>`;
+  }).join('');
+
+  const rankEmoji =
+    rc.rank == null ? '📊' :
+    rc.rank === 1 ? '🥇' :
+    rc.rank === 2 ? '🥈' :
+    rc.rank === 3 ? '🥉' :
+    rc.rank <= 10 ? '⭐' : '📈';
+
+  return `
+    <div class="section" id="report-card">
+      <div class="sec-h">
+        <h2>Monthly Report Card</h2>
+        <button class="rc-share" type="button" id="rc-share-btn">Share this report</button>
+      </div>
+      <div class="report-card">
+        <div class="rc-head">
+          <div class="rc-title">
+            <div class="rc-month">${esc(rc.monthLabel)}</div>
+            <span class="rc-tag">${rankEmoji} ${rc.rank != null ? `Rank #${rc.rank} of ${rc.rankOf}` : 'Unranked'}</span>
+          </div>
+        </div>
+
+        <div class="rc-rank">
+          <div class="rc-rank-badge">${rc.rank != null ? `#${rc.rank}` : '—'}<span class="of"> / ${rc.rankOf}</span></div>
+          <div class="rc-rank-text">
+            <strong>${esc(name)}</strong> sits at <strong>${rc.rank != null ? `rank ${rc.rank}` : '—'}</strong> on the curated 26 hours leaderboard for ${esc(rc.monthLabel)}.
+          </div>
+        </div>
+
+        <div class="rc-stats">
+          <div class="rc-stat"><div class="v">${rc.hours}</div><div class="l">Hours streamed</div><div class="e">${rc.sessions} session${rc.sessions === 1 ? '' : 's'}</div></div>
+          <div class="rc-stat"><div class="v">${formatBig(rc.avgViewers)}</div><div class="l">Avg viewers</div><div class="e">across all sessions</div></div>
+          <div class="rc-stat"><div class="v">${formatBig(rc.peakViewers)}</div><div class="l">Peak viewers</div><div class="e">single best stream</div></div>
+          <div class="rc-stat"><div class="v" style="font-size:22px;color:var(--signal)">${rc.topServer ? esc(rc.topServer) : '—'}</div><div class="l">Most-played server</div><div class="e">by session count</div></div>
+        </div>
+
+        <div class="rc-spark-wrap">
+          <div class="rc-spark-h"><span>Daily hours · ${esc(rc.monthLabel)}</span><strong>peak ${(maxMins / 60).toFixed(1)}h</strong></div>
+          <div class="rc-spark">${sparkBars}</div>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function(){
+        var btn = document.getElementById('rc-share-btn');
+        if (!btn) return;
+        btn.addEventListener('click', async function(){
+          var url = location.origin + location.pathname + '#report-card';
+          try { await navigator.clipboard.writeText(url); }
+          catch (e) {
+            var ta = document.createElement('textarea');
+            ta.value = url; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); } catch (_) {}
+            ta.remove();
+          }
+          var orig = btn.textContent;
+          btn.textContent = 'Copied ✓';
+          btn.classList.add('copied');
+          setTimeout(function(){ btn.textContent = orig; btn.classList.remove('copied'); }, 1600);
+        });
+      })();
+    </script>
   `;
 }
 
