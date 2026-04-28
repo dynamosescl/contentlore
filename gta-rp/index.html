@@ -70,6 +70,18 @@ body>*{position:relative;z-index:3}
 
 /* RANDOMISER CTA */
 .hero-cta{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* HYPE METER */
+.hype{margin-top:28px;max-width:560px;border:1px solid var(--border);background:var(--card);clip-path:var(--cut);padding:14px 18px}
+.hype-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hype-emoji{font-size:24px;line-height:1}
+.hype-label{font-family:var(--font-d);font-size:22px;letter-spacing:1.5px;color:var(--fg)}
+.hype-pct{font-family:var(--font-m);font-size:13px;color:var(--ink-dim);font-weight:500}
+.hype-pct strong{color:var(--fg)}
+.hype-bar{margin-top:10px;height:8px;background:oklch(0.10 0.04 190/.6);border:1px solid var(--border);position:relative;overflow:hidden}
+.hype-fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,oklch(0.65 0.18 245),oklch(0.82 0.20 195),oklch(0.78 0.22 50),oklch(0.68 0.27 25));transition:width .8s cubic-bezier(.2,.7,.2,1)}
+.hype-bar::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 18px,oklch(0.10 0.04 190/.4) 18px 19px);pointer-events:none}
+.hype-sub{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:2px;margin-top:8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .cta-spin{font-family:var(--font-d);font-size:18px;letter-spacing:2px;padding:14px 28px;background:linear-gradient(135deg,oklch(0.82 0.20 195),oklch(0.85 0.18 200));color:var(--bg);border:none;cursor:pointer;clip-path:var(--cut);transition:all .2s;display:inline-flex;align-items:center;gap:10px;box-shadow:0 0 0 1px var(--signal),0 0 24px oklch(0.82 0.20 195/.4)}
 .cta-spin:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--signal),0 0 32px oklch(0.82 0.20 195/.7)}
 .cta-spin .ico{font-size:24px;line-height:1;animation:wobble 3.5s ease-in-out infinite}
@@ -268,6 +280,17 @@ body>*{position:relative;z-index:3}
       </button>
       <span data-cl-notify="all" style="margin-left:8px;display:inline-block;vertical-align:middle"></span>
     </div>
+    <div class="hype" id="hype" style="display:none">
+      <div class="hype-row">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="hype-emoji" id="hype-emoji">📡</span>
+          <span class="hype-label" id="hype-label">Reading scene…</span>
+        </div>
+        <div class="hype-pct" id="hype-pct">—</div>
+      </div>
+      <div class="hype-bar"><div class="hype-fill" id="hype-fill" style="width:0%"></div></div>
+      <div class="hype-sub" id="hype-sub"><span>vs 7-day avg for this hour</span><span id="hype-detail"></span></div>
+    </div>
   </div>
 </div>
 
@@ -313,6 +336,50 @@ async function loadAll() {
     renderAll();
   } catch(e) { console.error('Load failed:', e); }
   refreshing = false;
+  loadHype();
+}
+
+async function loadHype() {
+  try {
+    const r = await fetch('/api/hype');
+    const d = await r.json();
+    if (!d.ok) return;
+    renderHype(d);
+  } catch(e) { /* silent — meter just stays hidden */ }
+}
+
+function renderHype(d) {
+  const el = document.getElementById('hype');
+  if (!el) return;
+  const band = d.band || {};
+  document.getElementById('hype-emoji').textContent = band.emoji || '📡';
+  document.getElementById('hype-label').textContent = band.label || 'Reading scene…';
+  const pct = d.ratio_pct;
+  const pctEl = document.getElementById('hype-pct');
+  if (pct == null) {
+    pctEl.innerHTML = '<strong>—</strong>  building data';
+  } else {
+    const arrow = pct >= 100 ? '▲' : '▼';
+    pctEl.innerHTML = `${arrow} <strong>${pct}%</strong> of normal`;
+  }
+  // Bar fill mapping: 100% sits at the centre of the gradient (50%
+  // of the bar width). 200%+ saturates the right end. <50% squeezes
+  // toward the left.
+  let fill = 0;
+  if (pct != null) fill = Math.max(2, Math.min(100, pct / 2));
+  const fillEl = document.getElementById('hype-fill');
+  fillEl.style.width = fill + '%';
+  fillEl.style.background = band.color
+    ? `linear-gradient(90deg, ${band.color}, ${band.color})`
+    : '';
+  // Detail line: avg ref numbers
+  const detail = document.getElementById('hype-detail');
+  if (d.average && d.average.viewers != null) {
+    detail.textContent = `usually ~${fmtBig(d.average.viewers)} watching · ${d.average.live_count}× live`;
+  } else {
+    detail.textContent = '';
+  }
+  el.style.display = '';
 }
 
 function getThumb(s, w, h) {
