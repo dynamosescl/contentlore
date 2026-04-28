@@ -14,15 +14,7 @@
 // ================================================================
 
 import { jsonResponse } from '../_lib.js';
-
-const ALLOWED_HANDLES = new Set([
-  // Mirror functions/api/uk-rp-live.js — keep in sync.
-  'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
-  'megsmary', 'tazzthegeeza', 'wheelydev', 'rexality', 'steeel',
-  'justj0hnnyhd', 'cherish_remedy', 'lorddorro', 'jck0__', 'absthename',
-  'essellz', 'lewthescot', 'angels365', 'fantasiasfantasy',
-  'kavsual', 'shammers', 'bags', 'dynamoses', 'dcampion', 'elliewaller',
-]);
+import { getHandlesSet } from '../_curated.js';
 
 const RANGES = {
   today: () => {
@@ -93,9 +85,10 @@ export async function onRequestGet({ request, env, waitUntil }) {
       ORDER BY ss.started_at ASC
     `).bind(window.end, window.start).all();
 
+    const allowed = await getHandlesSet(env);
     const now = Math.floor(Date.now() / 1000);
     const sessions = (res.results || [])
-      .filter(r => ALLOWED_HANDLES.has(String(r.handle).toLowerCase()))
+      .filter(r => allowed.has(String(r.handle).toLowerCase()))
       .map(r => ({
         handle: String(r.handle).toLowerCase(),
         display_name: r.display_name,

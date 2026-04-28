@@ -15,34 +15,8 @@
 // stream_sessions for the current calendar month.
 // ================================================================
 
-const ALLOWLIST = [
-  { handle: 'tyrone',           platform: 'twitch', name: 'Tyrone' },
-  { handle: 'lbmm',             platform: 'twitch', name: 'LBMM' },
-  { handle: 'reeclare',         platform: 'twitch', name: 'Reeclare' },
-  { handle: 'stoker',           platform: 'twitch', name: 'Stoker' },
-  { handle: 'samham',           platform: 'twitch', name: 'SamHam' },
-  { handle: 'deggyuk',          platform: 'twitch', name: 'DeggyUK' },
-  { handle: 'megsmary',         platform: 'twitch', name: 'MegsMary' },
-  { handle: 'tazzthegeeza',     platform: 'twitch', name: 'TaZzTheGeeza' },
-  { handle: 'wheelydev',        platform: 'twitch', name: 'WheelyDev' },
-  { handle: 'rexality',         platform: 'twitch', name: 'RexaliTy' },
-  { handle: 'steeel',           platform: 'twitch', name: 'Steeel' },
-  { handle: 'justj0hnnyhd',     platform: 'twitch', name: 'JustJ0hnnyHD' },
-  { handle: 'cherish_remedy',   platform: 'twitch', name: 'Cherish_Remedy' },
-  { handle: 'lorddorro',        platform: 'twitch', name: 'LordDorro' },
-  { handle: 'jck0__',           platform: 'twitch', name: 'JCK0__' },
-  { handle: 'absthename',       platform: 'twitch', name: 'ABsTheName' },
-  { handle: 'essellz',          platform: 'twitch', name: 'Essellz' },
-  { handle: 'lewthescot',       platform: 'twitch', name: 'LewTheScot' },
-  { handle: 'angels365',        platform: 'twitch', name: 'Angels365' },
-  { handle: 'fantasiasfantasy', platform: 'twitch', name: 'FantasiasFantasy' },
-  { handle: 'kavsual',          platform: 'kick',   name: 'Kavsual' },
-  { handle: 'shammers',         platform: 'kick',   name: 'Shammers' },
-  { handle: 'bags',             platform: 'kick',   name: 'Bags' },
-  { handle: 'dynamoses',        platform: 'kick',   name: 'Dynamoses' },
-  { handle: 'dcampion',         platform: 'kick',   name: 'DCampion' },
-  { handle: 'elliewaller',      platform: 'kick',   name: 'EllieWaller' },
-];
+// Allowlist now lives in D1 — fetched per-request via getCuratedEntry.
+import { getCuratedEntry } from '../../_curated.js';
 
 const SERVERS = [
   { id: 'unique',      name: 'Unique RP',      keywords: ['unique rp', 'uniquerp', 'unique'] },
@@ -87,7 +61,7 @@ function esc(s) {
 
 export async function onRequestGet({ params, env, request }) {
   const handle = String(params.handle || '').toLowerCase();
-  const entry = ALLOWLIST.find(c => c.handle === handle);
+  const entry = await getCuratedEntry(env, handle);
   if (!entry) {
     return new Response(notFoundHtml(handle), { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } });
   }

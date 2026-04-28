@@ -53,11 +53,13 @@ Every hub page is now a PWA candidate — manifest linked, theme-color set, serv
 
 The repo also contains several legacy directories (`about/`, `contact/`, `creators/`, `ethics/`, `ledger/`, `rising/`, `signals/`, `the-platform/`, `gta-rp/beef/`, `gta-rp/lore/`) that survived the 2026-04-26 cleanup sweep but aren't part of the active navigation. They serve via `_redirects` catch-all if anyone deep-links them. Worth a re-audit eventually.
 
-**Active Pages Functions (38, plus 1 helper):**
+**Active Pages Functions (40, plus 2 helpers):**
 
 | Endpoint | File | Purpose |
 |---|---|---|
-| `GET /api/uk-rp-live` | `api/uk-rp-live.js` | Curated 26 live state with full multi-platform `socials` per entry (direct platform APIs, 30s Cache API) |
+| `GET /api/curated-list` | `api/curated-list.js` | Public read of `curated_creators` D1 table. 5-min Cache API. Used by anything outside the Functions runtime that needs the canonical allowlist; within Functions, prefer `import { getCuratedList } from '../_curated.js'` directly. |
+| `GET\|POST\|PUT\|DELETE /api/admin/curated` | `api/admin/curated.js` | Bearer-authed CRUD over `curated_creators`. POST = upsert, PUT = partial update, DELETE = soft-deactivate (`?hard=1` to drop the row). Every mutation calls `invalidateCuratedCache()` in `_curated.js` so subsequent reads see fresh data. |
+| `GET /api/uk-rp-live` | `api/uk-rp-live.js` | Curated allowlist live state with full multi-platform `socials` per entry (direct platform APIs, 30s Cache API). Allowlist sourced from D1 via `_curated.js`. |
 | `GET /api/live-now` | `api/live-now.js` | DB-backed live list (anyone in `creators` table) |
 | `GET /api/clips?range=24h\|7d\|30d` | `api/clips.js` | Top Twitch clips for the 20 Twitch handles, GTA V + Just Chatting filtered, 5-min Cache API |
 | `GET /api/timeline?range=today\|yesterday\|7d` | `api/timeline.js` | `stream_sessions` rows overlapping window for the 26, server-id annotated, 5-min Cache API |
@@ -94,6 +96,7 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 | `GET\|POST /api/admin/backfill-avatars` | `api/admin/backfill-avatars.js` | One-shot Twitch avatar backfill (Bearer auth) |
 | `GET\|POST /api/admin/discord-test` | `api/admin/discord-test.js` | Discord webhook config status + test embed (Bearer auth) |
 | _helper_ | `_lib.js` | `jsonResponse`, `getTwitchToken`, `getKickToken`, `fetchKickChannel`, etc. |
+| _helper_ | `_curated.js` | `getCuratedList(env)` / `getHandlesSet(env)` / `getCuratedEntry(env, handle)` / `invalidateCuratedCache()`. 5-min per-isolate cache; module-level `let _cache` keyed off Date.now(). Single source of truth for the curated allowlist. |
 
 **26-creator allowlist** (source of truth: `functions/api/uk-rp-live.js`; mirrored in `contentlore-scheduler/src/discovery.js` as `ALLOWLIST_HANDLES`)
 - 20 Twitch primary: tyrone, lbmm, reeclare, stoker, samham, deggyuk, megsmary, tazzthegeeza, wheelydev, rexality, steeel, justj0hnnyhd, cherish_remedy, lorddorro, jck0__, absthename, essellz, lewthescot, angels365, fantasiasfantasy
@@ -118,6 +121,7 @@ Each ALLOWLIST entry now carries a `socials: { twitch, kick, tiktok, youtube, x,
 - `watch_streaks` (Phase 3 — anon UUID, current/max streak, total_visits, optional display_name)
 - `gta6_pulse_votes` (Phase 4 — anon UUID, choice ∈ {ready, optimistic, worried, not-thinking}, voted_at)
 - `push_subscriptions` (Phase 5 PWA — endpoint UNIQUE, p256dh, auth, user_uuid, filter_handles. Migration `011_push_subscriptions.sql`. Driven by the scheduler's `pollCurated` go-live transition path via `src/web-push.js`)
+- `curated_creators` (Phase 8 — handle PK, display_name, primary_platform, socials JSON, added_at, active. Index on active. Migration `013_curated_creators.sql`. **The single source of truth for the 26-creator allowlist** — replaces 14 hardcoded copies across the Functions + scheduler. Read via `functions/_curated.js` on Pages, `contentlore-scheduler/src/curated-list.js` on the scheduler. CRUD via `/api/admin/curated` (Bearer-authed) and the mod panel "Curated" tab.)
 - `parties` (Phase 6 — id PK, host_token, current_handle, current_platform, host_name, created_at, updated_at, expires_at. Index on expires_at. Migration `012_watch_party.sql`. Used by `/gta-rp/party/`.)
 - `party_messages` (Phase 6 — id auto, party_id, username, message, created_at. Indexes on party_id+created_at and on created_at. Self-trims via opportunistic delete on every write.)
 
@@ -281,6 +285,9 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - [ ] **WebSocket-based party chat** — replace 3s polling with Cloudflare Durable Objects for sub-second message delivery. Polling works fine at current scale but won't if a party crosses ~50 active users.
 - [ ] **Live reactions / emoji spam during a stream** — let party viewers float emojis over the embed.
 
+### PHASE 8 — INFRASTRUCTURE (DONE)
+- [x] **Curated allowlist → D1** — replaced 14 hardcoded copies of the 26-creator list with a single `curated_creators` table. New `_curated.js` helper (Pages) + `curated-list.js` helper (scheduler), both with the same API (`getCuratedList`, `getHandlesSet`, `getCuratedEntry`). Pages helper has 5-min per-isolate cache; scheduler has none (one SELECT per cron tick). New `/api/admin/curated` Bearer-authed CRUD endpoint and a "Curated" tab in `/mod/` for add/edit/deactivate. Adding a new creator is now one mod-panel click that propagates to every endpoint within 5 minutes (cache TTL) — no code edit, no deploy. Migration `013_curated_creators.sql`. Killed off the "14-place mirror" gotcha that was the project's biggest single liability.
+
 ---
 
 ## 7. Architecture
@@ -398,6 +405,7 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - `https://contentlore.com/cache/analytics/v1` — `/api/analytics` payload (5 min)
 - `https://contentlore.com/cache/network/v1` — `/api/network` payload (5 min)
 - `https://contentlore.com/cache/digest/v1` — `/api/digest` payload (10 min)
+- `https://contentlore.com/cache/curated-list/v1` — `/api/curated-list` payload (5 min). Note: in-Functions consumers go through `_curated.js` (per-isolate memo), so this Cache API entry is only hit by the public endpoint.
 - `https://contentlore.com/cache/scene-recap/{yyyymmdd}-{0|1|2|3}` — `/api/scene-recap` AI narrative, 6h Cache API keyed on a 6h UTC bucket
 - `https://contentlore.com/cache/scene-health/v1` — `/api/scene-health` (5 min)
 - `https://contentlore.com/cache/spotlight/{yyyy-mm-dd}` — `/api/spotlight` daily pick, 24h Cache API keyed on UTC date
@@ -470,7 +478,7 @@ Updates take effect immediately. Cron continues on its existing schedule. The sc
 # Production
 npx wrangler d1 execute contentlore-db --file=migrations/00X_name.sql --remote
 ```
-Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. Migration numbering has historical gaps and a duplicate (002, 004, two 005, 006, 008, 009, 010, 011, 012 — no 003 or 007). Pick the next free number for new ones.
+Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. Migration numbering has historical gaps and a duplicate (002, 004, two 005, 006, 008, 009, 010, 011, 012, 013 — no 003 or 007). Pick the next free number for new ones.
 
 ### Smoke tests after deploy
 ```bash
@@ -499,6 +507,9 @@ curl -X POST -H "Content-Type: application/json" \
 curl -H "Authorization: Bearer $ADMIN_TOKEN" \
   'https://contentlore.com/api/admin/submissions?status=pending' | jq '.counts, .count'
 
+# Phase 8 — curated allowlist source-of-truth:
+curl https://contentlore.com/api/curated-list  | jq '.count, (.creators | map(.handle) | length)'
+
 # Phase 6/7 endpoints:
 curl https://contentlore.com/api/hype          | jq '.ratio_pct, .band.label'
 curl https://contentlore.com/api/spotlight     | jq '.pick.handle, .reason'
@@ -525,7 +536,7 @@ Most should return non-zero. The scheduler `/status` shows the most recent poll 
 - **`_routes.json` controls Function routing.** `include` list captures paths for Functions; everything else is static. New Function paths (e.g. `/creator-profile/*`, `/api/streaks/*`) must be added or they fall through to the catch-all and serve the homepage.
 - **D1 platform records can drift from the curated allowlist.** Always source-of-truth the allowlist; treat `creator_platforms.platform` as a hint that needs reconciling. Tyrone (was `kick`+`rising`) and reeclare (was `kick`) got fixed in 2026-04-27 — they're now both `twitch`+`creator`. Bags has both a `twitch-bags` and a `kick` platform row under the same creator id (his allowlist platform is kick but a prior twitch-tagged discovery left the legacy id).
 - **All 26 allowlisted creators are now in `creators`+`creator_platforms`** as of 2026-04-27 (migration `010_backfill_curated.sql`). New creators added to `functions/api/uk-rp-live.js` ALLOWLIST also need a backfill row in D1 + a matching entry in `contentlore-scheduler/src/curated.js` ALLOWLIST + a matching entry in `discovery.js` ALLOWLIST_HANDLES. Yes that's three places — eventually move to a shared D1 table or KV blob.
-- **The curated allowlist is mirrored in 14 places** that must stay in sync: `functions/api/uk-rp-live.js` (canonical), `contentlore-scheduler/src/curated.js`, `contentlore-scheduler/src/discovery.js`, `functions/api/timeline.js` (`ALLOWED_HANDLES`), `functions/api/clips.js` (`TWITCH_HANDLES` + `HANDLE_TO_NAME`), `functions/api/analytics.js` (`ALLOWED_HANDLES`), `functions/api/network.js` (`ALLOWED_HANDLES`), `functions/api/digest.js` (`ALLOWED_HANDLES`), `functions/api/scene-health.js` (`ALLOWED_HANDLES`), `functions/api/spotlight.js` (`ALLOWLIST` array), `functions/api/party/create.js` (`ALLOWLIST` + `PLATFORM_OF`), `functions/api/party/[id]/stream.js` (`ALLOWLIST` + `PLATFORM_OF`), `functions/api/shoutout-card/[handle].js` (`ALLOWLIST` array), `functions/creator-profile/[handle].js` (`ALLOWLIST` array). When adding a creator, grep for `tyrone` to find every list. **This is now a serious enough liability that the next maintenance pass should move the allowlist to a shared D1 table or a KV blob.**
+- **The curated allowlist lives in D1 — single source of truth.** Table `curated_creators` (migration `013_curated_creators.sql`). Pages Functions read via `functions/_curated.js` (`getCuratedList(env)`, `getHandlesSet(env)`, `getCuratedEntry(env, handle)`) which has a 5-min per-isolate cache. Scheduler reads via `D:/contentlore-scheduler/src/curated-list.js` with the same API but no cache (one SELECT per cron tick is cheap enough). Adding/removing/editing a creator is now a single mod-panel action at `/mod/` → "Curated" tab — no code edit, no deploy. Both helpers carry a hardcoded FALLBACK array for the brief gap between schema deploy and seed migration; in production it should never execute. The 14-place mirror gotcha that lived here historically is GONE.
 - **If `scene_snapshots` ever stalls again**, check (1) whether `snapshots` has fresh `is_live=1` rows in the last 30 minutes (`pollCurated` should be writing them every tick), (2) whether `stream_title` actually contains a tracked-server keyword — Tyrone's "Just Chatting" titles and Angels365's "@angels365 !breakice" don't match any server keyword and silently get skipped, which is correct.
 - **If Kick API returns 401 from `/channels` or `/livestreams`** even though token grant succeeded, the `kick:app_token` in KV is probably stale (from an old/revoked Kick app). Purge with `wrangler kv key delete kick:app_token --namespace-id=f6c05b65a4e84c5baba997122ebcc8c6 --remote` — both Pages and the scheduler share this key. Burned us once on 2026-04-27.
 - **Twitch iframe autoplay warning** — Twitch refuses `autoplay=true` if the iframe was hidden when the `src` was set. If multi-view loads tiles before the container is rendered, console fills with "Couldn't autoplay because of style visibility checks". Phase 2 multi-view improvements include the fix as an open item.

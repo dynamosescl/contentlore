@@ -16,14 +16,7 @@
 // ================================================================
 
 import { jsonResponse } from '../_lib.js';
-
-const ALLOWED_HANDLES = new Set([
-  'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
-  'megsmary', 'tazzthegeeza', 'wheelydev', 'rexality', 'steeel',
-  'justj0hnnyhd', 'cherish_remedy', 'lorddorro', 'jck0__', 'absthename',
-  'essellz', 'lewthescot', 'angels365', 'fantasiasfantasy',
-  'kavsual', 'shammers', 'bags', 'dynamoses', 'dcampion', 'elliewaller',
-]);
+import { getHandlesSet } from '../_curated.js';
 
 const SERVERS = [
   { id: 'unique',      name: 'Unique RP',      keywords: ['unique rp', 'uniquerp', 'unique'] },
@@ -60,6 +53,7 @@ export async function onRequestGet({ request, env, waitUntil }) {
   if (hit) return hit;
 
   try {
+    const ALLOWED_HANDLES = await getHandlesSet(env);
     const now = Math.floor(Date.now() / 1000);
     const sevenDaysAgo = now - 7 * 86400;
 

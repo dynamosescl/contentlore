@@ -13,21 +13,7 @@
 // ================================================================
 
 import { jsonResponse } from '../../../_lib.js';
-
-const ALLOWLIST = new Set([
-  'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
-  'megsmary', 'tazzthegeeza', 'wheelydev', 'rexality', 'steeel',
-  'justj0hnnyhd', 'cherish_remedy', 'lorddorro', 'jck0__', 'absthename',
-  'essellz', 'lewthescot', 'angels365', 'fantasiasfantasy',
-  'kavsual', 'shammers', 'bags', 'dynamoses', 'dcampion', 'elliewaller',
-]);
-
-const PLATFORM_OF = (() => {
-  const m = new Map();
-  for (const h of ['kavsual', 'shammers', 'bags', 'dynamoses', 'dcampion', 'elliewaller']) m.set(h, 'kick');
-  for (const h of ALLOWLIST) if (!m.has(h)) m.set(h, 'twitch');
-  return m;
-})();
+import { getCuratedEntry } from '../../../_curated.js';
 
 export async function onRequestPut({ params, request, env }) {
   const id = String(params.id || '').toUpperCase().trim();
@@ -40,8 +26,9 @@ export async function onRequestPut({ params, request, env }) {
 
   const handle = String(body?.handle || '').toLowerCase().trim();
   const hostToken = String(body?.host_token || '').trim();
-  if (!ALLOWLIST.has(handle)) {
-    return jsonResponse({ ok: false, error: 'handle must be one of the curated 26' }, 400);
+  const curated = await getCuratedEntry(env, handle);
+  if (!curated) {
+    return jsonResponse({ ok: false, error: 'handle must be one of the curated allowlist' }, 400);
   }
   if (!hostToken) {
     return jsonResponse({ ok: false, error: 'host_token required' }, 401);
@@ -62,7 +49,7 @@ export async function onRequestPut({ params, request, env }) {
 
   const platform = ['twitch', 'kick'].includes(body?.platform)
     ? body.platform
-    : (PLATFORM_OF.get(handle) || 'twitch');
+    : (curated.platform || 'twitch');
 
   await env.DB.prepare(`
     UPDATE parties

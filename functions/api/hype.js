@@ -13,14 +13,10 @@
 // ================================================================
 
 import { jsonResponse } from '../_lib.js';
-
-const ALLOWED_HANDLES = new Set([
-  'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
-  'megsmary', 'tazzthegeeza', 'wheelydev', 'rexality', 'steeel',
-  'justj0hnnyhd', 'cherish_remedy', 'lorddorro', 'jck0__', 'absthename',
-  'essellz', 'lewthescot', 'angels365', 'fantasiasfantasy',
-  'kavsual', 'shammers', 'bags', 'dynamoses', 'dcampion', 'elliewaller',
-]);
+// ALLOWED_HANDLES sourced from D1 via getHandlesSet(env) at request time.
+// Note: the current implementation doesn't use ALLOWED_HANDLES (the JOIN
+// on creator_platforms.is_primary already restricts to tracked rows),
+// but the import is here for future filtering.
 
 const CACHE_TTL = 60;
 

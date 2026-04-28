@@ -15,6 +15,7 @@
 // ================================================================
 
 import { jsonResponse, getTwitchToken } from '../_lib.js';
+import { getCuratedList } from '../_curated.js';
 
 const RANGES = { '24h': 86400, '7d': 604800, '30d': 2592000 };
 const DEFAULT_RANGE = '7d';
@@ -32,24 +33,6 @@ const PARENT_DOMAINS = ['contentlore.com', 'localhost'];
 //   509658 = Just Chatting
 const ALLOWED_GAME_IDS = new Set(['32982', '509658']);
 
-// Mirror the Twitch slice of functions/api/uk-rp-live.js — keep in sync.
-const TWITCH_HANDLES = [
-  'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
-  'megsmary', 'tazzthegeeza', 'wheelydev', 'rexality', 'steeel',
-  'justj0hnnyhd', 'cherish_remedy', 'lorddorro', 'jck0__', 'absthename',
-  'essellz', 'lewthescot', 'angels365', 'fantasiasfantasy',
-];
-
-const HANDLE_TO_NAME = {
-  tyrone: 'Tyrone', lbmm: 'LBMM', reeclare: 'Reeclare', stoker: 'Stoker',
-  samham: 'SamHam', deggyuk: 'DeggyUK', megsmary: 'MegsMary',
-  tazzthegeeza: 'TaZzTheGeeza', wheelydev: 'WheelyDev', rexality: 'RexaliTy',
-  steeel: 'Steeel', justj0hnnyhd: 'JustJ0hnnyHD', cherish_remedy: 'Cherish_Remedy',
-  lorddorro: 'LordDorro', jck0__: 'JCK0__', absthename: 'ABsTheName',
-  essellz: 'Essellz', lewthescot: 'LewTheScot', angels365: 'Angels365',
-  fantasiasfantasy: 'FantasiasFantasy',
-};
-
 export async function onRequestGet({ request, env, waitUntil }) {
   const url = new URL(request.url);
   const rangeParam = url.searchParams.get('range');
@@ -61,6 +44,17 @@ export async function onRequestGet({ request, env, waitUntil }) {
   if (hit) return hit;
 
   try {
+    // Twitch slice of the curated list — Kick has no clips API, so we
+    // only call helix for primary-Twitch creators. Multi-platform creators
+    // (e.g. dynamoses, bags) get included if they have a twitch social.
+    const curated = await getCuratedList(env);
+    const TWITCH_HANDLES = curated
+      .filter(c => c.platform === 'twitch' || c.socials?.twitch)
+      .map(c => c.socials?.twitch || c.handle);
+    const HANDLE_TO_NAME = Object.fromEntries(
+      curated.map(c => [c.socials?.twitch || c.handle, c.display_name])
+    );
+
     const startedAt = new Date(Date.now() - RANGES[range] * 1000).toISOString();
     const userIds = await resolveTwitchUserIds(env, TWITCH_HANDLES);
 
@@ -68,7 +62,7 @@ export async function onRequestGet({ request, env, waitUntil }) {
     const settled = await Promise.allSettled(
       TWITCH_HANDLES
         .filter(h => userIds[h])
-        .map(h => fetchClipsForBroadcaster(env, h, userIds[h], startedAt))
+        .map(h => fetchClipsForBroadcaster(env, h, userIds[h], startedAt, HANDLE_TO_NAME))
     );
     const allClips = settled.flatMap(r => r.status === 'fulfilled' ? r.value : []);
 
@@ -130,14 +124,14 @@ async function resolveTwitchUserIds(env, handles) {
   return result;
 }
 
-async function fetchClipsForBroadcaster(env, handle, broadcasterId, startedAt) {
+async function fetchClipsForBroadcaster(env, handle, broadcasterId, startedAt, handleToName) {
   const url = `https://api.twitch.tv/helix/clips?broadcaster_id=${broadcasterId}&started_at=${encodeURIComponent(startedAt)}&first=${PER_CREATOR}`;
   const data = await twitchFetch(env, url);
   const clips = (data?.data || []).filter(c => c.game_id && ALLOWED_GAME_IDS.has(c.game_id));
   return clips.map(c => ({
     id: c.id,
     creator_handle: handle,
-    creator_name: HANDLE_TO_NAME[handle] || handle,
+    creator_name: (handleToName && handleToName[handle]) || handle,
     platform: 'twitch',
     title: c.title || '',
     url: c.url,

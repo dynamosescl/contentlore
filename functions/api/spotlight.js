@@ -13,39 +13,7 @@
 // ================================================================
 
 import { jsonResponse } from '../_lib.js';
-
-// Canonical 26-handle list, alphabetised so the rotation fallback
-// is deterministic. Mirrors functions/api/uk-rp-live.js ALLOWLIST
-// — keep in sync (the 9-place mirror gotcha applies here too).
-const ALLOWLIST = [
-  { handle: 'absthename',       name: 'ABsTheName',       platform: 'twitch' },
-  { handle: 'angels365',        name: 'Angels365',        platform: 'twitch' },
-  { handle: 'bags',             name: 'Bags',             platform: 'kick'   },
-  { handle: 'cherish_remedy',   name: 'Cherish_Remedy',   platform: 'twitch' },
-  { handle: 'dcampion',         name: 'DCampion',         platform: 'kick'   },
-  { handle: 'deggyuk',          name: 'DeggyUK',          platform: 'twitch' },
-  { handle: 'dynamoses',        name: 'Dynamoses',        platform: 'kick'   },
-  { handle: 'elliewaller',      name: 'EllieWaller',      platform: 'kick'   },
-  { handle: 'essellz',          name: 'Essellz',          platform: 'twitch' },
-  { handle: 'fantasiasfantasy', name: 'FantasiasFantasy', platform: 'twitch' },
-  { handle: 'jck0__',           name: 'JCK0__',           platform: 'twitch' },
-  { handle: 'justj0hnnyhd',     name: 'JustJ0hnnyHD',     platform: 'twitch' },
-  { handle: 'kavsual',          name: 'Kavsual',          platform: 'kick'   },
-  { handle: 'lbmm',             name: 'LBMM',             platform: 'twitch' },
-  { handle: 'lewthescot',       name: 'LewTheScot',       platform: 'twitch' },
-  { handle: 'lorddorro',        name: 'LordDorro',        platform: 'twitch' },
-  { handle: 'megsmary',         name: 'MegsMary',         platform: 'twitch' },
-  { handle: 'reeclare',         name: 'Reeclare',         platform: 'twitch' },
-  { handle: 'rexality',         name: 'RexaliTy',         platform: 'twitch' },
-  { handle: 'samham',           name: 'SamHam',           platform: 'twitch' },
-  { handle: 'shammers',         name: 'Shammers',         platform: 'kick'   },
-  { handle: 'steeel',           name: 'Steeel',           platform: 'twitch' },
-  { handle: 'stoker',           name: 'Stoker',           platform: 'twitch' },
-  { handle: 'tazzthegeeza',     name: 'TaZzTheGeeza',     platform: 'twitch' },
-  { handle: 'tyrone',           name: 'Tyrone',           platform: 'twitch' },
-  { handle: 'wheelydev',        name: 'WheelyDev',        platform: 'twitch' },
-];
-const ALLOWED_HANDLES = new Set(ALLOWLIST.map(c => c.handle));
+import { getCuratedList } from '../_curated.js';
 
 const CACHE_TTL = 86400;
 
@@ -74,6 +42,14 @@ export async function onRequestGet({ request, env, waitUntil }) {
   if (hit) return hit;
 
   try {
+    // The spotlight rotation alphabetises the curated list at request
+    // time, so the same handle index produces a stable daily pick even
+    // if creators are added/removed (the index would shift mid-rotation,
+    // which is fine — it's a daily UI surface, not a SLA).
+    const curated = await getCuratedList(env);
+    const ALLOWLIST = [...curated].sort((a, b) => a.handle.localeCompare(b.handle));
+    const ALLOWED_HANDLES = new Set(curated.map(c => c.handle));
+
     const now = Math.floor(Date.now() / 1000);
     const sevenDaysAgo = now - 7 * 86400;
 

@@ -14,39 +14,8 @@
 // edge cache short-circuits when warm.
 // ================================================================
 
-// Mirrors the ALLOWLIST in functions/api/uk-rp-live.js — keep `socials` in
-// sync between the two files. dynamoses + bags are the two confirmed
-// dual-platform creators (Twitch + Kick); everyone else gets the primary
-// handle in `socials.{primary}` and null for the rest.
-const ALLOWLIST = [
-  { handle: 'tyrone',           platform: 'twitch', name: 'Tyrone',           socials: { twitch: 'tyrone',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'lbmm',             platform: 'twitch', name: 'LBMM',             socials: { twitch: 'lbmm',             kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'reeclare',         platform: 'twitch', name: 'Reeclare',         socials: { twitch: 'reeclare',         kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'stoker',           platform: 'twitch', name: 'Stoker',           socials: { twitch: 'stoker',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'samham',           platform: 'twitch', name: 'SamHam',           socials: { twitch: 'samham',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'deggyuk',          platform: 'twitch', name: 'DeggyUK',          socials: { twitch: 'deggyuk',          kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'megsmary',         platform: 'twitch', name: 'MegsMary',         socials: { twitch: 'megsmary',         kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'tazzthegeeza',     platform: 'twitch', name: 'TaZzTheGeeza',     socials: { twitch: 'tazzthegeeza',     kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'wheelydev',        platform: 'twitch', name: 'WheelyDev',        socials: { twitch: 'wheelydev',        kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'rexality',         platform: 'twitch', name: 'RexaliTy',         socials: { twitch: 'rexality',         kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'steeel',           platform: 'twitch', name: 'Steeel',           socials: { twitch: 'steeel',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'justj0hnnyhd',     platform: 'twitch', name: 'JustJ0hnnyHD',     socials: { twitch: 'justj0hnnyhd',     kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'cherish_remedy',   platform: 'twitch', name: 'Cherish_Remedy',   socials: { twitch: 'cherish_remedy',   kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'lorddorro',        platform: 'twitch', name: 'LordDorro',        socials: { twitch: 'lorddorro',        kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'jck0__',           platform: 'twitch', name: 'JCK0__',           socials: { twitch: 'jck0__',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'absthename',       platform: 'twitch', name: 'ABsTheName',       socials: { twitch: 'absthename',       kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'essellz',          platform: 'twitch', name: 'Essellz',          socials: { twitch: 'essellz',          kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'lewthescot',       platform: 'twitch', name: 'LewTheScot',       socials: { twitch: 'lewthescot',       kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'angels365',        platform: 'twitch', name: 'Angels365',        socials: { twitch: 'angels365',        kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'fantasiasfantasy', platform: 'twitch', name: 'FantasiasFantasy', socials: { twitch: 'fantasiasfantasy', kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'kavsual',          platform: 'kick',   name: 'Kavsual',          socials: { twitch: null,               kick: 'kavsual',     tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'shammers',         platform: 'kick',   name: 'Shammers',         socials: { twitch: null,               kick: 'shammers',    tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  // Confirmed multi-platform via D1 migration 010.
-  { handle: 'bags',             platform: 'kick',   name: 'Bags',             socials: { twitch: 'bags',             kick: 'bags',        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'dynamoses',        platform: 'kick',   name: 'Dynamoses',        socials: { twitch: 'dynamoses',        kick: 'dynamoses',   tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'dcampion',         platform: 'kick',   name: 'DCampion',         socials: { twitch: null,               kick: 'dcampion',    tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-  { handle: 'elliewaller',      platform: 'kick',   name: 'EllieWaller',      socials: { twitch: null,               kick: 'elliewaller', tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
-];
+// Allowlist now lives in D1 — fetched per-request via getCuratedEntry.
+import { getCuratedEntry } from '../_curated.js';
 
 // Subset of SERVERS data needed for affinity detection. Kept in sync with
 // the SERVERS array in /gta-rp/servers/index.html — when that grows, mirror
@@ -82,7 +51,7 @@ function detectServer(title) {
 
 export async function onRequestGet({ params, env, request }) {
   const rawHandle = String(params.handle || '').toLowerCase();
-  const entry = ALLOWLIST.find(c => c.handle === rawHandle);
+  const entry = await getCuratedEntry(env, rawHandle);
 
   if (!entry) return notFoundPage(rawHandle);
 

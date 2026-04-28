@@ -16,21 +16,7 @@
 // ================================================================
 
 import { jsonResponse } from '../../_lib.js';
-
-const ALLOWLIST = new Set([
-  'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
-  'megsmary', 'tazzthegeeza', 'wheelydev', 'rexality', 'steeel',
-  'justj0hnnyhd', 'cherish_remedy', 'lorddorro', 'jck0__', 'absthename',
-  'essellz', 'lewthescot', 'angels365', 'fantasiasfantasy',
-  'kavsual', 'shammers', 'bags', 'dynamoses', 'dcampion', 'elliewaller',
-]);
-
-const PLATFORM_OF = (() => {
-  const m = new Map();
-  for (const h of ['kavsual', 'shammers', 'bags', 'dynamoses', 'dcampion', 'elliewaller']) m.set(h, 'kick');
-  for (const h of ALLOWLIST) if (!m.has(h)) m.set(h, 'twitch');
-  return m;
-})();
+import { getCuratedEntry } from '../../_curated.js';
 
 const ALLOWED_PLATFORMS = new Set(['twitch', 'kick']);
 const ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // ambiguous chars (I, O, 0, 1) excluded
@@ -57,10 +43,13 @@ export async function onRequestPost({ request, env }) {
 
   const handle = String(body?.handle || '').toLowerCase().trim();
   const hostName = String(body?.host_name || '').trim().slice(0, 32) || 'Host';
-  if (!ALLOWLIST.has(handle)) {
-    return jsonResponse({ ok: false, error: 'handle must be one of the curated 26' }, 400);
+  const curated = await getCuratedEntry(env, handle);
+  if (!curated) {
+    return jsonResponse({ ok: false, error: 'handle must be one of the curated allowlist' }, 400);
   }
-  const platform = ALLOWED_PLATFORMS.has(body?.platform) ? body.platform : (PLATFORM_OF.get(handle) || 'twitch');
+  const platform = ALLOWED_PLATFORMS.has(body?.platform)
+    ? body.platform
+    : (curated.platform || 'twitch');
 
   // Rate limit per IP (Cloudflare populates cf-connecting-ip on every request).
   const ip = request.headers.get('cf-connecting-ip') || '0.0.0.0';

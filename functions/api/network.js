@@ -12,14 +12,7 @@
 // ================================================================
 
 import { jsonResponse } from '../_lib.js';
-
-const ALLOWED_HANDLES = new Set([
-  'tyrone', 'lbmm', 'reeclare', 'stoker', 'samham', 'deggyuk',
-  'megsmary', 'tazzthegeeza', 'wheelydev', 'rexality', 'steeel',
-  'justj0hnnyhd', 'cherish_remedy', 'lorddorro', 'jck0__', 'absthename',
-  'essellz', 'lewthescot', 'angels365', 'fantasiasfantasy',
-  'kavsual', 'shammers', 'bags', 'dynamoses', 'dcampion', 'elliewaller',
-]);
+import { getHandlesSet } from '../_curated.js';
 
 const CACHE_TTL = 300;
 
@@ -28,6 +21,7 @@ export async function onRequestGet({ env, waitUntil }) {
   const cacheKey = new Request('https://contentlore.com/cache/network/v1');
   const hit = await cache.match(cacheKey);
   if (hit) return hit;
+  const ALLOWED_HANDLES = await getHandlesSet(env);
 
   try {
     const now = Math.floor(Date.now() / 1000);

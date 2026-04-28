@@ -93,6 +93,7 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
 
     <div class="tabs">
       <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
+      <div class="tab" onclick="switchTab('curated')">Curated</div>
       <div class="tab" onclick="switchTab('creators')">Creators</div>
       <div class="tab" onclick="switchTab('controls')">Controls</div>
       <div class="tab" onclick="switchTab('discovery')">Discovery</div>
@@ -106,8 +107,20 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
       <div class="panel" id="scheduler-panel"><div class="log">Loading...</div></div>
     </div>
 
+    <div class="tab-content" id="tab-curated">
+      <div class="sh">Curated Allowlist <span style="font-family:var(--font-m);font-size:12px;color:var(--ink-faint);font-weight:400;letter-spacing:2px;text-transform:uppercase">D1: curated_creators</span></div>
+      <div class="panel" style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button class="btn" onclick="openCuratedAdd()">+ Add creator</button>
+          <button class="btn" onclick="loadCurated()">Refresh</button>
+          <span id="curated-count" style="font-family:var(--font-m);font-size:12px;color:var(--ink-dim);margin-left:auto">—</span>
+        </div>
+      </div>
+      <div class="panel" id="curated-panel"><div class="log">Loading…</div></div>
+    </div>
+
     <div class="tab-content" id="tab-creators">
-      <div class="sh">Allowlist (26 creators)</div>
+      <div class="sh">All Creators (D1 dump)</div>
       <div class="panel" id="creators-panel"></div>
     </div>
 
@@ -131,6 +144,45 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
     <div class="tab-content" id="tab-discovery">
       <div class="sh">Discovery Queue</div>
       <div class="panel" id="discovery-panel"><div class="log">Loading...</div></div>
+    </div>
+
+    <!-- ========== Curated Add/Edit Modal ========== -->
+    <div id="curated-modal" style="display:none;position:fixed;inset:0;background:oklch(0.05 0.03 190/.9);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--card);border:1px solid var(--signal);max-width:560px;width:100%;padding:24px;max-height:90vh;overflow-y:auto">
+        <h2 id="curated-modal-title" style="font-family:var(--font-d);font-size:24px;letter-spacing:1px;margin-bottom:14px">Add curated creator</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+          <div>
+            <label style="display:block;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-bottom:4px">Handle (lowercase)</label>
+            <input id="cu-handle" type="text" maxlength="32" style="width:100%;padding:9px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:14px" placeholder="newcreator">
+          </div>
+          <div>
+            <label style="display:block;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-bottom:4px">Display name</label>
+            <input id="cu-display" type="text" maxlength="64" style="width:100%;padding:9px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-size:14px" placeholder="NewCreator">
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-bottom:4px">Primary platform</label>
+          <select id="cu-platform" style="padding:9px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:14px;width:100%">
+            <option value="twitch">twitch</option>
+            <option value="kick">kick</option>
+          </select>
+        </div>
+        <div style="font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-bottom:8px">Socials (handles only, no @ — discord allows full URL)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px">
+          <div><label style="font-size:11px;color:var(--ink-faint);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px">Twitch</label><input id="cu-s-twitch" type="text" style="width:100%;padding:7px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:13px"></div>
+          <div><label style="font-size:11px;color:var(--ink-faint);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px">Kick</label><input id="cu-s-kick" type="text" style="width:100%;padding:7px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:13px"></div>
+          <div><label style="font-size:11px;color:var(--ink-faint);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px">YouTube</label><input id="cu-s-youtube" type="text" style="width:100%;padding:7px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:13px"></div>
+          <div><label style="font-size:11px;color:var(--ink-faint);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px">TikTok</label><input id="cu-s-tiktok" type="text" style="width:100%;padding:7px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:13px"></div>
+          <div><label style="font-size:11px;color:var(--ink-faint);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px">X</label><input id="cu-s-x" type="text" style="width:100%;padding:7px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:13px"></div>
+          <div><label style="font-size:11px;color:var(--ink-faint);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px">Instagram</label><input id="cu-s-instagram" type="text" style="width:100%;padding:7px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:13px"></div>
+          <div style="grid-column:1/-1"><label style="font-size:11px;color:var(--ink-faint);font-family:var(--font-m);text-transform:uppercase;letter-spacing:1px">Discord (full https:// invite URL)</label><input id="cu-s-discord" type="text" style="width:100%;padding:7px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:13px" placeholder="https://discord.gg/..."></div>
+        </div>
+        <div id="cu-error" style="display:none;color:var(--red);font-family:var(--font-m);font-size:13px;margin-bottom:10px;padding:10px;background:oklch(0.68 0.27 25/.1);border:1px solid oklch(0.68 0.27 25/.3)"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" onclick="closeCuratedModal()">Cancel</button>
+          <button class="btn" id="cu-save-btn" onclick="saveCurated()" style="background:var(--signal);color:var(--bg);border-color:var(--signal)">Save</button>
+        </div>
+      </div>
     </div>
 
     <div class="tab-content" id="tab-submissions">
@@ -182,6 +234,7 @@ function switchTab(name) {
   event.target.classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
   if (name === 'creators') loadCreators();
+  if (name === 'curated') loadCurated();
   if (name === 'discovery') loadDiscovery();
   if (name === 'submissions') loadSubmissions('pending');
 }
@@ -536,6 +589,163 @@ loadDashboard = function () {
   _origLoadDashboard.apply(this, arguments);
   refreshSubmissionsBadge();
 };
+
+// ============================================================
+// CURATED — D1-backed allowlist CRUD
+// ============================================================
+let curatedEditing = null; // null = add mode, otherwise the handle being edited
+
+async function loadCurated() {
+  const panel = document.getElementById('curated-panel');
+  panel.innerHTML = '<div class="log">Loading…</div>';
+  try {
+    const r = await fetch('/api/admin/curated', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'load failed');
+    const list = d.creators || [];
+    document.getElementById('curated-count').textContent = `${list.filter(c => c.active).length} active · ${list.length} total`;
+
+    if (list.length === 0) {
+      panel.innerHTML = '<div style="padding:16px;color:var(--ink-dim)">No curated creators yet.</div>';
+      return;
+    }
+
+    panel.innerHTML = `<table>
+      <thead><tr>
+        <th>Handle</th><th>Display</th><th>Platform</th><th>Socials</th><th>Active</th><th>Actions</th>
+      </tr></thead>
+      <tbody>
+        ${list.map(c => {
+          const socialPills = Object.entries(c.socials || {})
+            .filter(([_, v]) => v)
+            .map(([k]) => `<span style="font-family:var(--font-m);font-size:10px;padding:2px 5px;background:var(--card2);border:1px solid var(--border);color:var(--ink-dim);text-transform:uppercase;letter-spacing:1px;margin-right:3px">${k}</span>`)
+            .join('') || '<span style="color:var(--ink-faint);font-size:12px">—</span>';
+          return `<tr style="${c.active ? '' : 'opacity:.45'}">
+            <td>${escapeHtml(c.handle)}</td>
+            <td>${escapeHtml(c.display_name)}</td>
+            <td><span class="badge ${c.primary_platform}">${c.primary_platform}</span></td>
+            <td>${socialPills}</td>
+            <td><span class="badge ${c.active ? 'live' : 'offline'}">${c.active ? 'YES' : 'NO'}</span></td>
+            <td>
+              <button class="btn" onclick="openCuratedEdit('${escapeHtml(c.handle)}')">Edit</button>
+              ${c.active
+                ? `<button class="btn danger" onclick="toggleCurated('${escapeHtml(c.handle)}', false)">Deactivate</button>`
+                : `<button class="btn" onclick="toggleCurated('${escapeHtml(c.handle)}', true)">Reactivate</button>`}
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:12px;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;line-height:1.6">
+      Changes propagate to all endpoints within 5 minutes (cache TTL). The cache is dropped immediately on every write,
+      so the next request from any isolate already on a warm cache will see the new data.
+    </div>`;
+  } catch (e) {
+    panel.innerHTML = `<div class="log" style="color:var(--red)">Error: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function openCuratedAdd() {
+  curatedEditing = null;
+  document.getElementById('curated-modal-title').textContent = 'Add curated creator';
+  document.getElementById('cu-handle').disabled = false;
+  for (const id of ['cu-handle','cu-display','cu-s-twitch','cu-s-kick','cu-s-youtube','cu-s-tiktok','cu-s-x','cu-s-instagram','cu-s-discord']) {
+    document.getElementById(id).value = '';
+  }
+  document.getElementById('cu-platform').value = 'twitch';
+  document.getElementById('cu-error').style.display = 'none';
+  document.getElementById('curated-modal').style.display = 'flex';
+}
+
+async function openCuratedEdit(handle) {
+  curatedEditing = handle;
+  // Pull current state so the edit form is pre-filled.
+  let creator = null;
+  try {
+    const r = await fetch('/api/admin/curated', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    const d = await r.json();
+    creator = (d.creators || []).find(c => c.handle === handle);
+  } catch {}
+  if (!creator) { alert('Could not load creator'); return; }
+  document.getElementById('curated-modal-title').textContent = 'Edit ' + creator.display_name;
+  document.getElementById('cu-handle').value = creator.handle;
+  document.getElementById('cu-handle').disabled = true; // handle is the PK
+  document.getElementById('cu-display').value = creator.display_name;
+  document.getElementById('cu-platform').value = creator.primary_platform;
+  const s = creator.socials || {};
+  document.getElementById('cu-s-twitch').value    = s.twitch    || '';
+  document.getElementById('cu-s-kick').value      = s.kick      || '';
+  document.getElementById('cu-s-youtube').value   = s.youtube   || '';
+  document.getElementById('cu-s-tiktok').value    = s.tiktok    || '';
+  document.getElementById('cu-s-x').value         = s.x         || '';
+  document.getElementById('cu-s-instagram').value = s.instagram || '';
+  document.getElementById('cu-s-discord').value   = s.discord   || '';
+  document.getElementById('cu-error').style.display = 'none';
+  document.getElementById('curated-modal').style.display = 'flex';
+}
+
+function closeCuratedModal() {
+  document.getElementById('curated-modal').style.display = 'none';
+}
+
+async function saveCurated() {
+  const handle = document.getElementById('cu-handle').value.toLowerCase().trim();
+  const display = document.getElementById('cu-display').value.trim();
+  const platform = document.getElementById('cu-platform').value;
+  const socials = {
+    twitch:    document.getElementById('cu-s-twitch').value.trim()    || null,
+    kick:      document.getElementById('cu-s-kick').value.trim()      || null,
+    youtube:   document.getElementById('cu-s-youtube').value.trim()   || null,
+    tiktok:    document.getElementById('cu-s-tiktok').value.trim()    || null,
+    x:         document.getElementById('cu-s-x').value.trim()         || null,
+    instagram: document.getElementById('cu-s-instagram').value.trim() || null,
+    discord:   document.getElementById('cu-s-discord').value.trim()   || null,
+  };
+  const err = document.getElementById('cu-error');
+  err.style.display = 'none';
+
+  if (!/^[a-z0-9_]{1,32}$/.test(handle)) { err.textContent = 'Handle must be lowercase [a-z0-9_], 1-32 chars'; err.style.display = 'block'; return; }
+  if (!display) { err.textContent = 'Display name required'; err.style.display = 'block'; return; }
+
+  document.getElementById('cu-save-btn').disabled = true;
+  document.getElementById('cu-save-btn').textContent = 'Saving…';
+  try {
+    const isEdit = !!curatedEditing;
+    const method = isEdit ? 'PUT' : 'POST';
+    const r = await fetch('/api/admin/curated', {
+      method,
+      headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle, display_name: display, primary_platform: platform, socials }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'save failed');
+    closeCuratedModal();
+    loadCurated();
+  } catch (e) {
+    err.textContent = 'Error: ' + e.message;
+    err.style.display = 'block';
+  } finally {
+    document.getElementById('cu-save-btn').disabled = false;
+    document.getElementById('cu-save-btn').textContent = 'Save';
+  }
+}
+
+async function toggleCurated(handle, active) {
+  if (!confirm((active ? 'Reactivate' : 'Deactivate') + ' ' + handle + '?')) return;
+  try {
+    const r = await fetch('/api/admin/curated', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle, active }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'toggle failed');
+    loadCurated();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
 </script>
 </body>
 </html>
