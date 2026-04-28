@@ -74,6 +74,16 @@ table.heatmap td.lvl-5{background:oklch(0.82 0.20 195/.85);color:var(--bg);font-
 .gcard .delta{font-family:var(--font-d);font-size:24px;color:var(--green);text-align:right}
 .gcard .delta.neg{color:var(--amber)}
 .gcard .delta .pct{font-size:14px;color:var(--ink-dim)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.fcard{background:var(--card2);border:1px solid var(--border);padding:14px;display:grid;grid-template-rows:auto 1fr auto;gap:8px;position:relative}
+.fcard.kick{opacity:.5}
+.fcard h5{font-family:var(--font-d);font-size:18px;letter-spacing:1px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.fcard h5 .platform{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:2px;text-transform:uppercase;font-weight:400}
+.fcard .spark{height:36px;width:100%;display:block}
+.fcard .nums{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:var(--ink-dim)}
+.fcard .nums .delta{color:var(--green)}
+.fcard .nums .delta.neg{color:var(--amber)}
+.fcard .nums .nodata{color:var(--ink-faint)}
 .legend{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px;margin-top:6px}
 .empty{color:var(--ink-faint);font-family:var(--font-m);font-size:12px;letter-spacing:1px;padding:20px;text-align:center}
 .footer{border-top:1px solid var(--border);padding:20px;text-align:center;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:20px}
@@ -164,6 +174,17 @@ table.heatmap td.lvl-5{background:oklch(0.82 0.20 195/.85);color:var(--bg);font-
       </div>
     </div>
     <div id="growth-wrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="sh">Follower Trend <span class="sh-meta">Last 30 days · per creator</span></div>
+  <div class="panel">
+    <div class="panel-h">
+      <div>
+        <div class="panel-t">Follower Count Over Time</div>
+        <div class="panel-d">Daily-bucketed follower count from the polling pass. Sorted by absolute delta — biggest gainers first. Kick creators show "no data" because the Kick Public API doesn't expose follower counts.</div>
+      </div>
+    </div>
+    <div id="follow-wrap"><div class="empty">Loading…</div></div>
   </div>
 </div>
 
@@ -321,6 +342,62 @@ function renderGrowth(growth) {
   wrap.innerHTML = `<div class="growth-grid">${html}</div>`;
 }
 
+function renderFollowers(list) {
+  const wrap = document.getElementById('follow-wrap');
+  if (!list || !list.length) {
+    wrap.innerHTML = '<div class="empty">Follower history is empty — the polling pass needs to capture at least two days of data per creator before trends can render. Growth tracking starts now — check back in a few days.</div>';
+    return;
+  }
+  // Render Twitch creators (with data) first, then Kick (no-data) last
+  const sorted = [...list].sort((a, b) => {
+    const aHas = (a.points && a.points.length > 1) ? 1 : 0;
+    const bHas = (b.points && b.points.length > 1) ? 1 : 0;
+    if (aHas !== bHas) return bHas - aHas;
+    return (b.delta || 0) - (a.delta || 0);
+  });
+
+  const html = sorted.map(s => {
+    const isKick = s.platform === 'kick';
+    const points = s.points || [];
+    let spark = '';
+    if (points.length > 1) {
+      const W = 200, H = 36;
+      const xs = points.map(p => p.ts);
+      const ys = points.map(p => p.followers);
+      const minX = xs[0], maxX = xs[xs.length - 1];
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      const ySpread = Math.max(1, maxY - minY);
+      const xScale = (x) => ((x - minX) / Math.max(1, maxX - minX)) * (W - 4) + 2;
+      const yScale = (y) => H - 2 - ((y - minY) / ySpread) * (H - 4);
+      let d = '';
+      points.forEach((p, i) => {
+        d += (i === 0 ? 'M' : 'L') + xScale(p.ts).toFixed(1) + ' ' + yScale(p.followers).toFixed(1) + ' ';
+      });
+      const positive = (s.delta || 0) >= 0;
+      const colour = positive ? 'oklch(0.82 0.22 145)' : 'oklch(0.78 0.20 60)';
+      spark = `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <path d="${d}" fill="none" stroke="${colour}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>`;
+    } else {
+      spark = `<div style="height:36px;display:flex;align-items:center;justify-content:center;font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px">${isKick ? 'No follower data on Kick' : 'Need more samples'}</div>`;
+    }
+    const deltaStr = s.delta_pct == null ? '—' : (s.delta_pct >= 0 ? '+' : '') + s.delta_pct + '%';
+    const deltaClass = (s.delta || 0) < 0 ? 'neg' : '';
+    return `<div class="fcard${isKick ? ' kick' : ''}">
+      <h5>${(s.display_name || s.handle).replace(/&/g,'&amp;').replace(/</g,'&lt;')}<span class="platform">${s.platform}</span></h5>
+      ${spark}
+      <div class="nums">
+        ${points.length > 1
+          ? `<span>${fmt(s.first_followers)} → ${fmt(s.last_followers)}</span><span class="delta ${deltaClass}">${deltaStr}</span>`
+          : `<span class="nodata">${isKick ? 'API limitation' : 'Awaiting samples'}</span><span class="nodata">—</span>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = `<div class="fgrid">${html}</div>`;
+}
+
 async function load() {
   try {
     const r = await fetch('/api/analytics', { cache: 'no-store' });
@@ -341,6 +418,7 @@ async function load() {
     renderHeatmap(data.heatmap);
     renderBars(data.server_hours);
     renderGrowth(data.growth);
+    renderFollowers(data.growth?.follower_growth || []);
   } catch (e) {
     document.getElementById('line-wrap').innerHTML = `<div class="empty">Couldn't load analytics: ${e.message}</div>`;
     document.getElementById('heatmap-wrap').innerHTML = '';

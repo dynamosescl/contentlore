@@ -218,13 +218,63 @@ export async function onRequestGet({ request, env, waitUntil }) {
 
     const fastestGrowing = growth.filter(g => g.delta_pct != null && g.delta_pct > 0).slice(0, 5);
 
+    // ----------------------------------------------------------------
+    // 5) FOLLOWER GROWTH — per-creator follower-count trend over 30d.
+    //    Bucketed to one sample per day so each sparkline has 30 points
+    //    max. Kick snapshots write NULL into `followers` (Public API
+    //    doesn't expose it) so this section is effectively Twitch-only —
+    //    we still surface Kick creators with a "no data" flag so they're
+    //    visible.
+    // ----------------------------------------------------------------
+    const thirtyDaysAgo = now - 30 * 86400;
+    const followersRes = await env.DB.prepare(`
+      SELECT cp.handle, c.display_name, cp.platform,
+             (s.captured_at / 86400) AS day_bucket,
+             AVG(s.followers) AS followers
+      FROM snapshots s
+      INNER JOIN creators c ON c.id = s.creator_id
+      INNER JOIN creator_platforms cp ON cp.creator_id = s.creator_id AND cp.is_primary = 1
+      WHERE s.captured_at >= ?
+        AND s.followers IS NOT NULL
+      GROUP BY s.creator_id, day_bucket
+      ORDER BY day_bucket ASC
+    `).bind(thirtyDaysAgo).all();
+
+    const followerSeries = new Map();
+    for (const r of (followersRes.results || [])) {
+      const h = String(r.handle).toLowerCase();
+      if (!ALLOWED_HANDLES.has(h)) continue;
+      const bucket = followerSeries.get(h) || {
+        handle: h,
+        display_name: r.display_name,
+        platform: r.platform,
+        points: [],
+      };
+      bucket.points.push({
+        ts: Number(r.day_bucket) * 86400,
+        followers: Math.round(Number(r.followers || 0)),
+      });
+      followerSeries.set(h, bucket);
+    }
+    const follower_growth = [...followerSeries.values()].map(s => {
+      const first = s.points[0]?.followers ?? 0;
+      const last  = s.points[s.points.length - 1]?.followers ?? first;
+      return {
+        ...s,
+        first_followers: first,
+        last_followers: last,
+        delta: last - first,
+        delta_pct: first > 0 ? Math.round(((last - first) / first) * 1000) / 10 : null,
+      };
+    }).sort((a, b) => (b.delta || 0) - (a.delta || 0));
+
     const payload = {
       ok: true,
       window: { start: sevenDaysAgo, end: now },
       hourly,
       heatmap: heatmapAvg,
       server_hours,
-      growth: { fastest: fastestGrowing, all: growth },
+      growth: { fastest: fastestGrowing, all: growth, follower_growth },
       stats: {
         total_hours: Math.round(totalMins / 60),
         unique_creators_live: uniqueLiveCreators.size,
