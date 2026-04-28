@@ -270,6 +270,60 @@ body.drawer-open .drawer-toggle{border-color:oklch(0.82 0.20 195/.6);color:var(-
   .header-right{font-size:10px}
   .nav-links{overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
+
+/* ==========================================================
+   MOBILE MULTI-VIEW (<=768px)
+   Replaces the desktop grid + drawer with a single-stream
+   shell: video + chat + bottom tabbar with creator avatars.
+   ========================================================== */
+.mobile-shell{display:none}
+.mobile-sheet{display:none}
+@media(min-width:769px){
+  .mobile-shell,.mobile-sheet{display:none !important}
+}
+@media(max-width:768px){
+  .wrap{display:none}
+  .chat-drawer{display:none !important}
+
+  .mobile-shell{display:flex;flex-direction:column;position:fixed;top:var(--nav-h);left:0;right:0;bottom:0;background:var(--bg);z-index:50}
+  .mobile-stream{width:100%;aspect-ratio:16/9;background:#000;position:relative;flex:none}
+  .mobile-stream iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+  .mobile-info{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--border);font-family:var(--font-m);font-size:11px;color:var(--ink-dim);min-height:30px;flex:none;flex-wrap:wrap}
+  .mobile-info .mi-name{font-family:var(--font-d);font-size:14px;letter-spacing:1px;color:var(--fg);text-decoration:none}
+  .mobile-info .mi-vw{color:var(--signal);font-weight:600}
+  .mobile-info .mi-up{color:var(--ink-faint);margin-left:auto}
+  .mobile-info .mi-mute{background:none;border:1px solid var(--border);color:var(--ink-dim);font:inherit;padding:2px 8px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-size:10px}
+  .mobile-info .mi-mute:hover{color:var(--signal);border-color:var(--signal)}
+  .mobile-chat{flex:1;background:#000;position:relative;min-height:0;overflow:hidden}
+  .mobile-chat iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+  .mobile-chat .mc-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--ink-faint);font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;line-height:1.6}
+  .ms-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;gap:10px;color:var(--ink-dim)}
+  .ms-empty .h{font-family:var(--font-d);font-size:24px;color:var(--fg);letter-spacing:1px}
+  .ms-empty .d{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;line-height:1.5;max-width:280px}
+
+  .mobile-tabbar{height:64px;background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;padding:6px;flex:none;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+  .mobile-tabbar::-webkit-scrollbar{display:none}
+  .mt-item{flex:0 0 auto;min-width:54px;height:52px;background:var(--card2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 6px;cursor:pointer;font-family:var(--font-m);color:var(--ink-dim);text-decoration:none;transition:all .15s;position:relative}
+  .mt-item.active{border-color:var(--signal);background:oklch(0.82 0.20 195/.18);box-shadow:0 0 8px oklch(0.82 0.20 195/.35)}
+  .mt-item.active .mt-name{color:var(--fg)}
+  .mt-item .mt-av{width:24px;height:24px;border-radius:50%;object-fit:cover;background:var(--card2);flex:none}
+  .mt-item .mt-ini{width:24px;height:24px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:12px;color:var(--ink-faint);flex:none}
+  .mt-item .mt-name{font-size:9px;letter-spacing:1px;text-transform:uppercase;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mt-item .mt-live{position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--signal);box-shadow:0 0 4px var(--signal)}
+  .mt-add{flex:0 0 auto;min-width:54px;height:52px;background:oklch(0.82 0.20 195/.10);border:1px dashed oklch(0.82 0.20 195/.5);color:var(--signal);font-family:var(--font-d);font-size:24px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .mt-add:hover,.mt-add:active{background:oklch(0.82 0.20 195/.22)}
+
+  .mobile-sheet{display:flex;flex-direction:column;position:fixed;inset:0;background:var(--bg);z-index:200;transform:translateY(100%);transition:transform .25s ease}
+  .mobile-sheet.open{transform:translateY(0)}
+  .mobile-sheet .msh-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--card);flex:none}
+  .mobile-sheet .msh-title{font-family:var(--font-d);font-size:24px;letter-spacing:1px}
+  .mobile-sheet .msh-sub{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+  .mobile-sheet .msh-close{font-family:var(--font-m);font-size:18px;background:none;border:1px solid var(--border);color:var(--ink-dim);width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .mobile-sheet .msh-close:hover{color:var(--fg);border-color:var(--signal)}
+  .mobile-sheet .msh-grid{padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+  .mobile-sheet .msh-grid .rc{padding:10px;cursor:pointer}
+  .mobile-sheet .msh-empty{padding:36px 16px;text-align:center;color:var(--ink-faint);font-family:var(--font-m);font-size:11px;letter-spacing:1px;line-height:1.6}
+}
 </style>
 </head>
 <body>
@@ -346,6 +400,32 @@ body.drawer-open .drawer-toggle{border-color:oklch(0.82 0.20 195/.6);color:var(-
     <div class="cd-empty" id="cd-empty">Pick a stream to load chat</div>
   </div>
 </aside>
+
+<!-- MOBILE SHELL (<=768px). Replaces .wrap on phones. Single stream + chat + bottom tabbar. -->
+<div class="mobile-shell" id="mobile-shell" aria-hidden="true">
+  <div class="mobile-stream" id="m-stream">
+    <div class="ms-empty"><div class="h">Pick a stream</div><div class="d">Tap the + below to add a creator from the roster.</div></div>
+  </div>
+  <div class="mobile-info" id="m-info" style="display:none"></div>
+  <div class="mobile-chat" id="m-chat">
+    <div class="mc-empty">Chat appears once a stream is selected</div>
+  </div>
+  <div class="mobile-tabbar" id="m-tabbar">
+    <button class="mt-add" onclick="openMobileSheet()" aria-label="Add stream">+</button>
+  </div>
+</div>
+
+<!-- MOBILE ROSTER SHEET — slide-up overlay, opens via the + button. -->
+<div class="mobile-sheet" id="mobile-sheet" aria-hidden="true">
+  <div class="msh-head">
+    <div>
+      <div class="msh-title">The Roster</div>
+      <div class="msh-sub">Tap a creator to add or remove</div>
+    </div>
+    <button class="msh-close" onclick="closeMobileSheet()" aria-label="Close roster">✕</button>
+  </div>
+  <div class="msh-grid" id="msh-grid"></div>
+</div>
 
 <script>
 const MAX = 6;
@@ -832,6 +912,206 @@ function renderRoster() {
     </button>`;
   }).join('');
 }
+
+// ================================================================
+// MOBILE MULTI-VIEW (<=768px)
+// Renders a single stream + chat + bottom tabbar. State piggybacks
+// on the existing `selected[]` array; mobileActiveKey picks which
+// of the selected streams is currently being shown.
+// ================================================================
+
+const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+const MOBILE_ACTIVE_KEY = 'cl:multi:mobile-active:v1';
+let mobileActiveKey = null;
+let mobileMutedKey  = null; // when null, the active stream is unmuted; else this stream is unmuted
+let mobileLoadedStreamKey = null; // last embed-iframe src key, to avoid reloads on refresh
+let mobileLoadedChatKey = null;
+try { mobileActiveKey = localStorage.getItem(MOBILE_ACTIVE_KEY) || null; } catch {}
+
+function persistMobileActive() {
+  try {
+    if (mobileActiveKey) localStorage.setItem(MOBILE_ACTIVE_KEY, mobileActiveKey);
+    else localStorage.removeItem(MOBILE_ACTIVE_KEY);
+  } catch {}
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function buildVideoSrc(s, muted) {
+  const plat = (s.platform || 'twitch').toLowerCase();
+  const twitchParents = `parent=${PARENT}&parent=www.${PARENT}&parent=contentlore.com&parent=www.contentlore.com`;
+  return plat === 'twitch'
+    ? `https://player.twitch.tv/?channel=${encodeURIComponent(s.handle)}&${twitchParents}&muted=${muted}&autoplay=true`
+    : `https://player.kick.com/${encodeURIComponent(s.handle)}?muted=${muted}&autoplay=true`;
+}
+
+function renderMobile() {
+  const shell = document.getElementById('mobile-shell');
+  if (!isMobile()) {
+    shell.setAttribute('aria-hidden', 'true');
+    return;
+  }
+  shell.setAttribute('aria-hidden', 'false');
+
+  const liveSel = selected.map(k => streams.find(s => skey(s) === k)).filter(Boolean);
+
+  // Reconcile mobileActiveKey: prefer existing, else first selected, else null.
+  if (!mobileActiveKey || !selected.includes(mobileActiveKey)) {
+    mobileActiveKey = selected[0] || null;
+    persistMobileActive();
+  }
+
+  renderMobileStreamAndChat(liveSel);
+  renderMobileTabbar(liveSel);
+}
+
+function renderMobileStreamAndChat(liveSel) {
+  const streamEl = document.getElementById('m-stream');
+  const infoEl   = document.getElementById('m-info');
+  const chatEl   = document.getElementById('m-chat');
+
+  const active = liveSel.find(s => skey(s) === mobileActiveKey);
+  if (!active) {
+    if (mobileLoadedStreamKey) {
+      streamEl.innerHTML = `<div class="ms-empty"><div class="h">Pick a stream</div><div class="d">Tap the + below to add a creator from the roster.</div></div>`;
+      mobileLoadedStreamKey = null;
+    }
+    infoEl.style.display = 'none';
+    if (mobileLoadedChatKey) {
+      chatEl.innerHTML = `<div class="mc-empty">Chat appears once a stream is selected</div>`;
+      mobileLoadedChatKey = null;
+    }
+    return;
+  }
+
+  // Stream iframe — only swap when the active stream changes OR mute state flips.
+  // mute state for mobile: only the active stream plays sound, and only if not in the
+  // "globally muted" mode (mobileMutedKey === active key means the user explicitly muted it).
+  const muted = mobileMutedKey === mobileActiveKey;
+  const streamCacheKey = mobileActiveKey + (muted ? ':m' : ':u');
+  if (streamCacheKey !== mobileLoadedStreamKey) {
+    const src = buildVideoSrc(active, muted);
+    streamEl.innerHTML = `<iframe src="${src}" allowfullscreen allow="autoplay;fullscreen;picture-in-picture" title="${escapeHtml(active.display_name)} stream"></iframe>`;
+    mobileLoadedStreamKey = streamCacheKey;
+  }
+
+  // Info bar
+  infoEl.style.display = '';
+  infoEl.innerHTML = `
+    <a class="mi-name" href="/creator-profile/${encodeURIComponent(active.handle)}">${escapeHtml(active.display_name)}</a>
+    ${active.viewers != null ? `<span class="mi-vw">${fmtBig(active.viewers)} watching</span>` : ''}
+    ${active.uptime_mins ? `<span class="mi-up">${fmtUptime(active.uptime_mins)}</span>` : ''}
+    <button class="mi-mute" onclick="toggleMobileMute()">${muted ? '🔊 Unmute' : '🔇 Mute'}</button>
+  `;
+
+  // Chat iframe — same caching rule.
+  if (mobileActiveKey !== mobileLoadedChatKey) {
+    const chatSrc = chatSrcFor(active);
+    chatEl.innerHTML = `<iframe src="${chatSrc}" title="${escapeHtml(active.display_name)} chat"></iframe>`;
+    mobileLoadedChatKey = mobileActiveKey;
+  }
+}
+
+function renderMobileTabbar(liveSel) {
+  const bar = document.getElementById('m-tabbar');
+  if (selected.length === 0) {
+    bar.innerHTML = `<button class="mt-add" onclick="openMobileSheet()" aria-label="Add stream">+</button>`;
+    return;
+  }
+  const items = selected.map(k => {
+    const s = streams.find(x => skey(x) === k);
+    if (!s) return '';
+    const active = k === mobileActiveKey ? ' active' : '';
+    const live = s.is_live ? '<span class="mt-live" title="Live"></span>' : '';
+    const av = s.avatar_url
+      ? `<img class="mt-av" src="${s.avatar_url}" alt="" loading="lazy">`
+      : `<span class="mt-ini">${(s.display_name || '?').charAt(0).toUpperCase()}</span>`;
+    return `<button class="mt-item${active}" onclick="setMobileActive('${k.replace(/'/g, "\\'")}')" aria-label="Switch to ${escapeHtml(s.display_name)}">${live}${av}<span class="mt-name">${escapeHtml(s.display_name)}</span></button>`;
+  }).join('');
+  bar.innerHTML = items + `<button class="mt-add" onclick="openMobileSheet()" aria-label="Add stream">+</button>`;
+}
+
+function setMobileActive(key) {
+  if (!selected.includes(key)) return;
+  mobileActiveKey = key;
+  persistMobileActive();
+  renderMobile();
+}
+
+function toggleMobileMute() {
+  if (!mobileActiveKey) return;
+  mobileMutedKey = mobileMutedKey === mobileActiveKey ? null : mobileActiveKey;
+  // Force a re-render of just the active stream by clearing the cache key
+  mobileLoadedStreamKey = null;
+  renderMobile();
+}
+
+function openMobileSheet() {
+  if (!isMobile()) return;
+  renderMobileSheetGrid();
+  const sheet = document.getElementById('mobile-sheet');
+  sheet.setAttribute('aria-hidden', 'false');
+  sheet.classList.add('open');
+}
+function closeMobileSheet() {
+  const sheet = document.getElementById('mobile-sheet');
+  sheet.classList.remove('open');
+  sheet.setAttribute('aria-hidden', 'true');
+}
+
+function renderMobileSheetGrid() {
+  const grid = document.getElementById('msh-grid');
+  if (!streams.length) {
+    grid.innerHTML = `<div class="msh-empty" style="grid-column:1/-1">Roster is empty — try again in a moment.</div>`;
+    return;
+  }
+  const cap = layoutCap(); // honour the layout cap so the desktop preset still bounds mobile
+  grid.innerHTML = streams.map(s => {
+    const k = skey(s);
+    const isSel = selected.includes(k);
+    const disabled = !isSel && selected.length >= cap;
+    const plat = (s.platform || 'twitch').toLowerCase();
+    return `<button class="rc${isSel ? ' selected' : ''}${disabled ? ' disabled' : ''}" onclick="${disabled ? '' : `mobileToggle('${k.replace(/'/g, "\\'")}')`}">
+      <div class="rc-status">
+        ${s.is_live ? '<span class="rc-live"><span class="dot"></span>Live</span>' : ''}
+        ${isSel ? '<span class="rc-onstage">✓ On stage</span>' : ''}
+      </div>
+      <div class="rc-main">
+        ${avatarHtml(s.display_name, s.avatar_url, 28, 'rc-av')}
+        <div class="rc-name">${escapeHtml(s.display_name)}</div>
+      </div>
+      <div class="rc-plat ${plat}">${plat}${s.is_live && s.viewers != null ? ' · ' + fmtBig(s.viewers) : ''}</div>
+    </button>`;
+  }).join('');
+}
+
+function mobileToggle(key) {
+  const s = streams.find(x => skey(x) === key);
+  if (!s) return;
+  toggle(s); // reuses the existing add/remove logic — fires renderStage which calls renderMobile
+  // If we just added a stream and nothing was active, switch to it.
+  if (selected.includes(key) && !mobileActiveKey) {
+    mobileActiveKey = key;
+    persistMobileActive();
+  }
+  renderMobileSheetGrid();
+  renderMobile();
+}
+
+// Re-render on viewport changes so rotating from portrait → desktop split picks
+// the right shell up immediately.
+const _mobileMQ = window.matchMedia('(max-width: 768px)');
+if (_mobileMQ.addEventListener) _mobileMQ.addEventListener('change', () => renderMobile());
+
+// Hook renderMobile() onto the existing render flow. renderStage is the
+// single source of truth for what's on screen, so we wrap it.
+const _origRenderStage = renderStage;
+renderStage = function () {
+  _origRenderStage.apply(this, arguments);
+  renderMobile();
+};
 
 // === INIT ===
 loadData();
