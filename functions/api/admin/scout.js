@@ -52,12 +52,8 @@ function detectServer(title) {
 }
 
 export async function onRequestGet({ request, env }) {
-  // TEMP: auth disabled for one-shot scout sweep. Re-enable before
-  // any sensitive data flows through this endpoint. Currently only
-  // returns public stream metadata (titles, viewer counts, slugs)
-  // which is already exposed by /api/uk-rp-live.
-  // const denied = authCheck(request, env);
-  // if (denied) return denied;
+  const denied = authCheck(request, env);
+  if (denied) return denied;
 
   try {
     const curated = await getCuratedList(env);
