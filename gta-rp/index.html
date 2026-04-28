@@ -196,6 +196,15 @@ body>*{position:relative;z-index:3}
 .r-plat{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;padding:2px 6px;border:1px solid;display:inline-block}
 .r-plat.twitch{color:var(--twitch);border-color:oklch(0.65 0.25 295/.4);background:oklch(0.65 0.25 295/.1)}
 .r-plat.kick{color:var(--kick);border-color:oklch(0.82 0.22 145/.4);background:oklch(0.82 0.22 145/.1)}
+.r-pills{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
+.r-pill{font-family:var(--font-m);font-size:9px;font-weight:600;letter-spacing:1px;padding:2px 5px;border:1px solid;display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:16px;text-transform:uppercase;line-height:1}
+.r-pill-twitch{color:var(--twitch);border-color:oklch(0.65 0.25 295/.45);background:oklch(0.65 0.25 295/.12)}
+.r-pill-kick{color:var(--kick);border-color:oklch(0.82 0.22 145/.45);background:oklch(0.82 0.22 145/.12)}
+.r-pill-youtube{color:oklch(0.68 0.27 25);border-color:oklch(0.68 0.27 25/.45);background:oklch(0.68 0.27 25/.10)}
+.r-pill-tiktok{color:oklch(0.78 0.20 350);border-color:oklch(0.78 0.20 350/.45);background:oklch(0.78 0.20 350/.10)}
+.r-pill-x{color:oklch(0.97 0.02 320);border-color:oklch(0.55 0.06 190/.6);background:oklch(0.13 0.05 190/.6)}
+.r-pill-instagram{color:oklch(0.78 0.20 350);border-color:oklch(0.78 0.20 350/.45);background:oklch(0.78 0.20 350/.10)}
+.r-pill-discord{color:oklch(0.65 0.22 280);border-color:oklch(0.65 0.22 280/.45);background:oklch(0.65 0.22 280/.10)}
 
 /* EMPTY */
 .empty-scene{border:1px solid var(--border);background:var(--card);padding:40px;text-align:center}
@@ -452,11 +461,29 @@ function renderRosterCard(s) {
     : `<div class="r-av-ph">${(s.display_name||'?').charAt(0)}</div>`;
   const url = s.profile_url || (plat==='kick'?`https://kick.com/${s.handle}`:`https://twitch.tv/${s.handle}`);
 
+  // Platform pills — one per non-null entry in s.socials, using a fixed
+  // order so cards stay stable. Labels are 1-letter codes that fit at
+  // small sizes; full label is on the title attr for accessibility.
+  const socials = s.socials || {};
+  const pillOrder = [
+    ['twitch',    'TW', 'Twitch'],
+    ['kick',      'KK', 'Kick'],
+    ['youtube',   'YT', 'YouTube'],
+    ['tiktok',    'TT', 'TikTok'],
+    ['x',         'X',  'X'],
+    ['instagram', 'IG', 'Instagram'],
+    ['discord',   'DC', 'Discord'],
+  ];
+  const pills = pillOrder
+    .filter(([k]) => socials[k])
+    .map(([k, code, label]) => `<span class="r-pill r-pill-${k}" title="${label}">${code}</span>`)
+    .join('');
+
   return `<a class="rcard" href="${url}">
     ${avHtml}
     <div class="r-info">
       <div class="r-name">${s.display_name}</div>
-      <span class="r-plat ${plat}">${plat}</span>
+      <div class="r-pills">${pills || `<span class="r-plat ${plat}">${plat}</span>`}</div>
     </div>
   </a>`;
 }

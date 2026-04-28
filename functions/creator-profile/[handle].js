@@ -96,12 +96,14 @@ export async function onRequestGet({ params, env, request }) {
 
   const display = liveEntry?.display_name || dbProfile?.display_name || entry.name;
   const avatar = liveEntry?.avatar_url || dbProfile?.avatar_url || null;
-  const tiktok = liveEntry?.tiktok || null;
-  const youtube = liveEntry?.youtube || null;
+  // Prefer the canonical allowlist socials (they're the source of truth)
+  // and merge over anything the live API returned in case future fields
+  // get added to the live shape first.
+  const socials = mergeSocials(entry.socials, liveEntry?.socials);
 
   return new Response(renderProfile({
     handle: entry.handle, name: display, platform: entry.platform,
-    avatar, liveEntry, clips, stats, affinity, tiktok, youtube,
+    avatar, liveEntry, clips, stats, affinity, socials,
   }), {
     headers: {
       'content-type': 'text/html; charset=utf-8',
@@ -208,18 +210,63 @@ function aggregateServerAffinity(sessions) {
 // Render
 // ================================================================
 
-function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, tiktok, youtube }) {
+// Resolve socials: take entry as the source of truth; let any non-null
+// values from the live API override (in case the live response gets
+// richer in the future). Always returns the full 7-key shape.
+function mergeSocials(entrySocials, liveSocials) {
+  const e = entrySocials || {};
+  const l = liveSocials || {};
+  return {
+    twitch:    l.twitch    || e.twitch    || null,
+    kick:      l.kick      || e.kick      || null,
+    tiktok:    l.tiktok    || e.tiktok    || null,
+    youtube:   l.youtube   || e.youtube   || null,
+    x:         l.x         || e.x         || null,
+    instagram: l.instagram || e.instagram || null,
+    discord:   l.discord   || e.discord   || null,
+  };
+}
+
+// Inline SVG glyphs for each platform — kept here so creator-profile
+// stays self-contained (no extra request for icon sprites). Each is
+// 18×18 in a viewBox and inherits currentColor.
+function platformIcon(key) {
+  switch (key) {
+    case 'twitch':    return '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M4.265 3 3 6.733V19.7h4.466V22h2.532l2.265-2.3h3.598L22 14.6V3H4.265zm15.736 10.667-2.733 2.733h-4.466l-2.265 2.267v-2.267H6.732V4.6h13.269v9.067zM17.733 7.333v4.4h-1.6v-4.4h1.6zm-4.4 0v4.4h-1.6v-4.4h1.6z"/></svg>';
+    case 'kick':      return '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M2 2h6v6h2V6h2V4h2V2h6v6h-2v2h-2v2h-2v2h2v2h2v2h2v6h-6v-2h-2v-2h-2v-2H8v6H2V2z"/></svg>';
+    case 'youtube':   return '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.016 3.016 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>';
+    case 'tiktok':    return '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43V8.42a8.3 8.3 0 0 0 4.85 1.55V6.69h-1.92z"/></svg>';
+    case 'x':         return '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>';
+    case 'instagram': return '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.23-.41a3.71 3.71 0 0 1-1.38-.9 3.71 3.71 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.81.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zm0-2.16C8.74 0 8.33.01 7.05.07 5.78.13 4.9.32 4.14.61c-.79.31-1.46.72-2.13 1.39C1.34 2.67.93 3.34.62 4.13.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12c0 3.26.01 3.67.07 4.95.06 1.27.26 2.15.55 2.91.31.79.72 1.46 1.39 2.13.67.67 1.34 1.08 2.13 1.39.76.29 1.64.49 2.91.55C8.33 23.99 8.74 24 12 24c3.26 0 3.67-.01 4.95-.07 1.27-.06 2.15-.26 2.91-.55.79-.31 1.46-.72 2.13-1.39.67-.67 1.08-1.34 1.39-2.13.29-.76.49-1.64.55-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.55-2.91-.31-.79-.72-1.46-1.39-2.13A5.88 5.88 0 0 0 19.86.61c-.76-.29-1.64-.49-2.91-.55C15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.41-11.85a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>';
+    case 'discord':   return '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.075.075 0 0 0-.079.038c-.21.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0 12.65 12.65 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.099.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>';
+    default: return '';
+  }
+}
+
+// Build the PLATFORMS link list from a socials object. Each non-null
+// handle becomes a branded button. Order is fixed so the page is
+// stable regardless of which platforms a creator has.
+function buildPlatformLinks(socials) {
+  if (!socials) return [];
+  const handle = (h) => String(h).replace(/^@/, '').trim();
+  const out = [];
+  if (socials.twitch)    out.push({ key: 'twitch',    label: 'Twitch',    url: `https://twitch.tv/${encodeURIComponent(handle(socials.twitch))}`,                       sub: '@' + handle(socials.twitch) });
+  if (socials.kick)      out.push({ key: 'kick',      label: 'Kick',      url: `https://kick.com/${encodeURIComponent(handle(socials.kick))}`,                          sub: '@' + handle(socials.kick) });
+  if (socials.youtube)   out.push({ key: 'youtube',   label: 'YouTube',   url: socials.youtube.startsWith('http') ? socials.youtube : `https://youtube.com/@${encodeURIComponent(handle(socials.youtube))}`, sub: '@' + handle(socials.youtube) });
+  if (socials.tiktok)    out.push({ key: 'tiktok',    label: 'TikTok',    url: `https://tiktok.com/@${encodeURIComponent(handle(socials.tiktok))}`,                      sub: '@' + handle(socials.tiktok) });
+  if (socials.x)         out.push({ key: 'x',         label: 'X',         url: `https://x.com/${encodeURIComponent(handle(socials.x))}`,                                 sub: '@' + handle(socials.x) });
+  if (socials.instagram) out.push({ key: 'instagram', label: 'Instagram', url: `https://instagram.com/${encodeURIComponent(handle(socials.instagram))}`,                 sub: '@' + handle(socials.instagram) });
+  if (socials.discord)   out.push({ key: 'discord',   label: 'Discord',   url: socials.discord.startsWith('http') ? socials.discord : `https://discord.gg/${encodeURIComponent(handle(socials.discord))}`,  sub: 'Server' });
+  return out;
+}
+
+function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials }) {
   const platUrl = platform === 'kick' ? `https://kick.com/${handle}` : `https://twitch.tv/${handle}`;
   const platLabel = platform === 'kick' ? 'Kick' : 'Twitch';
   const isLive = !!liveEntry?.is_live;
   const liveBanner = isLive ? renderLiveBanner(handle, platform, liveEntry) : '';
 
-  const platformLinks = [
-    platform === 'twitch' ? { label: 'Twitch', url: platUrl, color: 'twitch' } : null,
-    platform === 'kick' ? { label: 'Kick', url: platUrl, color: 'kick' } : null,
-    tiktok ? { label: 'TikTok', url: `https://tiktok.com/@${tiktok.replace(/^@/, '')}`, color: 'tiktok' } : null,
-    youtube ? { label: 'YouTube', url: youtube.startsWith('http') ? youtube : `https://youtube.com/@${youtube.replace(/^@/, '')}`, color: 'youtube' } : null,
-  ].filter(Boolean);
+  const platformLinks = buildPlatformLinks(socials);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -292,14 +339,35 @@ body>*{position:relative;z-index:3}
 .embed-wrap{aspect-ratio:16/9;background:#000;border:1px solid var(--border);clip-path:var(--cut);overflow:hidden;margin-bottom:18px;position:relative}
 .embed-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 
-/* PLATFORM LINKS */
-.plinks{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-.plink{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;padding:8px 14px;background:var(--card);border:1px solid var(--border);color:var(--ink-dim);text-decoration:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-.plink:hover{transform:translateY(-1px)}
-.plink.twitch:hover{border-color:var(--twitch);color:var(--twitch)}
-.plink.kick:hover{border-color:var(--kick);color:var(--kick)}
-.plink.tiktok:hover{border-color:var(--tiktok);color:var(--tiktok)}
-.plink.youtube:hover{border-color:var(--youtube);color:var(--youtube)}
+/* PLATFORMS — branded buttons rendering every non-null social */
+:root{
+  --x-col:oklch(0.97 0.02 320);
+  --instagram-col:oklch(0.78 0.20 350);
+  --discord-col:oklch(0.65 0.22 280);
+}
+.platforms{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+@media(max-width:600px){.platforms{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}}
+.pbtn{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);
+  border:1px solid var(--border);color:var(--fg);text-decoration:none;clip-path:var(--cut);
+  transition:all .15s;position:relative;overflow:hidden}
+.pbtn::before{content:'';position:absolute;inset:0;opacity:0;background:currentColor;transition:opacity .2s;pointer-events:none}
+.pbtn:hover{transform:translateY(-2px);border-color:currentColor;box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 14px currentColor}
+.pbtn:hover::before{opacity:.06}
+.pbtn-icon{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;background:oklch(0.18 0.06 295);color:currentColor;border:1px solid currentColor;
+  box-shadow:0 0 8px currentColor}
+.pbtn-text{display:flex;flex-direction:column;min-width:0;line-height:1}
+.pbtn-label{font-family:var(--font-d);font-size:18px;letter-spacing:1.5px;color:var(--fg);
+  margin-bottom:4px}
+.pbtn-sub{font-family:var(--font-m);font-size:10px;letter-spacing:1px;color:currentColor;
+  text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
+.pbtn-twitch{color:var(--twitch)}
+.pbtn-kick{color:var(--kick)}
+.pbtn-youtube{color:var(--youtube)}
+.pbtn-tiktok{color:var(--tiktok)}
+.pbtn-x{color:var(--x-col)}
+.pbtn-instagram{color:var(--instagram-col)}
+.pbtn-discord{color:var(--discord-col)}
 
 /* SECTIONS */
 .section{margin-top:32px}
@@ -375,10 +443,18 @@ body>*{position:relative;z-index:3}
 
   ${liveBanner}
 
-  <div class="plinks">
-    ${platformLinks.map(p =>
-      `<a class="plink ${p.color}" href="${esc(p.url)}" target="_blank" rel="noopener">${p.label} ↗</a>`
-    ).join('')}
+  <div class="section">
+    <div class="sec-h"><h2>Platforms</h2><span class="sub">${platformLinks.length} verified · click to open</span></div>
+    <div class="platforms">
+      ${platformLinks.map(p => `
+        <a class="pbtn pbtn-${p.key}" href="${esc(p.url)}" target="_blank" rel="noopener" aria-label="${p.label} — ${esc(p.sub)}">
+          <span class="pbtn-icon">${platformIcon(p.key)}</span>
+          <span class="pbtn-text">
+            <span class="pbtn-label">${p.label}</span>
+            <span class="pbtn-sub">${esc(p.sub)} ↗</span>
+          </span>
+        </a>`).join('')}
+    </div>
   </div>
 
   <div class="section">

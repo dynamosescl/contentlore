@@ -15,37 +15,59 @@ const CACHE_TTL = 90; // seconds
 const THUMB_SIZE = { w: 1280, h: 720 };
 const KICK_AVATAR_TTL = 86400 * 7; // 7 days
 
-// Optional `tiktok` / `youtube` fields are surfaced in every entry so creator-
-// profile pages and the multi-platform footprint card can light up without a
-// schema change later. Populate as handles become known.
+// `socials` carries a creator's whole multi-platform footprint. Each
+// field is either a string handle (no @, no full URL — just the
+// username, except `discord` which is a full invite URL) or null.
+// The field set is fixed so consumers can iterate it predictably.
+//
+// Honesty rules:
+//   - Only populate a handle when it's confirmed (the account exists,
+//     and it's actually the same person). Don't guess.
+//   - Cross-platform Twitch/Kick: confirmed today only for dynamoses
+//     and bags (both have D1 platform rows on both sides per
+//     migration 010_backfill_curated.sql).
+//   - TikTok / YouTube / X / Instagram / Discord: leave null until
+//     populated manually or via creator submissions.
+//
+// `platform` (top-level) is the *primary* platform — it drives which
+// API the live-state lookup hits and which embed the multi-view tile
+// uses. The full footprint goes in `socials`.
 const ALLOWLIST = [
-  { handle: 'tyrone',         platform: 'twitch', name: 'Tyrone' },
-  { handle: 'lbmm',           platform: 'twitch', name: 'LBMM' },
-  { handle: 'reeclare',       platform: 'twitch', name: 'Reeclare' },
-  { handle: 'stoker',         platform: 'twitch', name: 'Stoker' },
-  { handle: 'samham',         platform: 'twitch', name: 'SamHam' },
-  { handle: 'deggyuk',        platform: 'twitch', name: 'DeggyUK' },
-  { handle: 'megsmary',       platform: 'twitch', name: 'MegsMary' },
-  { handle: 'tazzthegeeza',   platform: 'twitch', name: 'TaZzTheGeeza' },
-  { handle: 'wheelydev',      platform: 'twitch', name: 'WheelyDev' },
-  { handle: 'rexality',       platform: 'twitch', name: 'RexaliTy' },
-  { handle: 'steeel',         platform: 'twitch', name: 'Steeel' },
-  { handle: 'justj0hnnyhd',   platform: 'twitch', name: 'JustJ0hnnyHD' },
-  { handle: 'cherish_remedy', platform: 'twitch', name: 'Cherish_Remedy' },
-  { handle: 'lorddorro',      platform: 'twitch', name: 'LordDorro' },
-  { handle: 'jck0__',         platform: 'twitch', name: 'JCK0__' },
-  { handle: 'absthename',     platform: 'twitch', name: 'ABsTheName' },
+  // ---- Primary Twitch (20) ----
+  { handle: 'tyrone',           platform: 'twitch', name: 'Tyrone',           socials: { twitch: 'tyrone',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'lbmm',             platform: 'twitch', name: 'LBMM',             socials: { twitch: 'lbmm',             kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'reeclare',         platform: 'twitch', name: 'Reeclare',         socials: { twitch: 'reeclare',         kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'stoker',           platform: 'twitch', name: 'Stoker',           socials: { twitch: 'stoker',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'samham',           platform: 'twitch', name: 'SamHam',           socials: { twitch: 'samham',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'deggyuk',          platform: 'twitch', name: 'DeggyUK',          socials: { twitch: 'deggyuk',          kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'megsmary',         platform: 'twitch', name: 'MegsMary',         socials: { twitch: 'megsmary',         kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'tazzthegeeza',     platform: 'twitch', name: 'TaZzTheGeeza',     socials: { twitch: 'tazzthegeeza',     kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'wheelydev',        platform: 'twitch', name: 'WheelyDev',        socials: { twitch: 'wheelydev',        kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'rexality',         platform: 'twitch', name: 'RexaliTy',         socials: { twitch: 'rexality',         kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'steeel',           platform: 'twitch', name: 'Steeel',           socials: { twitch: 'steeel',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'justj0hnnyhd',     platform: 'twitch', name: 'JustJ0hnnyHD',     socials: { twitch: 'justj0hnnyhd',     kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'cherish_remedy',   platform: 'twitch', name: 'Cherish_Remedy',   socials: { twitch: 'cherish_remedy',   kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'lorddorro',        platform: 'twitch', name: 'LordDorro',        socials: { twitch: 'lorddorro',        kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'jck0__',           platform: 'twitch', name: 'JCK0__',           socials: { twitch: 'jck0__',           kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'absthename',       platform: 'twitch', name: 'ABsTheName',       socials: { twitch: 'absthename',       kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
   // Added 2026-04-27 via scheduler discovery + admin triage
-  { handle: 'essellz',          platform: 'twitch', name: 'Essellz' },
-  { handle: 'lewthescot',       platform: 'twitch', name: 'LewTheScot' },
-  { handle: 'angels365',        platform: 'twitch', name: 'Angels365' },
-  { handle: 'fantasiasfantasy', platform: 'twitch', name: 'FantasiasFantasy' },
-  { handle: 'kavsual',        platform: 'kick',   name: 'Kavsual' },
-  { handle: 'shammers',       platform: 'kick',   name: 'Shammers' },
-  { handle: 'bags',           platform: 'kick',   name: 'Bags' },
-  { handle: 'dynamoses',      platform: 'kick',   name: 'Dynamoses' },
-  { handle: 'dcampion',       platform: 'kick',   name: 'DCampion' },
-  { handle: 'elliewaller',    platform: 'kick',   name: 'EllieWaller' },
+  { handle: 'essellz',          platform: 'twitch', name: 'Essellz',          socials: { twitch: 'essellz',          kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'lewthescot',       platform: 'twitch', name: 'LewTheScot',       socials: { twitch: 'lewthescot',       kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'angels365',        platform: 'twitch', name: 'Angels365',        socials: { twitch: 'angels365',        kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'fantasiasfantasy', platform: 'twitch', name: 'FantasiasFantasy', socials: { twitch: 'fantasiasfantasy', kick: null,        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+
+  // ---- Primary Kick (6) ----
+  { handle: 'kavsual',          platform: 'kick',   name: 'Kavsual',          socials: { twitch: null,               kick: 'kavsual',     tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'shammers',         platform: 'kick',   name: 'Shammers',         socials: { twitch: null,               kick: 'shammers',    tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  // bags is in D1 with both a `twitch-bags` creator id and a `kick` platform row
+  // (migration 010 — primary platform on the allowlist is kick, but the twitch
+  // account exists too). Confirmed multi-platform.
+  { handle: 'bags',             platform: 'kick',   name: 'Bags',             socials: { twitch: 'bags',             kick: 'bags',        tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  // dynamoses has both kick + twitch platform rows under the same creator id
+  // (migration 010). Confirmed multi-platform.
+  { handle: 'dynamoses',        platform: 'kick',   name: 'Dynamoses',        socials: { twitch: 'dynamoses',        kick: 'dynamoses',   tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'dcampion',         platform: 'kick',   name: 'DCampion',         socials: { twitch: null,               kick: 'dcampion',    tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
+  { handle: 'elliewaller',      platform: 'kick',   name: 'EllieWaller',      socials: { twitch: null,               kick: 'elliewaller', tiktok: null, youtube: null, x: null, instagram: null, discord: null } },
 ];
 
 const TWITCH_HANDLES = ALLOWLIST.filter(c => c.platform === 'twitch').map(c => c.handle);
@@ -167,6 +189,7 @@ function buildTwitchEntry(entry, twitchResult) {
     const uptimeMins = startedAtSec
       ? Math.max(0, Math.round((Date.now() / 1000 - startedAtSec) / 60))
       : null;
+    const socials = entrySocials(entry);
     return {
       handle: entry.handle,
       display_name,
@@ -180,8 +203,9 @@ function buildTwitchEntry(entry, twitchResult) {
       started_at: startedAtSec,
       uptime_mins: uptimeMins,
       thumbnail_url: resolveTwitchThumb(stream.thumbnail_url),
-      tiktok: entry.tiktok || null,
-      youtube: entry.youtube || null,
+      socials,
+      tiktok: socials.tiktok,   // back-compat top-level fields
+      youtube: socials.youtube,
     };
   }
   return offlineStub(entry, display_name, avatar_url);
@@ -292,6 +316,7 @@ function buildKickEntry(entry, kickResult) {
     const uptimeMins = startedAtSec
       ? Math.max(0, Math.round((Date.now() / 1000 - startedAtSec) / 60))
       : null;
+    const socials = entrySocials(entry);
     return {
       handle: entry.handle,
       display_name,
@@ -305,14 +330,36 @@ function buildKickEntry(entry, kickResult) {
       started_at: startedAtSec,
       uptime_mins: uptimeMins,
       thumbnail_url: ls?.thumbnail || stream?.thumbnail || null,
-      tiktok: entry.tiktok || null,
-      youtube: entry.youtube || null,
+      socials,
+      tiktok: socials.tiktok,   // back-compat top-level fields
+      youtube: socials.youtube,
     };
   }
   return offlineStub(entry, display_name, avatar_url);
 }
 
+// Resolve socials from an entry, fully populating every key so consumers
+// can iterate without null-guarding the object itself. Backfills the
+// primary platform handle if `socials` was omitted (defensive against
+// any future allowlist row that forgets to fill it in).
+function entrySocials(entry) {
+  const s = entry.socials || {};
+  const out = {
+    twitch:    s.twitch    || null,
+    kick:      s.kick      || null,
+    tiktok:    s.tiktok    || null,
+    youtube:   s.youtube   || null,
+    x:         s.x         || null,
+    instagram: s.instagram || null,
+    discord:   s.discord   || null,
+  };
+  if (entry.platform === 'twitch' && !out.twitch) out.twitch = entry.handle;
+  if (entry.platform === 'kick'   && !out.kick)   out.kick   = entry.handle;
+  return out;
+}
+
 function offlineStub(entry, display_name, avatar_url) {
+  const socials = entrySocials(entry);
   return {
     handle: entry.handle,
     display_name,
@@ -326,7 +373,8 @@ function offlineStub(entry, display_name, avatar_url) {
     started_at: null,
     uptime_mins: null,
     thumbnail_url: null,
-    tiktok: entry.tiktok || null,
-    youtube: entry.youtube || null,
+    socials,
+    tiktok: socials.tiktok,
+    youtube: socials.youtube,
   };
 }
