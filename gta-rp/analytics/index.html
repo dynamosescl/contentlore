@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scene Analytics — UK GTA RP · ContentLore</title>
+<meta name="description" content="Viewer trends, scene heatmap and server popularity across the curated 26 UK GTA RP creators.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);--card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);--ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 190);--signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);--amber:oklch(0.78 0.20 60);--green:oklch(0.82 0.22 145);--border:oklch(0.28 0.06 190);--font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;--cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
+html{background:var(--bg);color-scheme:dark}body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body>*{position:relative;z-index:3}
+.nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
+.nav-links{display:flex;flex-wrap:wrap;overflow-x:auto}
+.nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-link:hover{color:var(--ink-dim)}
+.nav-link.active{color:var(--signal);border-bottom-color:var(--signal)}
+.ldot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;background:var(--signal)}
+.hero{border-bottom:1px solid var(--border);padding:36px 24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
+.hero-inner{max-width:1180px;margin:0 auto}
+.hero-kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px}
+.hero h1{font-family:var(--font-d);font-size:clamp(40px,7vw,72px);line-height:.95;letter-spacing:1px}
+.hero h1 .neon{color:var(--signal);text-shadow:0 0 6px oklch(0.82 0.20 195/.4),0 0 18px oklch(0.82 0.20 195/.25)}
+.hero-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;max-width:720px;line-height:1.6}
+.mx{max-width:1180px;margin:0 auto;padding:24px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
+@media(max-width:700px){.stats{grid-template-columns:1fr 1fr}}
+.stat{background:var(--card);border:1px solid var(--border);padding:16px;clip-path:var(--cut)}
+.stat .v{font-family:var(--font-d);font-size:32px;line-height:1}
+.stat .l{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:4px}
+.stat .sub{font-family:var(--font-m);font-size:10px;color:var(--ink-dim);margin-top:6px;letter-spacing:1px}
+.sh{font-family:var(--font-d);font-size:26px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;letter-spacing:1px}
+.sh::after{content:'';flex:1;height:1px;background:var(--border)}
+.sh-meta{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:2px;text-transform:uppercase}
+.panel{background:var(--card);border:1px solid var(--border);padding:20px;clip-path:var(--cut);margin-bottom:24px}
+.panel-h{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.panel-t{font-family:var(--font-d);font-size:20px;letter-spacing:1px}
+.panel-d{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;text-transform:uppercase}
+.svg-wrap{position:relative;width:100%;overflow:hidden}
+svg.chart{display:block;width:100%;height:auto;max-width:100%}
+.notice{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);background:var(--card2);border:1px dashed var(--border);padding:12px 14px;letter-spacing:1px;line-height:1.6;margin-bottom:24px}
+.heatmap-wrap{overflow-x:auto}
+table.heatmap{border-collapse:separate;border-spacing:2px;font-family:var(--font-m);font-size:10px;letter-spacing:1px;margin:0 auto}
+table.heatmap th{font-family:var(--font-m);font-size:9px;text-transform:uppercase;color:var(--ink-faint);font-weight:400;padding:4px;letter-spacing:1px}
+table.heatmap th.dow-label{text-align:right;padding-right:8px;font-size:10px;color:var(--ink-dim)}
+table.heatmap td{width:24px;height:22px;text-align:center;border:1px solid var(--border);background:var(--card2);position:relative;font-size:9px;color:var(--ink-faint)}
+table.heatmap td.lvl-0{background:var(--card2)}
+table.heatmap td.lvl-1{background:oklch(0.82 0.20 195/.10);color:var(--signal-cyan)}
+table.heatmap td.lvl-2{background:oklch(0.82 0.20 195/.22);color:var(--fg)}
+table.heatmap td.lvl-3{background:oklch(0.82 0.20 195/.40);color:var(--bg);font-weight:600}
+table.heatmap td.lvl-4{background:oklch(0.82 0.20 195/.62);color:var(--bg);font-weight:600}
+table.heatmap td.lvl-5{background:oklch(0.82 0.20 195/.85);color:var(--bg);font-weight:700;box-shadow:0 0 8px oklch(0.82 0.20 195/.4)}
+.heat-legend{display:flex;align-items:center;gap:8px;font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px;margin-top:12px;flex-wrap:wrap}
+.heat-swatch{width:20px;height:14px;border:1px solid var(--border);display:inline-block}
+.bars{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.bar-row{display:grid;grid-template-columns:120px 1fr 80px;gap:10px;align-items:center;font-family:var(--font-m);font-size:11px;letter-spacing:1px}
+@media(max-width:600px){.bar-row{grid-template-columns:90px 1fr 64px;font-size:10px}}
+.bar-label{color:var(--ink-dim);text-align:right}
+.bar-track{position:relative;height:18px;background:var(--card2);border:1px solid var(--border)}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,oklch(0.82 0.20 195/.85),oklch(0.85 0.18 200/.6));transition:width .6s ease}
+.bar-val{color:var(--signal-cyan);text-align:right}
+.growth-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+@media(max-width:700px){.growth-grid{grid-template-columns:1fr}}
+.gcard{background:var(--card2);border:1px solid var(--border);padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+.gcard h4{font-family:var(--font-d);font-size:18px;letter-spacing:1px}
+.gcard .sub{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px;text-transform:uppercase}
+.gcard .delta{font-family:var(--font-d);font-size:24px;color:var(--green);text-align:right}
+.gcard .delta.neg{color:var(--amber)}
+.gcard .delta .pct{font-size:14px;color:var(--ink-dim)}
+.legend{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px;margin-top:6px}
+.empty{color:var(--ink-faint);font-family:var(--font-m);font-size:12px;letter-spacing:1px;padding:20px;text-align:center}
+.footer{border-top:1px solid var(--border);padding:20px;text-align:center;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:20px}
+::selection{background:var(--signal);color:var(--bg)}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/gta-rp/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:40px;filter:brightness(1.1)" loading="eager"></a>
+  <div class="nav-links">
+    <a href="/gta-rp/" class="nav-link"><span class="ldot"></span>Live</a>
+    <a href="/gta-rp/now/" class="nav-link">Now</a>
+    <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/clips/" class="nav-link">Clips</a>
+    <a href="/gta-rp/timeline/" class="nav-link">Timeline</a>
+    <a href="/gta-rp/analytics/" class="nav-link active">Analytics</a>
+    <a href="/gta-rp/network/" class="nav-link">Network</a>
+    <a href="/gta-rp/digest/" class="nav-link">Digest</a>
+    <a href="/gta-rp/streaks/" class="nav-link">Streaks</a>
+    <a href="/gta-rp/servers/" class="nav-link">Servers</a>
+  </div>
+</nav>
+
+<div class="hero"><div class="hero-inner">
+  <div class="hero-kicker">Scene Intelligence · 7-day Window</div>
+  <h1>Scene <span class="neon">Analytics</span></h1>
+  <p class="hero-sub">Viewer trends, scene heatmap and server popularity across the curated 26. Data updates every 15 minutes from the polling pass — charts fill in as the scheduler accumulates more samples.</p>
+</div></div>
+
+<div class="mx">
+  <div class="stats" id="stats">
+    <div class="stat"><div class="v" id="k-hours" style="color:var(--signal-cyan)">—</div><div class="l">total hours streamed</div><div class="sub">last 7 days</div></div>
+    <div class="stat"><div class="v" id="k-creators" style="color:var(--green)">—</div><div class="l">unique creators live</div><div class="sub">of 26 curated</div></div>
+    <div class="stat"><div class="v" id="k-peak" style="color:var(--amber)">—</div><div class="l">peak concurrent viewers</div><div class="sub" id="k-peak-when">—</div></div>
+    <div class="stat"><div class="v" id="k-server" style="color:var(--signal)">—</div><div class="l">most active server</div><div class="sub">by viewer-hours</div></div>
+  </div>
+
+  <div id="data-notice" class="notice" style="display:none">Data accumulates over time — charts will fill in over the coming days as the scheduler captures more samples.</div>
+
+  <div class="sh">Viewers Over Time <span class="sh-meta">7 days · hourly buckets</span></div>
+  <div class="panel">
+    <div class="panel-h">
+      <div>
+        <div class="panel-t">Total Concurrent Viewers</div>
+        <div class="panel-d">Sum of viewer counts across all live curated creators, hour-bucketed.</div>
+      </div>
+    </div>
+    <div class="svg-wrap" id="line-wrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="sh">Scene Heatmap <span class="sh-meta">Day-of-week × hour-of-day</span></div>
+  <div class="panel">
+    <div class="panel-h">
+      <div>
+        <div class="panel-t">When the UK Scene is Busiest</div>
+        <div class="panel-d">Average concurrent viewers by hour-of-day (UTC) and day-of-week. Brighter cells = more viewers.</div>
+      </div>
+    </div>
+    <div class="heatmap-wrap" id="heatmap-wrap"><div class="empty">Loading…</div></div>
+    <div class="heat-legend">
+      <span>Less</span>
+      <span class="heat-swatch" style="background:var(--card2)"></span>
+      <span class="heat-swatch" style="background:oklch(0.82 0.20 195/.22)"></span>
+      <span class="heat-swatch" style="background:oklch(0.82 0.20 195/.40)"></span>
+      <span class="heat-swatch" style="background:oklch(0.82 0.20 195/.62)"></span>
+      <span class="heat-swatch" style="background:oklch(0.82 0.20 195/.85)"></span>
+      <span>More</span>
+    </div>
+  </div>
+
+  <div class="sh">Server Popularity <span class="sh-meta">7d viewer-hours</span></div>
+  <div class="panel">
+    <div class="panel-h">
+      <div>
+        <div class="panel-t">Total Viewer-Hours per Server</div>
+        <div class="panel-d">Session minutes × peak viewers ÷ 60. UK servers only — sessions without a detected server keyword are excluded.</div>
+      </div>
+    </div>
+    <div id="bars-wrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="sh">Creator Growth Tracker <span class="sh-meta">Week-over-week</span></div>
+  <div class="panel">
+    <div class="panel-h">
+      <div>
+        <div class="panel-t">Fastest Growing This Week</div>
+        <div class="panel-d">Creators with the largest jump in average viewers vs. the prior week. Comparison needs at least one snapshot in each window.</div>
+      </div>
+    </div>
+    <div id="growth-wrap"><div class="empty">Loading…</div></div>
+  </div>
+</div>
+
+<div class="footer">ContentLore · Scene Analytics · 7-day rolling window · Updated every 15 min</div>
+
+<script>
+const fmt = (n) => {
+  if (n == null) return '—';
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+  return String(Math.round(n));
+};
+const fmtTime = (ts) => {
+  if (!ts) return '—';
+  const d = new Date(ts * 1000);
+  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+function renderLine(hourly) {
+  const wrap = document.getElementById('line-wrap');
+  if (!hourly || hourly.length === 0) {
+    wrap.innerHTML = '<div class="empty">No data yet — check back after the scheduler has run a few more passes.</div>';
+    return;
+  }
+  const W = 1100, H = 280;
+  const pad = { l: 56, r: 16, t: 18, b: 36 };
+  const innerW = W - pad.l - pad.r;
+  const innerH = H - pad.t - pad.b;
+
+  const xs = hourly.map(h => h.ts);
+  const ys = hourly.map(h => h.total_viewers);
+  const minX = xs[0], maxX = xs[xs.length - 1];
+  const maxY = Math.max(1, ...ys);
+  const xScale = (x) => pad.l + ((x - minX) / Math.max(1, maxX - minX)) * innerW;
+  const yScale = (y) => pad.t + innerH - (y / maxY) * innerH;
+
+  // Build path
+  let d = '';
+  hourly.forEach((h, i) => {
+    const x = xScale(h.ts), y = yScale(h.total_viewers);
+    d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+  });
+  // Area path (close to baseline)
+  let dArea = d + 'L' + xScale(maxX).toFixed(1) + ' ' + (pad.t + innerH).toFixed(1) +
+              ' L' + xScale(minX).toFixed(1) + ' ' + (pad.t + innerH).toFixed(1) + ' Z';
+
+  // Y gridlines (4)
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(p => Math.round(maxY * p));
+  let grid = '';
+  yTicks.forEach(v => {
+    const y = yScale(v);
+    grid += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y}" y2="${y}" stroke="oklch(0.28 0.06 190 / .4)" stroke-width="1" />`;
+    grid += `<text x="${pad.l - 8}" y="${y + 4}" text-anchor="end" fill="oklch(0.55 0.06 190)" font-family="JetBrains Mono, monospace" font-size="10">${fmt(v)}</text>`;
+  });
+
+  // X tick labels — every ~24h
+  const dayMs = 86400;
+  let xLabels = '';
+  for (let t = Math.floor(minX / dayMs) * dayMs; t <= maxX; t += dayMs) {
+    if (t < minX) continue;
+    const x = xScale(t);
+    const d2 = new Date(t * 1000);
+    const lbl = d2.toLocaleString(undefined, { month: 'short', day: 'numeric' });
+    xLabels += `<line x1="${x}" x2="${x}" y1="${pad.t + innerH}" y2="${pad.t + innerH + 4}" stroke="oklch(0.55 0.06 190)" stroke-width="1" />`;
+    xLabels += `<text x="${x}" y="${pad.t + innerH + 18}" text-anchor="middle" fill="oklch(0.55 0.06 190)" font-family="JetBrains Mono, monospace" font-size="10">${lbl}</text>`;
+  }
+
+  wrap.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="oklch(0.82 0.20 195)" stop-opacity="0.45"/>
+        <stop offset="100%" stop-color="oklch(0.82 0.20 195)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${grid}
+    <path d="${dArea}" fill="url(#g1)" stroke="none"/>
+    <path d="${d}" fill="none" stroke="oklch(0.85 0.18 200)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${xLabels}
+  </svg>`;
+}
+
+function renderHeatmap(grid) {
+  const wrap = document.getElementById('heatmap-wrap');
+  if (!grid || !grid.length) {
+    wrap.innerHTML = '<div class="empty">No heatmap data yet.</div>';
+    return;
+  }
+  const flat = grid.flat();
+  const max = Math.max(1, ...flat);
+  const lvl = (v) => {
+    if (v <= 0) return 0;
+    const r = v / max;
+    if (r < 0.10) return 1;
+    if (r < 0.30) return 2;
+    if (r < 0.55) return 3;
+    if (r < 0.80) return 4;
+    return 5;
+  };
+  const dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let html = '<table class="heatmap"><thead><tr><th></th>';
+  for (let h = 0; h < 24; h++) html += `<th>${String(h).padStart(2,'0')}</th>`;
+  html += '</tr></thead><tbody>';
+  for (let d = 0; d < 7; d++) {
+    html += `<tr><th class="dow-label">${dows[d]}</th>`;
+    for (let h = 0; h < 24; h++) {
+      const v = grid[d][h];
+      html += `<td class="lvl-${lvl(v)}" title="${dows[d]} ${h}:00 UTC · avg ${fmt(v)} viewers">${v > 0 ? fmt(v) : ''}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function renderBars(servers) {
+  const wrap = document.getElementById('bars-wrap');
+  const withData = (servers || []).filter(s => s.viewer_hours > 0);
+  if (withData.length === 0) {
+    wrap.innerHTML = '<div class="empty">No server-attributed sessions in window. Sessions without a detected server keyword are excluded.</div>';
+    return;
+  }
+  const max = Math.max(...withData.map(s => s.viewer_hours));
+  const html = withData.map(s => {
+    const pct = (s.viewer_hours / max) * 100;
+    return `<div class="bar-row">
+      <div class="bar-label">${s.name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
+      <div class="bar-val">${fmt(s.viewer_hours)}h</div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = `<div class="bars">${html}</div><div class="legend">Bar length = viewer-hours relative to top server. Servers with zero hours hidden.</div>`;
+}
+
+function renderGrowth(growth) {
+  const wrap = document.getElementById('growth-wrap');
+  const fastest = (growth?.fastest) || [];
+  if (fastest.length === 0) {
+    const newOnes = (growth?.all || []).filter(g => g.new_this_week).slice(0, 5);
+    if (newOnes.length > 0) {
+      const html = newOnes.map(g => `<div class="gcard">
+        <div><h4>${g.display_name || g.handle}</h4><div class="sub">@${g.handle} · new this week</div></div>
+        <div class="delta">+NEW <span class="pct">avg ${fmt(g.recent_avg)}</span></div>
+      </div>`).join('');
+      wrap.innerHTML = `<div class="growth-grid">${html}</div><div class="legend">Growth tracking starts now — week-over-week deltas appear once each creator has snapshots in two consecutive weeks.</div>`;
+      return;
+    }
+    wrap.innerHTML = '<div class="empty">Growth tracking starts now — check back next week once we have two weeks of data per creator.</div>';
+    return;
+  }
+  const html = fastest.map(g => `
+    <div class="gcard">
+      <div><h4>${g.display_name || g.handle}</h4><div class="sub">@${g.handle} · avg ${fmt(g.recent_avg)} (was ${fmt(g.prior_avg)})</div></div>
+      <div class="delta ${g.delta_pct < 0 ? 'neg' : ''}">+${g.delta_pct}%</div>
+    </div>`).join('');
+  wrap.innerHTML = `<div class="growth-grid">${html}</div>`;
+}
+
+async function load() {
+  try {
+    const r = await fetch('/api/analytics', { cache: 'no-store' });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'Analytics failed');
+
+    document.getElementById('k-hours').textContent = fmt(data.stats.total_hours);
+    document.getElementById('k-creators').textContent = fmt(data.stats.unique_creators_live);
+    document.getElementById('k-peak').textContent = fmt(data.stats.peak_concurrent);
+    document.getElementById('k-peak-when').textContent = data.stats.peak_concurrent_at ? fmtTime(data.stats.peak_concurrent_at) : '—';
+    document.getElementById('k-server').textContent = data.stats.most_active_server || '—';
+
+    if (data.stats.sample_size < 24) {
+      document.getElementById('data-notice').style.display = 'block';
+    }
+
+    renderLine(data.hourly);
+    renderHeatmap(data.heatmap);
+    renderBars(data.server_hours);
+    renderGrowth(data.growth);
+  } catch (e) {
+    document.getElementById('line-wrap').innerHTML = `<div class="empty">Couldn't load analytics: ${e.message}</div>`;
+    document.getElementById('heatmap-wrap').innerHTML = '';
+    document.getElementById('bars-wrap').innerHTML = '';
+    document.getElementById('growth-wrap').innerHTML = '';
+  }
+}
+load();
+</script>
+</body>
+</html>
