@@ -153,6 +153,219 @@
   });
 })();
 
+// ----------------------------------------------------------------
+// Notify-me button — opt-in browser push notifications.
+//
+// A page that wants the button drops <span data-cl-notify> (or
+// any element with that data-attribute) into the DOM. This module
+// hydrates each match into a working subscribe/unsubscribe button.
+//
+// Talks to:
+//   GET  /api/push/vapid-public-key
+//   POST /api/push/subscribe       { uuid, subscription, filter_handles? }
+//   POST /api/push/unsubscribe     { endpoint }
+//
+// Anon UUID stored in localStorage as 'cl:user-uuid:v1'.
+// ----------------------------------------------------------------
+(function () {
+  const NOTIFY_STYLE = `
+    .cl-notify-btn{display:inline-flex;align-items:center;gap:6px;background:oklch(0.14 0.05 190);
+      color:oklch(0.78 0.05 320);border:1px solid oklch(0.28 0.06 190);padding:8px 14px;
+      cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;
+      text-transform:uppercase;transition:all .15s;line-height:1;font-weight:500}
+    .cl-notify-btn:hover{border-color:oklch(0.82 0.20 195);color:oklch(0.97 0.02 320)}
+    .cl-notify-btn[data-state="on"]{border-color:oklch(0.82 0.20 195);color:oklch(0.85 0.18 200);
+      background:oklch(0.82 0.20 195/.12);box-shadow:0 0 8px oklch(0.82 0.20 195/.3)}
+    .cl-notify-btn[data-state="busy"]{cursor:wait;opacity:.7}
+    .cl-notify-btn[data-state="denied"]{cursor:not-allowed;opacity:.6;border-color:oklch(0.68 0.27 25/.4);color:oklch(0.68 0.27 25)}
+    .cl-notify-btn[data-state="unsupported"]{display:none}
+    .cl-notify-toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);
+      background:oklch(0.14 0.05 190);color:oklch(0.97 0.02 320);
+      border:1px solid oklch(0.82 0.20 195/.4);padding:10px 16px;
+      font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;
+      box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:9999;opacity:0;pointer-events:none;
+      transition:opacity .2s,transform .2s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+    .cl-notify-toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+  `;
+
+  const UUID_KEY = 'cl:user-uuid:v1';
+  const STATE_KEY = 'cl:push:endpoint:v1';
+
+  function genUUID() {
+    if (crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    return 'cl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+  function getUUID() {
+    try {
+      let u = localStorage.getItem(UUID_KEY);
+      if (!u) { u = genUUID(); localStorage.setItem(UUID_KEY, u); }
+      return u;
+    } catch { return genUUID(); }
+  }
+
+  function urlBase64ToUint8(b64) {
+    const padding = '='.repeat((4 - b64.length % 4) % 4);
+    const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+
+  function showToast(msg) {
+    let t = document.getElementById('cl-notify-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'cl-notify-toast';
+      t.className = 'cl-notify-toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => t.classList.remove('show'), 3400);
+  }
+
+  function ready(fn) {
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+  }
+
+  ready(() => {
+    const mounts = document.querySelectorAll('[data-cl-notify]');
+    if (!mounts.length) return;
+
+    // Inject style once.
+    if (!document.getElementById('cl-notify-style')) {
+      const style = document.createElement('style');
+      style.id = 'cl-notify-style';
+      style.textContent = NOTIFY_STYLE;
+      document.head.appendChild(style);
+    }
+
+    const supported =
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window;
+
+    mounts.forEach(mount => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cl-notify-btn';
+      btn.dataset.state = supported ? 'off' : 'unsupported';
+      btn.innerHTML = '<span class="ic">🔔</span><span class="lbl">Notify me</span>';
+      mount.appendChild(btn);
+
+      if (!supported) return;
+      if (Notification.permission === 'denied') {
+        btn.dataset.state = 'denied';
+        btn.title = 'Notifications blocked by browser settings.';
+        btn.querySelector('.lbl').textContent = 'Blocked';
+        btn.addEventListener('click', () => {
+          showToast('Notifications are blocked — enable them in browser settings.');
+        });
+        return;
+      }
+
+      // Reflect current subscribed state on load.
+      reflectState(btn);
+
+      btn.addEventListener('click', () => onClick(btn, mount));
+    });
+  });
+
+  async function reflectState(btn) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) return;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        btn.dataset.state = 'on';
+        btn.querySelector('.lbl').textContent = 'Notifications on';
+      }
+    } catch { /* ignore */ }
+  }
+
+  async function onClick(btn, mount) {
+    if (btn.dataset.state === 'busy') return;
+    btn.dataset.state = 'busy';
+
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+
+      if (existing) {
+        // Unsubscribe path.
+        await fetch('/api/push/unsubscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: existing.endpoint }),
+        }).catch(() => {});
+        await existing.unsubscribe().catch(() => {});
+        btn.dataset.state = 'off';
+        btn.querySelector('.lbl').textContent = 'Notify me';
+        try { localStorage.removeItem(STATE_KEY); } catch {}
+        showToast('Notifications turned off.');
+        return;
+      }
+
+      // Subscribe path.
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') {
+        btn.dataset.state = perm === 'denied' ? 'denied' : 'off';
+        if (perm === 'denied') btn.querySelector('.lbl').textContent = 'Blocked';
+        showToast(perm === 'denied' ? 'Notifications blocked — change in browser settings.' : 'Notifications not enabled.');
+        return;
+      }
+
+      // Fetch the VAPID public key.
+      const keyRes = await fetch('/api/push/vapid-public-key');
+      const keyJson = await keyRes.json();
+      if (!keyJson?.ok || !keyJson.key) {
+        btn.dataset.state = 'off';
+        showToast('Push not yet configured server-side.');
+        return;
+      }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8(keyJson.key),
+      });
+
+      // Filter — `data-cl-notify="<handle>"` opts into one creator;
+      // empty value (or `all`) opts into the whole curated 26.
+      const raw = (mount.getAttribute('data-cl-notify') || '').trim().toLowerCase();
+      const filter_handles = (!raw || raw === 'all') ? 'all' : [raw];
+
+      const subRes = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uuid: getUUID(),
+          subscription: sub.toJSON(),
+          filter_handles,
+        }),
+      });
+      const subJson = await subRes.json();
+      if (!subJson?.ok) {
+        // Roll back the browser-side sub if server rejected.
+        await sub.unsubscribe().catch(() => {});
+        btn.dataset.state = 'off';
+        showToast('Subscription failed — try again later.');
+        return;
+      }
+
+      try { localStorage.setItem(STATE_KEY, sub.endpoint); } catch {}
+      btn.dataset.state = 'on';
+      btn.querySelector('.lbl').textContent = 'Notifications on';
+      showToast(filter_handles === 'all' ? "You'll get a ping when any curated creator goes live." : "You'll get a ping when this creator goes live.");
+    } catch (err) {
+      console.error('[push] subscribe error', err);
+      btn.dataset.state = 'off';
+      showToast('Something went wrong — try again.');
+    }
+  }
+})();
+
 (function () {
   if (!('serviceWorker' in navigator)) return;
 

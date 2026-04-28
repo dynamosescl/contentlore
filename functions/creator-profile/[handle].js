@@ -227,6 +227,9 @@ function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1f1f">
+<script src="/pwa.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(name)} — UK GTA RP | ContentLore</title>
 <meta name="description" content="${esc(name)} — UK GTA RP creator on ${platLabel}. Live status, recent clips, stream stats and server affinity.">
@@ -365,6 +368,7 @@ body>*{position:relative;z-index:3}
       <div class="hero-actions">
         <a class="btn btn-primary" href="${esc(platUrl)}" target="_blank" rel="noopener">Follow on ${platLabel} ↗</a>
         ${isLive ? `<a class="btn btn-ghost" href="#live">Watch now ↓</a>` : ''}
+        <span data-cl-notify="${esc(entry.handle)}" style="display:inline-block;vertical-align:middle"></span>
       </div>
     </div>
   </div>
