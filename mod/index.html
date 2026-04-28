@@ -96,6 +96,7 @@ td:first-child{font-family:var(--font-d);font-size:15px;color:var(--fg)}
       <div class="tab" onclick="switchTab('creators')">Creators</div>
       <div class="tab" onclick="switchTab('controls')">Controls</div>
       <div class="tab" onclick="switchTab('discovery')">Discovery</div>
+      <div class="tab" onclick="switchTab('submissions')">Submissions <span id="sub-badge" style="margin-left:6px;font-size:9px;color:var(--signal);display:none">0</span></div>
     </div>
 
     <div class="tab-content active" id="tab-dashboard">
@@ -130,6 +131,17 @@ td:first-child{font-family:var(--font-d);font-size:15px;color:var(--fg)}
     <div class="tab-content" id="tab-discovery">
       <div class="sh">Discovery Queue</div>
       <div class="panel" id="discovery-panel"><div class="log">Loading...</div></div>
+    </div>
+
+    <div class="tab-content" id="tab-submissions">
+      <div class="sh">Public Submissions</div>
+      <div class="panel" style="padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint)">Filter</span>
+        <button class="btn" id="sub-filter-pending" onclick="loadSubmissions('pending')">Pending</button>
+        <button class="btn" id="sub-filter-approved" onclick="loadSubmissions('approved')">Approved</button>
+        <button class="btn" id="sub-filter-rejected" onclick="loadSubmissions('rejected')">Rejected</button>
+      </div>
+      <div class="panel" id="submissions-panel"><div class="log">Loading...</div></div>
     </div>
   </div>
 </div>
@@ -171,6 +183,7 @@ function switchTab(name) {
   document.getElementById('tab-'+name).classList.add('active');
   if (name === 'creators') loadCreators();
   if (name === 'discovery') loadDiscovery();
+  if (name === 'submissions') loadSubmissions('pending');
 }
 
 function fmtBig(n) {
@@ -329,6 +342,152 @@ async function approveCreator(id) {
     loadDiscovery();
   } catch(e) { alert('Error: '+e.message); }
 }
+
+// ============================================================
+// SUBMISSIONS — public form (/submit/) submissions
+// ============================================================
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  try { return new Date(s.replace(' ','T') + 'Z').toLocaleString(); } catch { return s; }
+}
+
+async function loadSubmissions(status) {
+  status = status || 'pending';
+  const panel = document.getElementById('submissions-panel');
+  panel.innerHTML = '<div class="log">Loading...</div>';
+  // Highlight the active filter chip
+  ['pending','approved','rejected'].forEach(s => {
+    const b = document.getElementById('sub-filter-'+s);
+    if (b) b.style.borderColor = s === status ? 'var(--signal)' : '';
+    if (b) b.style.color       = s === status ? 'var(--signal)' : '';
+  });
+  try {
+    const r = await fetch('/api/admin/submissions?status='+encodeURIComponent(status), {
+      headers: { Authorization: 'Bearer ' + TOKEN },
+    });
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'unknown');
+
+    // Update tab badge with PENDING count regardless of current filter
+    const pendingCount = (d.counts && d.counts.pending) || 0;
+    const badge = document.getElementById('sub-badge');
+    if (badge) {
+      badge.textContent = pendingCount;
+      badge.style.display = pendingCount > 0 ? 'inline' : 'none';
+    }
+
+    if (!d.submissions || d.submissions.length === 0) {
+      panel.innerHTML = '<div style="padding:16px;color:var(--ink-dim)">No '+status+' submissions.</div>';
+      return;
+    }
+
+    panel.innerHTML = `
+      <div style="margin-bottom:8px;font-family:var(--font-m);font-size:11px;color:var(--ink-dim)">
+        ${d.submissions.length} ${status} · counts: pending=${d.counts?.pending||0} approved=${d.counts?.approved||0} rejected=${d.counts?.rejected||0}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${d.submissions.map(s => renderSubmissionCard(s, status)).join('')}
+      </div>`;
+  } catch (e) {
+    panel.innerHTML = '<div class="log" style="color:var(--red)">Error: '+escapeHtml(e.message)+'</div>';
+  }
+}
+
+function renderSubmissionCard(s, currentStatus) {
+  const socials = s.socials || {};
+  const platforms = [];
+  if (socials.twitch)  platforms.push(`<span class="badge twitch">tw · @${escapeHtml(socials.twitch)}</span>`);
+  if (socials.kick)    platforms.push(`<span class="badge kick">kk · @${escapeHtml(socials.kick)}</span>`);
+  if (socials.tiktok)  platforms.push(`<span class="badge" style="color:oklch(0.78 0.20 350);background:oklch(0.78 0.20 350/.10);border:1px solid oklch(0.78 0.20 350/.4)">tt · @${escapeHtml(socials.tiktok)}</span>`);
+  if (socials.youtube) platforms.push(`<span class="badge" style="color:oklch(0.68 0.27 25);background:oklch(0.68 0.27 25/.10);border:1px solid oklch(0.68 0.27 25/.4)">yt · @${escapeHtml(socials.youtube)}</span>`);
+  if (socials.x)       platforms.push(`<span class="badge" style="color:var(--fg);border:1px solid var(--border)">x · @${escapeHtml(socials.x)}</span>`);
+
+  const servers = (s.servers && s.servers.length)
+    ? s.servers.map(sv => `<span style="font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:2px 6px;background:var(--card2);border:1px solid var(--border);color:var(--ink-dim)">${escapeHtml(sv)}</span>`).join(' ')
+    : '<span style="color:var(--ink-faint);font-family:var(--font-m);font-size:10px">no servers selected</span>';
+
+  const decisionMeta = s.reviewed_at
+    ? `<span style="font-family:var(--font-m);font-size:10px;color:var(--ink-faint);margin-left:auto">${escapeHtml(s.status)} by ${escapeHtml(s.reviewed_by||'mod')} · ${escapeHtml(fmtDate(s.reviewed_at))}</span>`
+    : '';
+
+  const actions = currentStatus === 'pending'
+    ? `<div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn" style="border-color:var(--green);color:var(--green)" onclick="decideSubmission(${s.id}, 'approve')">✓ Approve</button>
+        <button class="btn danger" onclick="decideSubmission(${s.id}, 'reject')">✕ Reject</button>
+      </div>`
+    : `<div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn" onclick="decideSubmission(${s.id}, 'approve')">Re-approve</button>
+        <button class="btn danger" onclick="decideSubmission(${s.id}, 'reject')">Re-reject</button>
+      </div>`;
+
+  return `
+    <div class="panel" style="margin:0">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <h3 style="margin:0">${escapeHtml(s.name)}</h3>
+        <span style="font-family:var(--font-m);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint)">primary: ${escapeHtml(s.primary_platform||'?')}</span>
+        ${decisionMeta}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${platforms.join(' ') || '<span style="color:var(--red)">no platforms!</span>'}</div>
+      ${s.bio ? `<div style="font-size:13px;color:var(--ink-dim);line-height:1.55;margin-bottom:8px;font-style:italic">"${escapeHtml(s.bio)}"</div>` : ''}
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">${servers}</div>
+      <div style="font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px">
+        Submitted ${escapeHtml(fmtDate(s.submitted_at || s.first_seen))}
+        ${s.ip ? ' · IP ' + escapeHtml(s.ip) : ''}
+      </div>
+      ${actions}
+    </div>`;
+}
+
+async function decideSubmission(id, action) {
+  const verb = action === 'approve' ? 'Approve' : 'Reject';
+  if (!confirm(verb + ' submission #' + id + '?')) return;
+  try {
+    const r = await fetch('/api/admin/submissions', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'failed');
+    // Reload current filter
+    const activeFilter = document.querySelector('.tab-content#tab-submissions button[id^=sub-filter-]')
+      ? (['pending','approved','rejected'].find(s => {
+          const b = document.getElementById('sub-filter-'+s);
+          return b && b.style.color && b.style.color.includes('signal');
+        }) || 'pending')
+      : 'pending';
+    loadSubmissions(activeFilter);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+// Poll for pending count on login so the badge is fresh from the start.
+async function refreshSubmissionsBadge() {
+  try {
+    const r = await fetch('/api/admin/submissions?status=pending&limit=1', {
+      headers: { Authorization: 'Bearer ' + TOKEN },
+    });
+    if (!r.ok) return;
+    const d = await r.json();
+    const n = (d.counts && d.counts.pending) || 0;
+    const badge = document.getElementById('sub-badge');
+    if (badge) {
+      badge.textContent = n;
+      badge.style.display = n > 0 ? 'inline' : 'none';
+    }
+  } catch { /* ignore */ }
+}
+// Hook into existing dashboard load.
+const _origLoadDashboard = loadDashboard;
+loadDashboard = function () {
+  _origLoadDashboard.apply(this, arguments);
+  refreshSubmissionsBadge();
+};
 </script>
 </body>
 </html>
