@@ -244,7 +244,7 @@ function renderClips(clips) {
 function renderNew(list) {
   const wrap = document.getElementById('new-wrap');
   if (!list || !list.length) {
-    wrap.innerHTML = '<div class="empty">No new candidates surfaced in the last 7 days. The discovery pass is conservative — it only flags streamers using a UK server keyword AND an RP keyword. No-news is good-news.</div>';
+    wrap.innerHTML = '<div class="empty">No new candidates surfaced in the last 7 days. The discovery pass is conservative — it only flags streamers using a tracked-server keyword AND an RP keyword. No-news is good-news.</div>';
     return;
   }
   const html = list.map(c => `<div class="new-card">

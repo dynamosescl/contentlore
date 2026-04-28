@@ -28,7 +28,7 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 - `https://contentlore.com/gta-rp/network/` — interactive force-directed creator graph
 - `https://contentlore.com/gta-rp/digest/` — auto-generated weekly scene digest
 - `https://contentlore.com/gta-rp/streaks/` — opt-in daily-visit tracker
-- `https://contentlore.com/gta-rp/servers/` — UK RP server status board
+- `https://contentlore.com/gta-rp/servers/` — RP server status board
 - `https://contentlore.com/gta-rp/fivem-enhanced/` — FiveM Enhanced migration tracker
 - `https://contentlore.com/gta-rp/gta-6/` — platform deep-dive
 - `https://contentlore.com/creator-profile/{handle}` — per-creator profile (dynamic Function)
@@ -51,7 +51,7 @@ Every hub page is now a PWA candidate — manifest linked, theme-color set, serv
 
 The repo also contains several legacy directories (`about/`, `contact/`, `creators/`, `ethics/`, `ledger/`, `rising/`, `signals/`, `the-platform/`, `gta-rp/beef/`, `gta-rp/lore/`) that survived the 2026-04-26 cleanup sweep but aren't part of the active navigation. They serve via `_redirects` catch-all if anyone deep-links them. Worth a re-audit eventually.
 
-**Active Pages Functions (27, plus 1 helper):**
+**Active Pages Functions (28, plus 1 helper):**
 
 | Endpoint | File | Purpose |
 |---|---|---|
@@ -62,7 +62,8 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 | `GET /api/analytics` | `api/analytics.js` | 7d hourly viewer buckets, 7×24 heatmap, server-hours bars, week-over-week growth, 30d follower trend per creator. 5-min Cache API |
 | `GET /api/network` | `api/network.js` | Curated-26 nodes (avg viewer weight) + curated-only edges from `creator_edges`. 5-min Cache API |
 | `GET /api/digest` | `api/digest.js` | "This week in UK GTA RP" report — peak moment, top creators, top clips (delegates to `/api/clips?range=7d`), new pending_creators, server hours. 10-min Cache API |
-| `GET /api/cfx-populations` | `api/cfx-populations.js` | Live FiveM player counts for 5 known UK server CFX IDs, 60s Cache API |
+| `GET /api/cfx-populations` | `api/cfx-populations.js` | Live FiveM player counts for 5 known server CFX IDs, 60s Cache API |
+| `GET /api/scene-averages` | `api/scene-averages.js` | 7-day avg streamers/viewers per server from `scene_snapshots`, 5-min Cache API. Powers the "Avg" column on the servers status board |
 | `POST /api/streaks/check-in` | `api/streaks/check-in.js` | Idempotent daily-visit increment (anonymous UUID), badge state |
 | `GET /api/streaks/leaderboard?order=current\|max` | `api/streaks/leaderboard.js` | Top opt-in users with display names, 5-min Cache API |
 | `GET\|POST /api/gta6-pulse` | `api/gta6-pulse.js` | Anonymous one-vote-per-device GTA 6 readiness poll, 30s Cache API tallies |
@@ -90,9 +91,9 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 
 Each ALLOWLIST entry now carries a `socials: { twitch, kick, tiktok, youtube, x, instagram, discord }` object with seven fixed slots — each either a username string (no @, no full URL) or null. Discord is the exception: it stores a full invite URL since `discord.gg/{code}` codes are opaque. The shape is fixed so consumers iterate predictably without null-guarding the object itself. TikTok / YouTube / X / Instagram are all null today — populated as creators submit them via `/submit/` or via manual edits to the allowlist file.
 
-**12 UK servers tracked** (source of truth: `SERVERS` array in `gta-rp/servers/index.html`, mirrored in `functions/api/cfx-populations.js` for live populations)
+**13 RP servers tracked** (source of truth: `SERVERS` array in `gta-rp/servers/index.html`, mirrored in `functions/api/cfx-populations.js` for live populations). Mix of UK-founded servers (Unique, TNG, Orbit, Drill UK, British Life, The Ends) and American servers UK creators play on (New Era, Prodigy, D10, Chase, plus the rest with mixed/unverified origin). Don't blanket-label as "UK servers" — it's not accurate.
 - With known CFX IDs (5): Unique RP `ok4qzr`, Orbit RP `5j8edz`, Unmatched RP `r43qej`, New Era RP `z5okp5`, Prodigy RP `775kda`
-- CFX ID unknown / private (7): TNG, D10, VeraRP, The Endz, Let's RP, Drill UK, British Life RP
+- CFX ID unknown / private (8): TNG, D10, Chase, VeraRP, The Ends RP (formerly The Endz), Let's RP, Drill UK, British Life RP
 
 **D1 tables** (verified 2026-04-27 against prod schema)
 - `creators` (id, display_name, role, bio, categories, origin_story, avatar_url, accent_colour, created_at, updated_at)
@@ -110,7 +111,7 @@ Each ALLOWLIST entry now carries a `socials: { twitch, kick, tiktok, youtube, x,
 **Data pipeline:** Scheduler worker (every 15 min) runs four steps in order:
 1. `pollCurated` — batched Twitch + Kick fetch for **all 26 curated creators**, writes one snapshot per creator (~3.5s). After writes, diffs current liveness against `curated:livestate:v1` in KV; for each offline → online transition, calls `notifyGoLive` (`src/discord.js`) which posts a rich embed to `env.DISCORD_WEBHOOK_URL`. Then persists the new livestate blob for next-tick comparison. First-tick-ever liveness is treated as "was offline" so deploying on a busy day doesn't spam the channel.
 2. `rebuildSessions` — stitches new snapshots into `stream_sessions`.
-3. `captureSceneSnapshots` — groups currently-live curated streams by detected UK server, writes one row per active server.
+3. `captureSceneSnapshots` — groups currently-live curated streams by detected RP server, writes one row per active server.
 4. `discoverCreators` — scans top 300 GTA V Twitch streams for new UK RP candidates, writes to `pending_creators`.
 
 (The legacy round-robin `runPollingPass` step was removed — `pollCurated` covers all 26 curated creators every tick, and the long-tail pool wasn't producing useful data on a 6.7-day cadence. If you re-add it, wire it back into `src/index.js`.)
@@ -471,10 +472,10 @@ Most should return non-zero. The scheduler `/status` shows the most recent poll 
 - **D1 platform records can drift from the curated allowlist.** Always source-of-truth the allowlist; treat `creator_platforms.platform` as a hint that needs reconciling. Tyrone (was `kick`+`rising`) and reeclare (was `kick`) got fixed in 2026-04-27 — they're now both `twitch`+`creator`. Bags has both a `twitch-bags` and a `kick` platform row under the same creator id (his allowlist platform is kick but a prior twitch-tagged discovery left the legacy id).
 - **All 26 allowlisted creators are now in `creators`+`creator_platforms`** as of 2026-04-27 (migration `010_backfill_curated.sql`). New creators added to `functions/api/uk-rp-live.js` ALLOWLIST also need a backfill row in D1 + a matching entry in `contentlore-scheduler/src/curated.js` ALLOWLIST + a matching entry in `discovery.js` ALLOWLIST_HANDLES. Yes that's three places — eventually move to a shared D1 table or KV blob.
 - **The curated allowlist is mirrored in 9 places** that must stay in sync: `functions/api/uk-rp-live.js` (canonical), `contentlore-scheduler/src/curated.js`, `contentlore-scheduler/src/discovery.js`, `functions/api/timeline.js` (`ALLOWED_HANDLES`), `functions/api/clips.js` (`TWITCH_HANDLES` + `HANDLE_TO_NAME`), `functions/api/analytics.js` (`ALLOWED_HANDLES`), `functions/api/network.js` (`ALLOWED_HANDLES`), `functions/api/digest.js` (`ALLOWED_HANDLES`), `functions/creator-profile/[handle].js`. When adding a creator, grep for `tyrone` to find every list. Eventually move to a shared D1 table or KV blob.
-- **If `scene_snapshots` ever stalls again**, check (1) whether `snapshots` has fresh `is_live=1` rows in the last 30 minutes (`pollCurated` should be writing them every tick), (2) whether `stream_title` actually contains a UK server keyword — Tyrone's "Just Chatting" titles and Angels365's "@angels365 !breakice" don't match any server keyword and silently get skipped, which is correct.
+- **If `scene_snapshots` ever stalls again**, check (1) whether `snapshots` has fresh `is_live=1` rows in the last 30 minutes (`pollCurated` should be writing them every tick), (2) whether `stream_title` actually contains a tracked-server keyword — Tyrone's "Just Chatting" titles and Angels365's "@angels365 !breakice" don't match any server keyword and silently get skipped, which is correct.
 - **If Kick API returns 401 from `/channels` or `/livestreams`** even though token grant succeeded, the `kick:app_token` in KV is probably stale (from an old/revoked Kick app). Purge with `wrangler kv key delete kick:app_token --namespace-id=f6c05b65a4e84c5baba997122ebcc8c6 --remote` — both Pages and the scheduler share this key. Burned us once on 2026-04-27.
 - **Twitch iframe autoplay warning** — Twitch refuses `autoplay=true` if the iframe was hidden when the `src` was set. If multi-view loads tiles before the container is rendered, console fills with "Couldn't autoplay because of style visibility checks". Phase 2 multi-view improvements include the fix as an open item.
-- **CFX server IDs are 6-character hashes**, not derivable from server names. Public server search isn't a documented FiveM API; use `gtaboom.com/servers/{id}` URLs from web search to discover candidates, then verify against `https://servers-frontend.fivem.net/api/servers/single/{id}`. 7 of our 12 UK servers are whitelist-only with IPs gated behind Discord — no public CFX ID available.
+- **CFX server IDs are 6-character hashes**, not derivable from server names. Public server search isn't a documented FiveM API (the `/api/servers/?searchText=` endpoint returns 404; only `/api/servers/single/{id}` works for known IDs); use `gtaboom.com/servers/{id}` URLs from web search to discover candidates, then verify against `https://servers-frontend.fivem.net/api/servers/single/{id}`. 8 of our 13 RP servers are whitelist-only with IPs gated behind Discord — no public CFX ID available.
 - **Site-wide animation policy: no flicker, no glitch, no CRT.** All such animations were stripped in `60c3450`. Only the static `body::before` scanline overlay remains. If a future feature needs motion, prefer subtle `transform`/`opacity` transitions on hover rather than ambient infinite animations.
 
 ---
@@ -603,3 +604,16 @@ Every ALLOWLIST entry in `functions/api/uk-rp-live.js` now carries a `socials: {
 New `/submit/` page — GTA-styled form with display name, optional Twitch/Kick/TikTok/YouTube/X handles, 12 server checkboxes, free-text bio, and a hidden honeypot for spam. Posts to `/api/submit` (no auth, KV-rate-limited 3 / IP / UTC day via key `submit:rl:{ip}:{yyyy-mm-dd}`). The endpoint sanitises handles (strips @, URL prefixes; rejects anything not in `[A-Za-z0-9._-]`), validates server values against a whitelist, dedupe-rejects against `creator_platforms` so submissions for the curated 26 don't pollute the queue. INSERTs into `pending_creators` with `discovery_count=0`, `status='pending'`, and `notes` prefixed with the literal `SUBMITTED:` followed by the full JSON payload (socials, servers, bio, ip, user_agent). The sentinel is what separates form submissions from auto-discovery rows in the same table — no schema migration needed. New `/api/admin/submissions` endpoint (Bearer auth) lists/decides them, and `/mod/` got a new "Submissions" tab with filter chips (Pending / Approved / Rejected), live pending-count badge on the tab name, and per-card Approve/Reject buttons. Footer "Submit your channel →" link added on every hub page that has one (skipped multi-view since its sticky chat drawer doesn't leave room for a footer).
 
 **CLAUDE.md sync** (this commit) — refreshed Active Functions count (22 → 27, with the five new endpoints), Active hub surfaces (17 → 18, /submit/), added the PWA paragraph below the surface counts, expanded the allowlist section to call out the new `socials` shape and the two confirmed multi-platform creators, added `push_subscriptions` to the D1 tables list, flipped the rest of Phase 5 (Discord, OG tags, Mobile PWA, multi-platform footprint, public submission form) to done with commit refs, refreshed the Architecture diagram (push endpoints + push fanout + /submit + push_subscriptions table + the PWA footer block), added `submit:rl:*` to KV keys, added VAPID_* env vars on both Pages and scheduler, added migration 011 to the migration numbering note, added smoke-test curl commands for `/api/push/vapid-public-key`, `/api/submit`, `/api/admin/submissions`, and added this entry. Also flipped the "Discord confirmed working in production" status into the Phase 5 roadmap entry.
+
+### 2026-04-29 — Servers overhaul (rebrand + Chase RP + Avg column)
+Renamed the servers surface from "UK RP" to "RP" across the site, on the basis that several tracked servers (Prodigy, New Era, D10, Chase) are American servers UK creators play on, not UK servers. Touched `/gta-rp/servers/` (title, hero, footer, OG tags), `/gta-rp/fivem-enhanced/` ("Server Migration Tracker" heading + the 13-server stat + briefing/changelog wording), `/gta-rp/gta-6/` (impact analysis text), `/gta-rp/analytics/` (server-hours panel description), `/gta-rp/digest/` (discovery empty-state), homepage card, submit form fieldset.
+
+**Server roster: 12 → 13.** Added Chase RP as a new entry (American server, dedicated UK following, police/criminal focused, no public CFX ID, keywords `['chase rp','chaserp']` — bare 'chase' deliberately excluded to avoid matching "police chase" in titles). Renamed "The Endz" → "The Ends RP" with the user's new description and merged keyword set spanning both spellings (`['the ends','theends','ends rp','theendsrp','the endz','endz rp','endz']`). Rewrote Prodigy / New Era / D10 server descriptions to accurately frame them as American servers with UK creator presence (was previously labelled "UK GTA RP server").
+
+**New endpoint `/api/scene-averages`** — 7-day rolling AVG of `streamer_count` + `total_viewers` per server from `scene_snapshots`. Powers the new "Avg" column on the servers status board. 5-min Cache API hit at `/cache/scene-averages`. Shows `—` with tooltip "Building data" when sample size <3 snapshots.
+
+**Status-board Players column tightened** — servers with no CFX ID previously showed "private" (implied deliberate hiding). Changed to `—` with tooltip "Player count unavailable — CFX ID not configured" since the 8 unknown-CFX servers are mostly whitelist-gated, not actively private. Servers with a known CFX ID that are momentarily unreachable also show `—` with a different tooltip.
+
+**Server-keyword sync across 5 files** — `functions/api/timeline.js`, `functions/api/analytics.js`, `functions/api/cfx-populations.js`, `gta-rp/servers/index.html`, `D:/contentlore-scheduler/src/scenes.js`, `D:/contentlore-scheduler/src/discovery.js`. The legacy `D:/contentlore/scheduler/` mirror is unimported and skipped (still has US-server entries from before the project pivoted to UK scene — flag for future cleanup or deletion).
+
+**Discovery research that came up empty:** the FiveM master's `/api/servers/?searchText=` endpoint returns 404 — the public frontend has no documented search API, only `/api/servers/single/{id}` for known CFX IDs. The streaming list at `/api/servers/streamRedir/` redirects to a custom binary format that needs FiveM's own decoder. So I couldn't bulk-search for CFX IDs of the 8 unknown servers. D1 query against `snapshots` (last 500 live titles) confirmed no untracked servers in active use — every detected `X RP` token mapped to an existing entry, including 2 hits for "THE ENDS" which validated the Endz/Ends merge.

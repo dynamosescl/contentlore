@@ -7,7 +7,7 @@
 //                     (sum of `viewers` across all live curated snapshots
 //                      grouped into hour buckets)
 //   - heatmap:        7×24 grid of avg viewers by (dow, hour-of-day)
-//   - server_hours:   total session-hours per detected UK server
+//   - server_hours:   total session-hours per detected RP server
 //   - stats:          aggregate counters for the hero strip
 //
 // Charting is done client-side as inline SVG so we avoid pulling
@@ -33,8 +33,9 @@ const SERVERS = [
   { id: 'prodigy',     name: 'Prodigy RP',     keywords: ['prodigy rp', 'prodigyrp', 'prodigy'] },
   { id: 'd10',         name: 'D10 RP',         keywords: ['d10 rp', 'd10rp', 'd10'] },
   { id: 'unmatched',   name: 'Unmatched RP',   keywords: ['unmatched rp', 'unmatchedrp', 'unmatched'] },
+  { id: 'chase',       name: 'Chase RP',       keywords: ['chase rp', 'chaserp'] },
   { id: 'verarp',      name: 'VeraRP',         keywords: ['vera rp', 'verarp', 'vera'] },
-  { id: 'endz',        name: 'The Endz',       keywords: ['the endz', 'endz rp', 'endz'] },
+  { id: 'endz',        name: 'The Ends RP',    keywords: ['the ends', 'theends', 'ends rp', 'theendsrp', 'the endz', 'endz rp', 'endz'] },
   { id: 'letsrp',      name: "Let's RP",       keywords: ["let's rp", 'letsrp', 'lets rp'] },
   { id: 'drilluk',     name: 'Drill UK',       keywords: ['drill uk', 'drilluk', 'drill rp'] },
   { id: 'britishlife', name: 'British Life',   keywords: ['british life', 'britishlife'] },

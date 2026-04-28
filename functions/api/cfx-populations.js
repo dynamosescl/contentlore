@@ -13,7 +13,7 @@
 // ================================================================
 
 // CFX server IDs verified 2026-04-27 against servers-frontend.fivem.net.
-// `null` = no public CFX ID known yet (whitelist-only / private).
+// `null` = no public CFX ID known yet (whitelist-only / private / not searched).
 // Keep in sync with SERVERS in gta-rp/servers/index.html.
 const CFX_IDS = {
   'unique':      'ok4qzr',
@@ -23,6 +23,7 @@ const CFX_IDS = {
   'prodigy':     '775kda',
   'd10':         null,
   'unmatched':   'r43qej',
+  'chase':       null,
   'verarp':      null,
   'endz':        null,
   'letsrp':      null,
