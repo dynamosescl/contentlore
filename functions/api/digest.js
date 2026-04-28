@@ -32,6 +32,7 @@ const SERVERS = [
   { id: 'letsrp',      name: "Let's RP",       keywords: ["let's rp", 'letsrp', 'lets rp'] },
   { id: 'drilluk',     name: 'Drill UK',       keywords: ['drill uk', 'drilluk', 'drill rp'] },
   { id: 'britishlife', name: 'British Life',   keywords: ['british life', 'britishlife'] },
+  { id: '9kings',      name: '9 Kings RP',     keywords: ['9 kings rp', '9kings rp', '9kingsrp', 'ninekings', '9 kings', '9kings'] },
 ];
 const SERVERS_SORTED = [...SERVERS].sort((a, b) =>
   Math.max(...b.keywords.map(k => k.length)) - Math.max(...a.keywords.map(k => k.length))

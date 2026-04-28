@@ -29,6 +29,7 @@ const CFX_IDS = {
   'letsrp':      null,
   'drilluk':     null,
   'britishlife': null,
+  '9kings':      null,
 };
 
 const CACHE_URL = 'https://contentlore.com/cache/cfx-populations';

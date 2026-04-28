@@ -33,6 +33,7 @@ const SERVERS = [
   { id: 'letsrp',      name: "Let's RP",       keywords: ["let's rp", 'letsrp', 'lets rp'] },
   { id: 'drilluk',     name: 'Drill UK RP',    keywords: ['drill uk', 'drilluk', 'drill rp'] },
   { id: 'britishlife', name: 'British Life RP',keywords: ['british life', 'britishlife'] },
+  { id: '9kings',      name: '9 Kings RP',     keywords: ['9 kings rp', '9kings rp', '9kingsrp', 'ninekings', '9 kings', '9kings'] },
 ];
 
 // Match longest keyword first so "newera rp" beats "newera"/"new era".

@@ -52,10 +52,8 @@ function detectServer(title) {
 }
 
 export async function onRequestGet({ request, env }) {
-  // TEMP: auth disabled for one-shot probe of 4 new streamers' Kick
-  // existence. Re-secure after the run completes.
-  // const denied = authCheck(request, env);
-  // if (denied) return denied;
+  const denied = authCheck(request, env);
+  if (denied) return denied;
 
   try {
     const url = new URL(request.url);
