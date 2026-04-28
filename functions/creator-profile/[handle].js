@@ -386,6 +386,16 @@ function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(name)} — UK GTA RP | ContentLore</title>
 <meta name="description" content="${esc(name)} — UK GTA RP creator on ${platLabel}. Live status, recent clips, stream stats and server affinity.">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="ContentLore">
+<meta property="og:title" content="${esc(name)} — UK GTA RP · ContentLore">
+<meta property="og:description" content="${esc(name)} on ${platLabel} — live status, recent clips, monthly report card, server affinity.">
+<meta property="og:image" content="https://contentlore.com/api/shoutout-card/${esc(handle)}">
+<meta property="og:url" content="https://contentlore.com/creator-profile/${esc(handle)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(name)} — UK GTA RP · ContentLore">
+<meta name="twitter:description" content="${esc(name)} on ${platLabel} — live status, recent clips, monthly report card, server affinity.">
+<meta name="twitter:image" content="https://contentlore.com/api/shoutout-card/${esc(handle)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -703,7 +713,10 @@ function renderReportCard(handle, name, rc) {
     <div class="section" id="report-card">
       <div class="sec-h">
         <h2>Monthly Report Card</h2>
-        <button class="rc-share" type="button" id="rc-share-btn">Share this report</button>
+        <span style="display:flex;gap:8px">
+          <a class="rc-share" href="/api/shoutout-card/${esc(handle)}" target="_blank" rel="noopener" style="text-decoration:none">📸 Shoutout card ↗</a>
+          <button class="rc-share" type="button" id="rc-share-btn">Share this report</button>
+        </span>
       </div>
       <div class="report-card">
         <div class="rc-head">
