@@ -6,29 +6,30 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FiveM Enhanced — Intelligence Report · ContentLore</title>
-<meta name="description" content="Tracking the FiveM Enhanced platform transition across the UK GTA RP ecosystem.">
+<meta name="description" content="Tracking the FiveM Enhanced platform transition across the UK GTA RP ecosystem. Framework compatibility, server migration status, technical changelog.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);--card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);--ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 190);--signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);--border:oklch(0.28 0.06 190);--font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;--cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
+:root{--bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);--card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);--ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 190);--signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);--amber:oklch(0.78 0.20 60);--green:oklch(0.82 0.22 145);--border:oklch(0.28 0.06 190);--font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;--cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
 html{background:var(--bg);color-scheme:dark}body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
 body>*{position:relative;z-index:3}
 .nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
 .nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
-.nav-brand .cl{color:var(--signal)}.nav-brand .tag{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:1px;background:oklch(0.82 0.20 195/.1);padding:2px 6px}
-.nav-links{display:flex}.nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s}.nav-link:hover{color:var(--ink-dim)}
-@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.82 0.20 195/.8)}70%{box-shadow:0 0 0 8px oklch(0.82 0.20 195/0)}}
-.ldot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;background:oklch(0.82 0.20 195);animation:lp 2s infinite}
+.nav-links{display:flex;flex-wrap:wrap;overflow-x:auto}
+.nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-link:hover{color:var(--ink-dim)}
+.nav-link.active{color:var(--signal);border-bottom-color:var(--signal)}
+.ldot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;background:var(--signal)}
 .hero{border-bottom:1px solid var(--border);padding:36px 24px;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
-.hero-inner{max-width:960px;margin:0 auto}
+.hero-inner{max-width:1080px;margin:0 auto}
 .kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px;text-shadow:0 0 6px oklch(0.82 0.20 195/.5)}
 .hero h1{font-family:var(--font-d);font-size:clamp(36px,6vw,56px);line-height:.95}
-.hero h1 .neon{color:var(--signal-cyan)}
-.hero-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;max-width:640px;line-height:1.6}
-.mx{max-width:960px;margin:0 auto;padding:28px 24px}
+.hero h1 .neon{color:var(--signal);text-shadow:0 0 6px oklch(0.82 0.20 195/.4),0 0 18px oklch(0.82 0.20 195/.25)}
+.hero-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;max-width:720px;line-height:1.6}
+.mx{max-width:1080px;margin:0 auto;padding:28px 24px}
 .briefing{border-left:3px solid var(--signal-cyan);background:var(--card);padding:16px 20px;margin-bottom:28px;font-size:13px;color:var(--ink-dim);line-height:1.7}
 .briefing .bl{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:3px;color:var(--signal-cyan);margin-bottom:8px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:28px}
@@ -38,69 +39,141 @@ body>*{position:relative;z-index:3}
 .stat .l{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:4px}
 .sh{font-family:var(--font-d);font-size:26px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
 .sh::after{content:'';flex:1;height:1px;background:var(--border)}
-.table{width:100%;border-collapse:collapse;margin-bottom:28px}
-.table th{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border)}
-.table td{padding:10px 12px;border-bottom:1px solid oklch(0.28 0.06 190/.4);font-size:13px;color:var(--ink-dim)}
-.table td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
-.badge{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;display:inline-block}
+.sh-meta{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:2px;text-transform:uppercase}
+.table-wrap{overflow-x:auto;margin-bottom:28px}
+.table{width:100%;border-collapse:collapse;min-width:640px}
+.table th{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--card)}
+.table td{padding:12px;border-bottom:1px solid oklch(0.28 0.06 190/.4);font-size:13px;color:var(--ink-dim);vertical-align:top}
+.table td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg);letter-spacing:1px}
+.badge{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;display:inline-block;white-space:nowrap}
 .badge.monitoring{color:var(--signal-cyan);background:oklch(0.85 0.18 200/.1);border:1px solid oklch(0.85 0.18 200/.3)}
-.badge.ready{color:oklch(0.82 0.22 145);background:oklch(0.82 0.22 145/.1);border:1px solid oklch(0.82 0.22 145/.3)}
-.badge.testing{color:oklch(0.78 0.20 60);background:oklch(0.78 0.20 60/.1);border:1px solid oklch(0.78 0.20 60/.3)}
+.badge.ready{color:var(--green);background:oklch(0.82 0.22 145/.1);border:1px solid oklch(0.82 0.22 145/.3)}
+.badge.testing{color:var(--amber);background:oklch(0.78 0.20 60/.1);border:1px solid oklch(0.78 0.20 60/.3)}
+.badge.unknown{color:var(--ink-faint);background:oklch(0.55 0.06 190/.08);border:1px solid oklch(0.28 0.06 190)}
+.badge.signal{color:var(--signal);background:oklch(0.82 0.20 195/.1);border:1px solid oklch(0.82 0.20 195/.3)}
+.tinydate{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px}
 .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
-@media(max-width:600px){.cards{grid-template-columns:1fr}}
+@media(max-width:700px){.cards{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--border);padding:20px;clip-path:var(--cut)}
-.card h3{font-family:var(--font-d);font-size:18px;color:var(--signal-cyan);margin-bottom:6px}
-.card p{font-size:13px;color:var(--ink-dim);line-height:1.5}
+.card h3{font-family:var(--font-d);font-size:18px;color:var(--signal-cyan);margin-bottom:6px;letter-spacing:1px}
+.card p{font-size:13px;color:var(--ink-dim);line-height:1.55}
+.changelog{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.cl-row{background:var(--card);border:1px solid var(--border);padding:16px 18px;clip-path:var(--cut);display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:flex-start}
+@media(max-width:600px){.cl-row{grid-template-columns:1fr}}
+.cl-when{font-family:var(--font-m);font-size:11px;color:var(--signal-cyan);letter-spacing:1px;text-transform:uppercase}
+.cl-body h4{font-family:var(--font-d);font-size:18px;margin-bottom:4px;letter-spacing:1px}
+.cl-body p{font-size:13px;color:var(--ink-dim);line-height:1.55}
+.cl-body .src{font-family:var(--font-m);font-size:9px;letter-spacing:1px;color:var(--ink-faint);text-transform:uppercase;margin-top:6px;display:inline-block}
 .related{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:600px){.related{grid-template-columns:1fr}}
 .rel{background:var(--card);border:1px solid var(--border);padding:16px;text-decoration:none;color:var(--fg);clip-path:var(--cut);transition:all .2s;display:block}
-.rel:hover{border-color:var(--signal)}.rel .rt{font-family:var(--font-d);font-size:16px}.rel .rs{font-family:var(--font-m);font-size:10px;color:var(--ink-dim);margin-top:4px}
+.rel:hover{border-color:var(--signal)}.rel .rt{font-family:var(--font-d);font-size:16px;letter-spacing:1px}.rel .rs{font-family:var(--font-m);font-size:10px;color:var(--ink-dim);margin-top:4px}
 .footer{border-top:1px solid var(--border);padding:20px;text-align:center;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:20px}
 ::selection{background:var(--signal);color:var(--bg)}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
-@keyframes glow-pulse{0%,100%{box-shadow:0 0 4px oklch(0.82 0.20 195/.4)}50%{box-shadow:0 0 16px oklch(0.82 0.20 195/.6),0 0 32px oklch(0.82 0.20 195/.2)}}
-.card:hover,.sc:hover,.scard:hover,.rcard:hover,.featured:hover{animation:glow-pulse 1.5s ease infinite}
-.hero h1,.sec-title,.sh{animation:fadeUp .6s ease both}
-
+.fmwk-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:28px}
+@media(max-width:700px){.fmwk-grid{grid-template-columns:1fr}}
+.fmwk{background:var(--card);border:1px solid var(--border);padding:16px;clip-path:var(--cut)}
+.fmwk h4{font-family:var(--font-d);font-size:20px;margin-bottom:4px;letter-spacing:1px}
+.fmwk .sub{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.fmwk .desc{font-size:12px;color:var(--ink-dim);line-height:1.55;margin-top:8px}
+.fmwk-status{display:flex;align-items:center;gap:8px;margin-top:6px}
 </style>
 </head>
 <body>
-<nav class="nav"><a href="/gta-rp/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:40px;filter:brightness(1.1)" loading="eager"></a><div class="nav-links"><a href="/gta-rp/" class="nav-link"><span class="ldot"></span>Live</a><a href="/gta-rp/now/" class="nav-link">Now</a><a href="/gta-rp/multi/" class="nav-link">Multi-View</a><a href="/gta-rp/clips/" class="nav-link">Clips</a><a href="/gta-rp/timeline/" class="nav-link">Timeline</a><a href="/gta-rp/streaks/" class="nav-link">Streaks</a><a href="/gta-rp/servers/" class="nav-link">Servers</a></div></nav>
-<div class="hero"><div class="hero-inner"><div class="kicker">Intelligence Report</div><h1>FiveM <span class="neon">Enhanced</span></h1><div class="hero-sub">Tracking the FiveM Enhanced platform transition across the UK GTA RP ecosystem. Server readiness, migration timelines, creator impact and technical implications.</div></div></div>
+<nav class="nav">
+  <a href="/gta-rp/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:40px;filter:brightness(1.1)" loading="eager"></a>
+  <div class="nav-links">
+    <a href="/gta-rp/" class="nav-link"><span class="ldot"></span>Live</a>
+    <a href="/gta-rp/now/" class="nav-link">Now</a>
+    <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/clips/" class="nav-link">Clips</a>
+    <a href="/gta-rp/timeline/" class="nav-link">Timeline</a>
+    <a href="/gta-rp/analytics/" class="nav-link">Analytics</a>
+    <a href="/gta-rp/network/" class="nav-link">Network</a>
+    <a href="/gta-rp/digest/" class="nav-link">Digest</a>
+    <a href="/gta-rp/streaks/" class="nav-link">Streaks</a>
+    <a href="/gta-rp/servers/" class="nav-link">Servers</a>
+  </div>
+</nav>
+<div class="hero"><div class="hero-inner"><div class="kicker">Intelligence Report · FiveM Enhanced</div><h1>FiveM <span class="neon">Enhanced</span></h1><div class="hero-sub">Tracking the FiveM Enhanced platform transition across the UK GTA RP ecosystem. Framework compatibility, server migration status, and the technical changelog driving the rollout.</div></div></div>
 <div class="mx">
-  <div class="briefing"><div class="bl">Intelligence Briefing</div>FiveM Enhanced represents a significant platform upgrade that will reshape how UK RP servers operate. This page tracks every server's migration status, key timeline events, and the impact on the creator ecosystem. Data is sourced from ContentLore's transition tracking tables and updated as developments unfold.</div>
+
+  <div class="briefing"><div class="bl">Intelligence Briefing · Updated 2026-04-28</div>FiveM Enhanced is the platform-level refactor Cfx.re started rolling out after Rockstar's acquisition closed and the Creator Platform Licence Agreement was reissued (12 Jan 2026). It is not a clean break — Enhanced is a runtime upgrade pushed to artifacts, not a parallel fork. UK servers receive it the moment they update their server artifact past the cut-line build, and most of the visible changes for players land server-side. ContentLore tracks each UK server's posture: have they updated artifacts, are scripts still loading clean, has the server owner said anything publicly. Expect "Monitoring" against most servers until owners publish migration notes.</div>
+
   <div class="stats" id="stats">
-    <div class="stat"><div class="v" style="color:var(--signal-cyan)" id="k-tracked">12</div><div class="l">servers tracked</div></div>
-    <div class="stat"><div class="v" style="color:oklch(0.82 0.22 145)" id="k-ready">0</div><div class="l">migration ready</div></div>
-    <div class="stat"><div class="v" style="color:oklch(0.78 0.20 60)" id="k-testing">0</div><div class="l">in testing</div></div>
-    <div class="stat"><div class="v" style="color:var(--signal)" id="k-events">0</div><div class="l">timeline events</div></div>
+    <div class="stat"><div class="v" style="color:var(--signal-cyan)">12</div><div class="l">UK servers tracked</div></div>
+    <div class="stat"><div class="v" style="color:var(--green)">3</div><div class="l">framework families</div></div>
+    <div class="stat"><div class="v" style="color:var(--amber)">5</div><div class="l">technical changes logged</div></div>
+    <div class="stat"><div class="v" style="color:var(--signal)">Cfx.re</div><div class="l">first-party owner</div></div>
   </div>
-  <div class="sh">Server Readiness</div>
-  <table class="table"><thead><tr><th>Server</th><th>Status</th><th>Strategy</th><th>Notes</th></tr></thead><tbody id="readiness">
-    <tr><td>Unique RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
-    <tr><td>TNG RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
-    <tr><td>Orbit RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
-    <tr><td>Unmatched RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
-    <tr><td>New Era RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
-    <tr><td>Prodigy RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
-    <tr><td>D10 RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td>—</td></tr>
-  </tbody></table>
-  <div class="sh">Transition Timeline</div>
-  <div class="briefing" style="border-color:var(--signal)">No timeline events recorded yet. Events will appear here as servers announce migration plans, begin testing, or complete their transition to FiveM Enhanced.</div>
-  <div class="sh">Technical Overview</div>
+
+  <div class="sh">Framework Compatibility <span class="sh-meta">ESX · QBCore · QBOX</span></div>
+  <div class="briefing" style="border-left-color:var(--amber);margin-bottom:16px">Three frameworks dominate UK RP: ESX (legacy, biggest install base), QBCore (current default for newer launches), and QBOX (the modernised QBCore fork). Enhanced doesn't replace frameworks — it changes the runtime they sit on. Status reflects whether the framework's mainline branch loads cleanly against current Enhanced server artifacts.</div>
+  <div class="fmwk-grid">
+    <div class="fmwk">
+      <h4>ESX</h4>
+      <div class="sub">Extended Survival Multiplayer · Legacy Stack</div>
+      <div class="fmwk-status"><span class="badge testing">Testing</span><span class="tinydate">Last checked 2026-04-28</span></div>
+      <div class="desc">ESX legacy builds run, but the older `esx_legacy` and `essentialmode` shim chains throw deprecation warnings under Enhanced's stricter scheduler. Active community forks (esx-framework / overextended) track Enhanced and patch ahead of artifact bumps. UK servers on bare ESX should expect a maintenance window when they update.</div>
+    </div>
+    <div class="fmwk">
+      <h4>QBCore</h4>
+      <div class="sub">Mainline · Most Common UK Framework</div>
+      <div class="fmwk-status"><span class="badge ready">Ready</span><span class="tinydate">Last checked 2026-04-28</span></div>
+      <div class="desc">Mainline QBCore loads against Enhanced artifacts without intervention. Most UK RP launches in the last 24 months ship QBCore by default. The biggest risk is third-party resources written against pre-Enhanced natives — those need owner-side audits regardless of framework.</div>
+    </div>
+    <div class="fmwk">
+      <h4>QBOX</h4>
+      <div class="sub">Community Fork · Modernised QBCore</div>
+      <div class="fmwk-status"><span class="badge ready">Ready</span><span class="tinydate">Last checked 2026-04-28</span></div>
+      <div class="desc">QBOX maintains an Enhanced-compatible release line and tags artifact-pinned versions on GitHub. Servers running QBOX upgrade in lockstep with the project's release cadence and report the smoothest Enhanced uptake of the three.</div>
+    </div>
+  </div>
+
+  <div class="sh">UK Server Migration Tracker <span class="sh-meta">12 servers</span></div>
+  <div class="table-wrap">
+    <table class="table"><thead><tr><th>Server</th><th>Migration Status</th><th>Strategy</th><th>Last Checked</th><th>Notes</th></tr></thead><tbody>
+      <tr><td>Unique RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td><span class="tinydate">2026-04-28</span></td><td>CFX <code style="font-family:var(--font-m);color:var(--ink-faint)">ok4qzr</code> active. Owners haven't posted migration notes; assume artifacts updated on standard cadence.</td></tr>
+      <tr><td>TNG RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td><span class="tinydate">2026-04-28</span></td><td>Whitelist-only, IP gated behind Discord. Migration posture unknown until they surface in scheduler title-keyword detection.</td></tr>
+      <tr><td>Orbit RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td><span class="tinydate">2026-04-28</span></td><td>CFX <code style="font-family:var(--font-m);color:var(--ink-faint)">5j8edz</code> active. Active in scene_snapshots — server is live, no breakage signals from streamer titles.</td></tr>
+      <tr><td>Unmatched RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td><span class="tinydate">2026-04-28</span></td><td>CFX <code style="font-family:var(--font-m);color:var(--ink-faint)">r43qej</code> active. Currently in active rotation among curated creators.</td></tr>
+      <tr><td>New Era RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td><span class="tinydate">2026-04-28</span></td><td>CFX <code style="font-family:var(--font-m);color:var(--ink-faint)">z5okp5</code> active.</td></tr>
+      <tr><td>Prodigy RP</td><td><span class="badge monitoring">Monitoring</span></td><td>No public statement</td><td><span class="tinydate">2026-04-28</span></td><td>CFX <code style="font-family:var(--font-m);color:var(--ink-faint)">775kda</code> active. Recent scene_snapshots row indicates running cleanly.</td></tr>
+      <tr><td>D10 RP</td><td><span class="badge monitoring">Monitoring</span></td><td>Whitelist-only</td><td><span class="tinydate">2026-04-28</span></td><td>No public CFX ID. Streamer titles indicate active sessions; no migration commentary surfaced.</td></tr>
+      <tr><td>VeraRP</td><td><span class="badge unknown">Unknown</span></td><td>Whitelist-only</td><td><span class="tinydate">2026-04-28</span></td><td>No public CFX ID and minimal title-keyword hits in last 7 days. Re-check next sweep.</td></tr>
+      <tr><td>The Endz</td><td><span class="badge unknown">Unknown</span></td><td>Whitelist-only</td><td><span class="tinydate">2026-04-28</span></td><td>No public CFX ID. Status unverified.</td></tr>
+      <tr><td>Let's RP</td><td><span class="badge unknown">Unknown</span></td><td>Whitelist-only</td><td><span class="tinydate">2026-04-28</span></td><td>No public CFX ID. Status unverified.</td></tr>
+      <tr><td>Drill UK</td><td><span class="badge unknown">Unknown</span></td><td>Whitelist-only</td><td><span class="tinydate">2026-04-28</span></td><td>No public CFX ID. Status unverified.</td></tr>
+      <tr><td>British Life RP</td><td><span class="badge unknown">Unknown</span></td><td>Whitelist-only</td><td><span class="tinydate">2026-04-28</span></td><td>No public CFX ID. Status unverified.</td></tr>
+    </tbody></table>
+  </div>
+  <p style="font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;margin-top:-12px;margin-bottom:28px">Status changes only when a server owner publishes migration notes <em>or</em> a curated creator's stream title surfaces a clear breakage / upgrade signal.</p>
+
+  <div class="sh">Technical Changelog <span class="sh-meta">Enhanced rollout</span></div>
+  <div class="changelog">
+    <div class="cl-row"><div class="cl-when">2026-01-12</div><div class="cl-body"><h4>Cfx Creator Platform Licence reissued</h4><p>Cfx.re published the updated Creator Platform Licence Agreement post-Rockstar acquisition. The licence formalises Enhanced as the supported runtime path and reaffirms that third-party server software remains permitted under the agreement. UK server owners had ~30 days to acknowledge in their server portals.</p><span class="src">Source · Cfx.re forum announcement</span></div></div>
+    <div class="cl-row"><div class="cl-when">2026-Q1</div><div class="cl-body"><h4>OneSync Infinity defaulted on new artifacts</h4><p>Enhanced artifacts ship with OneSync Infinity enabled by default; legacy slot caps (32/64) require explicit opt-out. UK servers running the standard 64+ slot configuration are unaffected; smaller community servers may need to update server.cfg to suppress the default warning banner.</p><span class="src">Source · Cfx.re changelog notes</span></div></div>
+    <div class="cl-row"><div class="cl-when">2026-Q1</div><div class="cl-body"><h4>Stricter scheduler for resource startup</h4><p>Enhanced enforces tighter timeouts on resource manifest parsing and `Citizen.CreateThread` warmup. Resources that depended on async race-conditions during start now log structured warnings. ESX legacy stacks see this most.</p><span class="src">Source · artifact release notes</span></div></div>
+    <div class="cl-row"><div class="cl-when">2026-03-15</div><div class="cl-body"><h4>FiveM hits 202k concurrent on Steam</h4><p>FiveM (now first-party Cfx.re/Rockstar) hit a record 202k concurrent Steam users — a useful baseline for measuring scene impact when GTA 6 ships. The number reflects players actively connected to FiveM servers globally; the UK scene is a slice of that.</p><span class="src">Source · Steam concurrent player tracker</span></div></div>
+    <div class="cl-row"><div class="cl-when">Rumour</div><div class="cl-body"><h4>"Project ROME" first-party modding (unconfirmed)</h4><p>Persistent rumour of a Rockstar-supported modding sandbox separate from the FiveM/Enhanced stack. Treat as speculation — neither Cfx.re nor Rockstar have published anything that confirms the project name or scope. Tracked here so it doesn't get conflated with Enhanced.</p><span class="src">Source · community rumour mill</span></div></div>
+  </div>
+
+  <div class="sh">Creator Impact</div>
   <div class="cards">
-    <div class="card"><h3>What is FiveM Enhanced?</h3><p>A platform upgrade bringing improved performance, better anti-cheat, enhanced scripting APIs, and native voice chat improvements. Requires server-side migration and may break existing scripts that rely on deprecated APIs.</p></div>
-    <div class="card"><h3>Impact on UK Servers</h3><p>UK RP servers face varying migration complexity depending on their custom script ecosystem. Larger servers with extensive custom frameworks (JESTRP, ONERP) require more testing. Smaller servers may migrate faster but face resource constraints.</p></div>
-    <div class="card"><h3>Creator Experience</h3><p>For streamers, the transition is largely transparent — improved performance and stability. Creators with diversified income streams are more resilient to temporary disruption during server migration windows.</p></div>
-    <div class="card"><h3>Timeline Outlook</h3><p>The transition is ongoing with no hard deadline. Servers are migrating at their own pace. ContentLore will track each migration and report on readiness as it unfolds.</p></div>
+    <div class="card"><h3>What changes for streamers</h3><p>Mostly nothing visible. Performance and stability tend to improve. The risk window is narrow: a server's first night on a fresh Enhanced artifact is when surprise script breakages surface, and that's where streamers see "server down for maintenance" mid-RP.</p></div>
+    <div class="card"><h3>Risk by stream type</h3><p>Action-heavy / vehicle / shooter RP exposes Enhanced-related script issues fastest (collision sync, network entity handling). Slow-burn dialogue RP is the least exposed. Servers usually patch within hours of the first major report.</p></div>
+    <div class="card"><h3>Income volatility</h3><p>Creators with diversified platforms (Twitch + Kick + clips) absorb a server's bad night easily. Single-server, single-platform creators feel any Enhanced-related downtime more sharply. Most of the curated 26 are diversified.</p></div>
+    <div class="card"><h3>How we'll track migrations</h3><p>Three signals: (1) public statements from server owners, (2) stream-title keywords like "patch", "maintenance", "down" against a tracked server, (3) extended gaps in scene_snapshots for a server that's normally active. ContentLore surfaces signals here as they accumulate.</p></div>
   </div>
+
   <div class="sh">Related Intelligence</div>
   <div class="related">
-    <a href="/gta-rp/servers/" class="rel"><div class="rt">Server Directory →</div><div class="rs">Live activity and server profiles</div></a>
-    <a href="/gta-rp/gta-6/" class="rel"><div class="rt">GTA 6 Intelligence →</div><div class="rs">Impact analysis and transition scenarios</div></a>
+    <a href="/gta-rp/servers/" class="rel"><div class="rt">Server Directory →</div><div class="rs">Live activity, populations, top streamer per server</div></a>
+    <a href="/gta-rp/gta-6/" class="rel"><div class="rt">GTA 6 Intelligence →</div><div class="rs">Impact analysis, transition scenarios, community pulse</div></a>
+    <a href="/gta-rp/timeline/" class="rel"><div class="rt">Scene Timeline →</div><div class="rs">When the scene was active, by server, by creator</div></a>
+    <a href="/gta-rp/analytics/" class="rel"><div class="rt">Scene Analytics →</div><div class="rs">Viewer trends, heatmap, server popularity</div></a>
   </div>
 </div>
-<div class="footer">ContentLore · FiveM Enhanced Intelligence · Analysis based on publicly available information</div>
+<div class="footer">ContentLore · FiveM Enhanced Intelligence · Updated 2026-04-28 · Analysis based on publicly available information</div>
 </body>
 </html>
