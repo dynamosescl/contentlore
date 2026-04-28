@@ -50,10 +50,10 @@
       letter-spacing:2px;color:oklch(0.97 0.02 320)}
     .cl-mn-drawer header .ttl .cl{color:oklch(0.82 0.20 195)}
     .cl-mn-drawer header .x{background:none;border:1px solid oklch(0.28 0.06 190);color:oklch(0.78 0.05 320);
-      width:34px;height:34px;cursor:pointer;font:inherit;font-size:14px}
+      width:34px;height:34px;cursor:pointer;font:inherit;font-size:16px}
     .cl-mn-drawer header .x:hover{border-color:oklch(0.82 0.20 195);color:oklch(0.85 0.18 200)}
     .cl-mn-drawer nav{flex:1;overflow-y:auto;padding:8px 0}
-    .cl-mn-drawer nav a{display:flex;align-items:center;gap:10px;padding:14px 18px;font-size:12px;
+    .cl-mn-drawer nav a{display:flex;align-items:center;gap:10px;padding:14px 18px;font-size:13px;
       letter-spacing:2px;text-transform:uppercase;color:oklch(0.78 0.05 320);text-decoration:none;
       border-left:3px solid transparent;transition:background .15s,color .15s,border-color .15s}
     .cl-mn-drawer nav a:hover{background:oklch(0.10 0.04 190);color:oklch(0.97 0.02 320);
@@ -61,7 +61,7 @@
     .cl-mn-drawer nav a.active{color:oklch(0.85 0.18 200);border-left-color:oklch(0.82 0.20 195);
       background:oklch(0.82 0.20 195/.08)}
     .cl-mn-drawer footer{padding:14px 18px;border-top:1px solid oklch(0.28 0.06 190);
-      font-size:9px;letter-spacing:2px;text-transform:uppercase;color:oklch(0.55 0.06 190);flex:none}
+      font-size:11px;letter-spacing:2px;text-transform:uppercase;color:oklch(0.55 0.06 190);flex:none}
   `;
 
   function ready(fn) {
@@ -171,7 +171,7 @@
   const NOTIFY_STYLE = `
     .cl-notify-btn{display:inline-flex;align-items:center;gap:6px;background:oklch(0.14 0.05 190);
       color:oklch(0.78 0.05 320);border:1px solid oklch(0.28 0.06 190);padding:8px 14px;
-      cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;
+      cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2px;
       text-transform:uppercase;transition:all .15s;line-height:1;font-weight:500}
     .cl-notify-btn:hover{border-color:oklch(0.82 0.20 195);color:oklch(0.97 0.02 320)}
     .cl-notify-btn[data-state="on"]{border-color:oklch(0.82 0.20 195);color:oklch(0.85 0.18 200);
@@ -182,7 +182,7 @@
     .cl-notify-toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);
       background:oklch(0.14 0.05 190);color:oklch(0.97 0.02 320);
       border:1px solid oklch(0.82 0.20 195/.4);padding:10px 16px;
-      font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;
+      font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:1px;
       box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:9999;opacity:0;pointer-events:none;
       transition:opacity .2s,transform .2s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
     .cl-notify-toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
@@ -432,20 +432,20 @@
           z-index:9999;display:flex;align-items:center;gap:12px;
           background:oklch(0.14 0.05 190);color:oklch(0.97 0.02 320);
           border:1px solid oklch(0.28 0.06 190);padding:12px 14px;
-          font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;
+          font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:1px;
           box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:calc(100vw - 32px);
           clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%)}
         #cl-pwa-banner img{width:32px;height:32px;flex:none}
         #cl-pwa-banner .cl-pwa-text{flex:1;line-height:1.4}
         #cl-pwa-banner .cl-pwa-text strong{color:oklch(0.85 0.18 200);font-family:'Bebas Neue',Impact,sans-serif;font-size:16px;letter-spacing:1.5px;display:block}
-        #cl-pwa-banner button{font-family:inherit;font-size:11px;letter-spacing:1px;
+        #cl-pwa-banner button{font-family:inherit;font-size:12px;letter-spacing:1px;
           text-transform:uppercase;border:1px solid oklch(0.82 0.20 195);
           background:oklch(0.82 0.20 195/.12);color:oklch(0.85 0.18 200);
           padding:7px 12px;cursor:pointer;transition:background .15s}
         #cl-pwa-banner button:hover{background:oklch(0.82 0.20 195/.22)}
         #cl-pwa-banner button.cl-pwa-secondary{border-color:oklch(0.28 0.06 190);
           background:transparent;color:oklch(0.55 0.06 190)}
-        @media(max-width:520px){#cl-pwa-banner{flex-wrap:wrap;font-size:11px}}
+        @media(max-width:520px){#cl-pwa-banner{flex-wrap:wrap;font-size:12px}}
       </style>
       <img src="/logo.png" alt="">
       <div class="cl-pwa-text">

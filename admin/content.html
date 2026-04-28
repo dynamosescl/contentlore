@@ -22,7 +22,7 @@ html{background:var(--bg);color-scheme:dark}
 body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:100vh;-webkit-font-smoothing:antialiased}
 .admin-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:16px}
 .admin-header h1{font-family:var(--font-d);font-size:24px;letter-spacing:3px}
-.admin-header .back{color:var(--signal-cyan);text-decoration:none;font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px}
+.admin-header .back{color:var(--signal-cyan);text-decoration:none;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px}
 .admin-header .back:hover{text-decoration:underline}
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg2)}
 .tab{padding:12px 24px;font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;border:none;background:none;color:var(--t3);border-bottom:2px solid transparent;transition:all .2s}
@@ -35,13 +35,13 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:1
 .card{background:var(--bg2);border:1px solid var(--border);clip-path:var(--clip);padding:20px}
 .card h2{font-family:var(--font-d);font-size:18px;text-transform:uppercase;letter-spacing:2px;color:var(--t2);margin-bottom:16px}
 .field{margin-bottom:14px}
-.field label{display:block;font-family:var(--font-m);font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--t1);padding:8px 12px;font-family:var(--font-m);font-size:13px;border-radius:2px;outline:none;transition:border-color .2s}
+.field label{display:block;font-family:var(--font-m);font-size:13px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--t1);padding:10px 12px;font-family:var(--font-m);font-size:15px;border-radius:2px;outline:none;transition:border-color .2s}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--signal)}
 .field textarea{min-height:80px;resize:vertical}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.btn{font-family:var(--font-d);font-size:14px;text-transform:uppercase;letter-spacing:2px;padding:10px 20px;border:none;cursor:pointer;clip-path:var(--clip);transition:all .2s}
+.btn{font-family:var(--font-d);font-size:15px;text-transform:uppercase;letter-spacing:2px;padding:11px 20px;border:none;cursor:pointer;clip-path:var(--clip);transition:all .2s}
 .btn-mag{background:var(--signal);color:var(--bg)}
 .btn-mag:hover{box-shadow:0 0 22px var(--signal-g);transform:translateY(-1px)}
 .btn-cyan{background:var(--signal-cyan);color:var(--bg)}
@@ -53,8 +53,8 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:1
 .list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all .15s}
 .list-item:hover{border-color:var(--signal);background:var(--bg2)}
 .list-item .title{font-family:var(--font-d);font-size:16px;text-transform:uppercase;letter-spacing:1px}
-.list-item .meta{font-family:var(--font-m);font-size:11px;color:var(--t3);display:flex;gap:12px;align-items:center}
-.badge{padding:2px 8px;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border:1px solid transparent}
+.list-item .meta{font-family:var(--font-m);font-size:12px;color:var(--t3);display:flex;gap:12px;align-items:center}
+.badge{padding:3px 8px;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border:1px solid transparent}
 .badge-active{background:oklch(0.82 0.20 195/.15);color:var(--signal);border-color:oklch(0.82 0.20 195/.4)}
 .badge-cooling{background:oklch(0.78 0.18 60/.15);color:var(--orange);border-color:oklch(0.78 0.18 60/.4)}
 .badge-resolved{background:oklch(0.55 0.06 190/.15);color:var(--t2);border-color:oklch(0.55 0.06 190/.4)}
@@ -64,19 +64,19 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:1
 .heat-bar{display:flex;gap:2px;align-items:center}
 .heat-pip{width:8px;height:8px;background:var(--border);transition:background .2s}
 .heat-pip.on{background:var(--signal)}
-.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;font-family:var(--font-m);font-size:13px;clip-path:var(--clip);z-index:999;transform:translateY(100px);opacity:0;transition:all .3s}
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;font-family:var(--font-m);font-size:14px;clip-path:var(--clip);z-index:999;transform:translateY(100px);opacity:0;transition:all .3s}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.success{background:var(--success);color:var(--bg)}
 .toast.error{background:var(--red);color:var(--t1)}
 .beats-editor,.chapters-editor{margin-top:8px}
 .beat-item,.chapter-item{background:var(--bg);border:1px solid var(--border);padding:10px;margin-bottom:6px;position:relative}
-.beat-item .remove,.chapter-item .remove{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--red);cursor:pointer;font-size:14px}
-.empty{text-align:center;padding:40px;color:var(--t3);font-family:var(--font-m);font-size:13px}
-.token-field{display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:var(--bg);border:1px solid var(--border);min-height:38px;cursor:text}
-.token{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:var(--bg3);border:1px solid var(--border);font-family:var(--font-m);font-size:12px;color:var(--t1)}
-.token .x{cursor:pointer;color:var(--t3);font-size:10px}
+.beat-item .remove,.chapter-item .remove{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--red);cursor:pointer;font-size:16px}
+.empty{text-align:center;padding:40px;color:var(--t3);font-family:var(--font-m);font-size:14px}
+.token-field{display:flex;flex-wrap:wrap;gap:4px;padding:9px;background:var(--bg);border:1px solid var(--border);min-height:40px;cursor:text}
+.token{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:var(--bg3);border:1px solid var(--border);font-family:var(--font-m);font-size:13px;color:var(--t1)}
+.token .x{cursor:pointer;color:var(--t3);font-size:12px}
 .token .x:hover{color:var(--red)}
-.token-field input{border:none;background:none;color:var(--t1);font-family:var(--font-m);font-size:12px;outline:none;flex:1;min-width:80px}
+.token-field input{border:none;background:none;color:var(--t1);font-family:var(--font-m);font-size:13px;outline:none;flex:1;min-width:80px}
 ::selection{background:var(--signal);color:var(--bg)}
 </style>
 </head>
@@ -116,14 +116,14 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:1
           <select id="beef-status"><option value="active">Active</option><option value="cooling">Cooling</option><option value="resolved">Resolved</option><option value="legendary">Legendary</option></select>
         </div>
       </div>
-      <div class="field"><label>Heat (1-10)</label><input type="range" id="beef-heat" min="1" max="10" value="5" oninput="document.getElementById('heat-val').textContent=this.value"><span id="heat-val" style="font-family:'JetBrains Mono';font-size:13px;color:var(--signal);margin-left:8px">5</span></div>
+      <div class="field"><label>Heat (1-10)</label><input type="range" id="beef-heat" min="1" max="10" value="5" oninput="document.getElementById('heat-val').textContent=this.value"><span id="heat-val" style="font-family:'JetBrains Mono';font-size:14px;color:var(--signal);margin-left:8px">5</span></div>
       <div class="field"><label>Side A (press Enter to add)</label><div class="token-field" id="side-a-tokens"><input type="text" placeholder="Creator name…" onkeydown="addToken(event,'side-a-tokens')"></div></div>
       <div class="field"><label>Side B (press Enter to add)</label><div class="token-field" id="side-b-tokens"><input type="text" placeholder="Creator name…" onkeydown="addToken(event,'side-b-tokens')"></div></div>
       <div class="field"><label>Description</label><textarea id="beef-desc" placeholder="What kicked this off…"></textarea></div>
       <div class="field">
         <label>Beats (timeline events)</label>
         <div id="beef-beats" class="beats-editor"></div>
-        <button class="btn btn-ghost" onclick="addBeat()" style="margin-top:6px;font-size:11px;padding:6px 12px">+ Add Beat</button>
+        <button class="btn btn-ghost" onclick="addBeat()" style="margin-top:6px;font-size:13px;padding:8px 14px">+ Add Beat</button>
       </div>
       <div class="btn-row">
         <button class="btn btn-mag" onclick="saveBeef()">Save Beef</button>
@@ -165,13 +165,13 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font-b);min-height:1
           <select id="lore-era"><option value="current">Current</option><option value="legacy">Legacy</option><option value="legendary">Legendary</option></select>
         </div>
       </div>
-      <div class="field"><label>Weight (1-5)</label><input type="range" id="lore-weight" min="1" max="5" value="3" oninput="document.getElementById('weight-val').textContent=this.value"><span id="weight-val" style="font-family:'JetBrains Mono';font-size:13px;color:var(--signal-cyan);margin-left:8px">3</span></div>
+      <div class="field"><label>Weight (1-5)</label><input type="range" id="lore-weight" min="1" max="5" value="3" oninput="document.getElementById('weight-val').textContent=this.value"><span id="weight-val" style="font-family:'JetBrains Mono';font-size:14px;color:var(--signal-cyan);margin-left:8px">3</span></div>
       <div class="field"><label>Description</label><textarea id="lore-desc" placeholder="Arc summary…"></textarea></div>
       <div class="field"><label>Linked Beefs (press Enter to add slug)</label><div class="token-field" id="linked-beefs-tokens"><input type="text" placeholder="beef-slug…" onkeydown="addToken(event,'linked-beefs-tokens')"></div></div>
       <div class="field">
         <label>Chapters</label>
         <div id="lore-chapters" class="chapters-editor"></div>
-        <button class="btn btn-ghost" onclick="addChapter()" style="margin-top:6px;font-size:11px;padding:6px 12px">+ Add Chapter</button>
+        <button class="btn btn-ghost" onclick="addChapter()" style="margin-top:6px;font-size:13px;padding:8px 14px">+ Add Chapter</button>
       </div>
       <div class="btn-row">
         <button class="btn btn-cyan" onclick="saveLore()">Save Arc</button>
@@ -370,7 +370,7 @@ function renderLoreList() {
   el.innerHTML = allLore.map(a => {
     return `<div class="list-item" onclick="editLore('${a.slug}')">
       <div><div class="title">${a.title}</div><div class="meta"><span class="badge badge-${a.era || 'current'}">${a.era || 'current'}</span><span>${a.kind || 'other'}</span><span>${a.server || '—'}</span></div></div>
-      <div style="font-family:'JetBrains Mono';font-size:12px;color:var(--signal-cyan)">W${a.weight || 3}</div>
+      <div style="font-family:'JetBrains Mono';font-size:13px;color:var(--signal-cyan)">W${a.weight || 3}</div>
     </div>`;
   }).join('');
 }

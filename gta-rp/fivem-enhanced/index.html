@@ -31,64 +31,64 @@ body>*{position:relative;z-index:3}
 .nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
 .nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
 .nav-links{display:flex;flex-wrap:wrap;overflow-x:auto}
-.nav-link{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-link{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
 .nav-link:hover{color:var(--ink-dim)}
 .nav-link.active{color:var(--signal);border-bottom-color:var(--signal)}
 .ldot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;background:var(--signal)}
 .hero{border-bottom:1px solid var(--border);padding:36px 24px;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
 .hero-inner{max-width:1080px;margin:0 auto}
-.kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px;text-shadow:0 0 6px oklch(0.82 0.20 195/.5)}
+.kicker{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px;text-shadow:0 0 6px oklch(0.82 0.20 195/.5)}
 .hero h1{font-family:var(--font-d);font-size:clamp(36px,6vw,56px);line-height:.95}
 .hero h1 .neon{color:var(--signal);text-shadow:0 0 6px oklch(0.82 0.20 195/.4),0 0 18px oklch(0.82 0.20 195/.25)}
-.hero-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;max-width:720px;line-height:1.6}
+.hero-sub{font-size:16px;color:var(--ink-dim);margin-top:8px;max-width:720px;line-height:1.6}
 .mx{max-width:1080px;margin:0 auto;padding:28px 24px}
-.briefing{border-left:3px solid var(--signal-cyan);background:var(--card);padding:16px 20px;margin-bottom:28px;font-size:13px;color:var(--ink-dim);line-height:1.7}
-.briefing .bl{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:3px;color:var(--signal-cyan);margin-bottom:8px}
+.briefing{border-left:3px solid var(--signal-cyan);background:var(--card);padding:18px 20px;margin-bottom:28px;font-size:16px;color:var(--ink-dim);line-height:1.7}
+.briefing .bl{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal-cyan);margin-bottom:8px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:28px}
 @media(max-width:600px){.stats{grid-template-columns:1fr 1fr}}
 .stat{background:var(--card);border:1px solid var(--border);padding:16px;clip-path:var(--cut)}
 .stat .v{font-family:var(--font-d);font-size:32px;line-height:1}
-.stat .l{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:4px}
+.stat .l{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:4px}
 .sh{font-family:var(--font-d);font-size:26px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
 .sh::after{content:'';flex:1;height:1px;background:var(--border)}
-.sh-meta{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:2px;text-transform:uppercase}
+.sh-meta{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:2px;text-transform:uppercase}
 .table-wrap{overflow-x:auto;margin-bottom:28px}
 .table{width:100%;border-collapse:collapse;min-width:640px}
-.table th{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--card)}
-.table td{padding:12px;border-bottom:1px solid oklch(0.28 0.06 190/.4);font-size:13px;color:var(--ink-dim);vertical-align:top}
-.table td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg);letter-spacing:1px}
-.badge{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;display:inline-block;white-space:nowrap}
+.table th{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-align:left;padding:12px;border-bottom:1px solid var(--border);background:var(--card)}
+.table td{padding:13px 12px;border-bottom:1px solid oklch(0.28 0.06 190/.4);font-size:14px;color:var(--ink-dim);vertical-align:top}
+.table td:first-child{font-family:var(--font-d);font-size:17px;color:var(--fg);letter-spacing:1px}
+.badge{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;display:inline-block;white-space:nowrap}
 .badge.monitoring{color:var(--signal-cyan);background:oklch(0.85 0.18 200/.1);border:1px solid oklch(0.85 0.18 200/.3)}
 .badge.ready{color:var(--green);background:oklch(0.82 0.22 145/.1);border:1px solid oklch(0.82 0.22 145/.3)}
 .badge.testing{color:var(--amber);background:oklch(0.78 0.20 60/.1);border:1px solid oklch(0.78 0.20 60/.3)}
 .badge.unknown{color:var(--ink-faint);background:oklch(0.55 0.06 190/.08);border:1px solid oklch(0.28 0.06 190)}
 .badge.signal{color:var(--signal);background:oklch(0.82 0.20 195/.1);border:1px solid oklch(0.82 0.20 195/.3)}
-.tinydate{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px}
+.tinydate{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px}
 .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
 @media(max-width:700px){.cards{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--border);padding:20px;clip-path:var(--cut)}
 .card h3{font-family:var(--font-d);font-size:18px;color:var(--signal-cyan);margin-bottom:6px;letter-spacing:1px}
-.card p{font-size:13px;color:var(--ink-dim);line-height:1.55}
+.card p{font-size:16px;color:var(--ink-dim);line-height:1.6}
 .changelog{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
 .cl-row{background:var(--card);border:1px solid var(--border);padding:16px 18px;clip-path:var(--cut);display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:flex-start}
 @media(max-width:600px){.cl-row{grid-template-columns:1fr}}
-.cl-when{font-family:var(--font-m);font-size:11px;color:var(--signal-cyan);letter-spacing:1px;text-transform:uppercase}
+.cl-when{font-family:var(--font-m);font-size:12px;color:var(--signal-cyan);letter-spacing:1px;text-transform:uppercase}
 .cl-body h4{font-family:var(--font-d);font-size:18px;margin-bottom:4px;letter-spacing:1px}
-.cl-body p{font-size:13px;color:var(--ink-dim);line-height:1.55}
-.cl-body .src{font-family:var(--font-m);font-size:9px;letter-spacing:1px;color:var(--ink-faint);text-transform:uppercase;margin-top:6px;display:inline-block}
+.cl-body p{font-size:16px;color:var(--ink-dim);line-height:1.6}
+.cl-body .src{font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:var(--ink-faint);text-transform:uppercase;margin-top:8px;display:inline-block}
 .related{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
 @media(max-width:600px){.related{grid-template-columns:1fr}}
 .rel{background:var(--card);border:1px solid var(--border);padding:16px;text-decoration:none;color:var(--fg);clip-path:var(--cut);transition:all .2s;display:block}
-.rel:hover{border-color:var(--signal)}.rel .rt{font-family:var(--font-d);font-size:16px;letter-spacing:1px}.rel .rs{font-family:var(--font-m);font-size:10px;color:var(--ink-dim);margin-top:4px}
-.footer{border-top:1px solid var(--border);padding:20px;text-align:center;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:20px}
+.rel:hover{border-color:var(--signal)}.rel .rt{font-family:var(--font-d);font-size:17px;letter-spacing:1px}.rel .rs{font-family:var(--font-m);font-size:12px;color:var(--ink-dim);margin-top:4px}
+.footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:24px}
 ::selection{background:var(--signal);color:var(--bg)}
 .fmwk-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:28px}
 @media(max-width:700px){.fmwk-grid{grid-template-columns:1fr}}
 .fmwk{background:var(--card);border:1px solid var(--border);padding:16px;clip-path:var(--cut)}
 .fmwk h4{font-family:var(--font-d);font-size:20px;margin-bottom:4px;letter-spacing:1px}
-.fmwk .sub{font-family:var(--font-m);font-size:9px;color:var(--ink-faint);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
-.fmwk .desc{font-size:12px;color:var(--ink-dim);line-height:1.55;margin-top:8px}
+.fmwk .sub{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.fmwk .desc{font-size:14px;color:var(--ink-dim);line-height:1.6;margin-top:8px}
 .fmwk-status{display:flex;align-items:center;gap:8px;margin-top:6px}
 </style>
 </head>
@@ -160,7 +160,7 @@ body>*{position:relative;z-index:3}
       <tr><td>British Life RP</td><td><span class="badge unknown">Unknown</span></td><td>Whitelist-only</td><td><span class="tinydate">2026-04-28</span></td><td>No public CFX ID. Status unverified.</td></tr>
     </tbody></table>
   </div>
-  <p style="font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;margin-top:-12px;margin-bottom:28px">Status changes only when a server owner publishes migration notes <em>or</em> a curated creator's stream title surfaces a clear breakage / upgrade signal.</p>
+  <p style="font-family:var(--font-m);font-size:13px;color:var(--ink-faint);letter-spacing:1px;line-height:1.6;margin-top:-12px;margin-bottom:28px">Status changes only when a server owner publishes migration notes <em>or</em> a curated creator's stream title surfaces a clear breakage / upgrade signal.</p>
 
   <div class="sh">Technical Changelog <span class="sh-meta">Enhanced rollout</span></div>
   <div class="changelog">
