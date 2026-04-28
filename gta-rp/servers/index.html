@@ -321,8 +321,6 @@ async function load() {
     const rowsHtml = srvData.map(srv => {
       const isLive = srv.liveCount > 0;
       const top = isLive ? srv.streams[0] : null;
-      // TODO: "Peak today" column would go here once scene_snapshots is producing rows.
-      // SQL: SELECT MAX(total_viewers) FROM scene_snapshots WHERE server = ? AND snapshot_at > date('now','-1 day')
       const topCell = top
         ? `<a href="/creator-profile/${esc(top.handle)}">
              <span>${esc(top.display_name)}</span>
