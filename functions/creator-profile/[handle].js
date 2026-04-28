@@ -561,8 +561,12 @@ body>*{position:relative;z-index:3}
     <a href="/gta-rp/" class="nav-link">Live</a>
     <a href="/gta-rp/now/" class="nav-link">Now</a>
     <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/party/" class="nav-link">Party</a>
     <a href="/gta-rp/clips/" class="nav-link">Clips</a>
     <a href="/gta-rp/timeline/" class="nav-link">Timeline</a>
+    <a href="/gta-rp/analytics/" class="nav-link">Analytics</a>
+    <a href="/gta-rp/digest/" class="nav-link">Digest</a>
+    <a href="/gta-rp/health/" class="nav-link">Health</a>
     <a href="/gta-rp/streaks/" class="nav-link">Streaks</a>
     <a href="/gta-rp/servers/" class="nav-link">Servers</a>
   </div>
