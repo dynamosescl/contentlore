@@ -187,7 +187,7 @@ body>*{position:relative;z-index:3}
     <div class="section-h">
       <div>
         <h2>Leaderboard</h2>
-        <span class="sub">Display name required to appear · ranks across the curated 26 scene</span>
+        <span class="sub">Display name required to appear · ranks across the 26-streamer scene</span>
       </div>
       <div class="lb-controls">
         <button class="lb-tab active" data-order="current">Current streak</button>
@@ -284,7 +284,7 @@ async function saveDisplayName() {
 }
 
 function stopTracking() {
-  if (!confirm('Stop tracking and remove your local opt-in? Your D1 record stays (we can\'t delete it without auth) but you\'ll vanish from the leaderboard if you also clear your display name.')) return;
+  if (!confirm('Stop tracking and remove your local opt-in? Your record stays on the server (we can\'t delete it without auth) but you\'ll vanish from the leaderboard if you also clear your display name.')) return;
   try {
     localStorage.removeItem(KEY_OPT);
     sessionStorage.removeItem(SESS_FLAG);

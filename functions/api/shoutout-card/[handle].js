@@ -67,7 +67,7 @@ export async function onRequestGet({ params, env, request }) {
   }
 
   const start = monthStartUnix();
-  const monthLabel = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const monthLabel = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Europe/London' });
 
   // All curated handles' totals for the month (one query → rank).
   let allRanks = [];
@@ -374,5 +374,5 @@ body{display:flex;flex-direction:column;align-items:center;padding:32px 16px;gap
 function notFoundHtml(handle) {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Not Found · ContentLore</title>
 <style>body{background:oklch(0.10 0.04 190);color:oklch(0.97 0.02 320);font-family:system-ui;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:24px}h1{font-size:64px;margin-bottom:8px;color:oklch(0.82 0.20 195)}p{color:oklch(0.55 0.06 190)}</style>
-</head><body><h1>404</h1><p>"${esc(handle)}" isn't on the curated UK GTA RP roster.</p></body></html>`;
+</head><body><h1>404</h1><p>"${esc(handle)}" isn't on the UK GTA RP streamer roster.</p></body></html>`;
 }

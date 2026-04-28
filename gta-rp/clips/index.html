@@ -9,16 +9,16 @@
 <script src="/pwa.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clip Wall — UK GTA RP | ContentLore</title>
-<meta name="description" content="The best UK GTA RP clips from Twitch. Top moments from the curated 26, sorted by views, filterable by creator and date.">
+<meta name="description" content="The best UK GTA RP clips from Twitch. Top moments from the 26 tracked streamers, sorted by views, filterable by streamer and date.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ContentLore">
 <meta property="og:title" content="Clip Wall — UK GTA RP · ContentLore">
-<meta property="og:description" content="The best UK GTA RP clips from Twitch. Top moments from the curated 26, sorted by views, filterable by creator and date.">
+<meta property="og:description" content="The best UK GTA RP clips from Twitch. Top moments from the 26 tracked streamers, sorted by views, filterable by streamer and date.">
 <meta property="og:image" content="https://contentlore.com/logo.png">
 <meta property="og:url" content="https://contentlore.com/gta-rp/clips/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Clip Wall — UK GTA RP · ContentLore">
-<meta name="twitter:description" content="The best UK GTA RP clips from Twitch. Top moments from the curated 26, sorted by views, filterable by creator and date.">
+<meta name="twitter:description" content="The best UK GTA RP clips from Twitch. Top moments from the 26 tracked streamers, sorted by views, filterable by streamer and date.">
 <meta name="twitter:image" content="https://contentlore.com/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -203,7 +203,7 @@ body>*{position:relative;z-index:3}
   <div class="hero-inner">
     <div class="hero-kicker"><div class="dot"></div><span>UK GTA RP — Auto-Updating</span></div>
     <h1>CLIP <span class="neon">WALL</span></h1>
-    <p class="hero-desc">The best moments from the UK GTA RP scene. Pulled from Twitch every five minutes for the 20 Twitch creators in the curated 26, sorted by views, filterable by date and creator.</p>
+    <p class="hero-desc">The best moments from the UK GTA RP scene. Pulled from Twitch every five minutes for the 20 Twitch streamers we track, sorted by views, filterable by date and streamer.</p>
   </div>
 </div>
 
@@ -230,8 +230,8 @@ body>*{position:relative;z-index:3}
       <button class="filter-btn" data-range="30d">30d</button>
     </div>
     <div class="filter-group">
-      <span class="filter-label">Creator</span>
-      <select class="filter-select" id="filter-creator"><option value="">All creators</option></select>
+      <span class="filter-label">Streamer</span>
+      <select class="filter-select" id="filter-creator"><option value="">All streamers</option></select>
     </div>
     <div class="filter-group">
       <span class="filter-label">Platform</span>
@@ -330,7 +330,7 @@ function render() {
 
   const wrap = document.getElementById('grid-wrap');
   if (list.length === 0) {
-    wrap.innerHTML = `<div class="state empty"><div class="icon">📼</div>No clips matching your filters.<br>Try a wider time range or clear the creator filter.</div>`;
+    wrap.innerHTML = `<div class="state empty"><div class="icon">📼</div>No clips matching your filters.<br>Try a wider time range or clear the streamer filter.</div>`;
     return;
   }
 
@@ -400,7 +400,7 @@ function populateCreatorDropdown() {
     if (!seen.has(c.creator_handle)) seen.set(c.creator_handle, c.creator_name);
   }
   const entries = [...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]));
-  sel.innerHTML = '<option value="">All creators</option>' +
+  sel.innerHTML = '<option value="">All streamers</option>' +
     entries.map(([h, n]) => `<option value="${escapeAttr(h)}">${escapeHtml(n)}</option>`).join('');
   sel.value = state.creator;
 }
@@ -515,7 +515,7 @@ function timeAgo(iso) {
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 86400 * 7) return `${Math.floor(diff / 86400)}d ago`;
-  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', timeZone: 'Europe/London' });
 }
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

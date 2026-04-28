@@ -145,9 +145,9 @@ body>*{position:relative;z-index:3}
 
   <div class="stat-grid" id="stat-grid">
     <div class="stat"><div class="stat-label">Viewer-hours</div><div class="stat-val" id="s-vh">—</div><div class="stat-delta flat" id="s-vh-d">—</div><div class="stat-sub">this week vs last</div></div>
-    <div class="stat"><div class="stat-label">Active creators</div><div class="stat-val" id="s-ac">—</div><div class="stat-delta flat" id="s-ac-d">—</div><div class="stat-sub">of 26 curated</div></div>
+    <div class="stat"><div class="stat-label">Active streamers</div><div class="stat-val" id="s-ac">—</div><div class="stat-delta flat" id="s-ac-d">—</div><div class="stat-sub">of 26 tracked</div></div>
     <div class="stat"><div class="stat-label">Stream sessions</div><div class="stat-val" id="s-ss">—</div><div class="stat-delta flat" id="s-ss-d">—</div><div class="stat-sub">7-day window</div></div>
-    <div class="stat"><div class="stat-label">Peak hour (UTC)</div><div class="stat-val" id="s-ph">—</div><div class="stat-sub" id="s-ph-sub">when most go live</div></div>
+    <div class="stat"><div class="stat-label">Peak hour (UK time)</div><div class="stat-val" id="s-ph">—</div><div class="stat-sub" id="s-ph-sub">when most go live</div></div>
   </div>
 
   <div class="sh">Server activity <span class="sh-meta">Viewer-hours · this week</span></div>
@@ -204,13 +204,23 @@ function renderStats(d) {
   e3.textContent = deltaText(dss);
   e3.className = 'stat-delta ' + deltaClass(dss);
 
-  document.getElementById('s-ph').textContent = fmtHour(d.peak_hour_utc);
+  // peak_hour_utc comes back as a UTC hour-of-day; show in UK time.
   const ph = d.peak_hour_utc;
   if (ph != null) {
-    const ukOffset = -new Date().getTimezoneOffset() / 60;
-    const local = (ph + ukOffset + 24) % 24;
-    document.getElementById('s-ph-sub').textContent = `~${String(Math.floor(local)).padStart(2,'0')}:00 your time`;
+    const ukH = (ph + ukOffsetHours() + 24) % 24;
+    document.getElementById('s-ph').textContent = String(Math.floor(ukH)).padStart(2, '0') + ':00';
+    document.getElementById('s-ph-sub').textContent = 'when most go live (UK time)';
+  } else {
+    document.getElementById('s-ph').textContent = '—';
   }
+}
+function ukOffsetHours() {
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', hour12: false });
+  let diff = parseInt(fmt.format(now), 10) - now.getUTCHours();
+  if (diff > 12) diff -= 24;
+  if (diff < -12) diff += 24;
+  return diff;
 }
 
 function renderBars(list) {

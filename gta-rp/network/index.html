@@ -9,16 +9,16 @@
 <script src="/pwa.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Creator Network — UK GTA RP · ContentLore</title>
-<meta name="description" content="Interactive force-directed graph of raids, hosts and shoutouts across the curated 26 UK GTA RP creators.">
+<meta name="description" content="Interactive map of raids, hosts and shoutouts across the 26 tracked UK GTA RP streamers.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ContentLore">
 <meta property="og:title" content="Creator Network — UK GTA RP · ContentLore">
-<meta property="og:description" content="Interactive force-directed graph of raids, hosts and shoutouts across the curated 26 UK GTA RP creators.">
+<meta property="og:description" content="Interactive map of raids, hosts and shoutouts across the 26 tracked UK GTA RP streamers.">
 <meta property="og:image" content="https://contentlore.com/logo.png">
 <meta property="og:url" content="https://contentlore.com/gta-rp/network/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Creator Network — UK GTA RP · ContentLore">
-<meta name="twitter:description" content="Interactive force-directed graph of raids, hosts and shoutouts across the curated 26 UK GTA RP creators.">
+<meta name="twitter:description" content="Interactive map of raids, hosts and shoutouts across the 26 tracked UK GTA RP streamers.">
 <meta name="twitter:image" content="https://contentlore.com/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -112,7 +112,7 @@ svg.graph .node:hover circle{stroke-width:3px;cursor:pointer}
 <div class="hero"><div class="hero-inner">
   <div class="hero-kicker">Creator Graph · Force-Directed</div>
   <h1>Creator <span class="neon">Network</span></h1>
-  <p class="hero-sub">Who raids, hosts, and shouts out who across the curated 26. Nodes sized by 30-day average viewers; edges coloured by interaction type. Click a node to focus its connections.</p>
+  <p class="hero-sub">Shows who raids, hosts, and shouts out who across the 26 tracked streamers. Larger circles mean more average viewers (30-day window). Lines are colour-coded by the type of interaction. Click a streamer to highlight their connections.</p>
 </div></div>
 
 <div class="mx">
@@ -136,7 +136,7 @@ svg.graph .node:hover circle{stroke-width:3px;cursor:pointer}
     <svg class="graph" id="graph" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="empty-state" id="empty-state" style="display:none">
       <div class="em-h">Network data is building</div>
-      <div class="em-d">The scheduler hasn't yet detected enough raids, hosts or shoutouts from stream titles. Edges accumulate over time as the curated 26 interact on stream — check back as the data fills in.</div>
+      <div class="em-d">Not enough raids, hosts or shoutouts have been spotted yet to draw a meaningful map. This graph grows as more connections are detected — check back later.</div>
     </div>
   </div>
 
@@ -152,7 +152,7 @@ svg.graph .node:hover circle{stroke-width:3px;cursor:pointer}
     <div class="detail-edges" id="d-edges"></div>
   </div>
 
-  <p class="note">Edges are derived from raid/host/shoutout/mention detection in the scheduler's polling pass. Sparse early on; richer over time. Self-loops and duplicate type-edges are de-duped at write-time.</p>
+  <p class="note">Connections are detected automatically from stream titles and on-stream activity. The map grows as more interactions are spotted across the scene.</p>
 </div>
 
 <div class="footer">ContentLore · Creator Network · Force-directed simulation, no external libraries · <a href="/submit/" style="color:inherit;text-decoration:underline">Submit your channel →</a></div>
@@ -167,7 +167,7 @@ const fmt = (n) => {
 const fmtDate = (ts) => {
   if (!ts) return '—';
   const d = new Date(ts * 1000);
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: 'Europe/London' });
 };
 
 const EDGE_COLORS = {

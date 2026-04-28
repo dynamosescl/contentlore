@@ -181,8 +181,8 @@ function renderTable() {
     const tags = (c.discovered_tags || []).slice(0, 4).map(t => `<span class="tag">${t}</span>`).join('');
     const platform = c.platform || 'twitch';
     const link = platform === 'twitch' ? `https://twitch.tv/${c.name}` : `https://kick.com/${c.name}`;
-    const firstSeen = c.first_seen ? new Date(c.first_seen + 'Z').toLocaleDateString('en-GB', {day:'2-digit',month:'short'}) : '—';
-    const lastSeen = c.last_seen ? new Date(c.last_seen + 'Z').toLocaleDateString('en-GB', {day:'2-digit',month:'short'}) : '—';
+    const firstSeen = c.first_seen ? new Date(c.first_seen + 'Z').toLocaleDateString('en-GB', {day:'2-digit',month:'short',timeZone:'Europe/London'}) : '—';
+    const lastSeen = c.last_seen ? new Date(c.last_seen + 'Z').toLocaleDateString('en-GB', {day:'2-digit',month:'short',timeZone:'Europe/London'}) : '—';
     const isSelected = selected.has(c.id) ? ' selected' : '';
     const checked = selected.has(c.id) ? ' checked' : '';
 

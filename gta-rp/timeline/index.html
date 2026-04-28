@@ -9,16 +9,16 @@
 <script src="/pwa.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scene Timeline — UK GTA RP | ContentLore</title>
-<meta name="description" content="Visual timeline of UK GTA RP streaming activity. Who was live when, on which server, across the curated 26 creators.">
+<meta name="description" content="Visual timeline of UK GTA RP streaming activity. Who was live when, on which server, across the 26 tracked streamers.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ContentLore">
 <meta property="og:title" content="Scene Timeline — UK GTA RP · ContentLore">
-<meta property="og:description" content="Visual timeline of UK GTA RP streaming activity. Who was live when, on which server, across the curated 26 creators.">
+<meta property="og:description" content="Visual timeline of UK GTA RP streaming activity. Who was live when, on which server, across the 26 tracked streamers.">
 <meta property="og:image" content="https://contentlore.com/logo.png">
 <meta property="og:url" content="https://contentlore.com/gta-rp/timeline/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Scene Timeline — UK GTA RP · ContentLore">
-<meta name="twitter:description" content="Visual timeline of UK GTA RP streaming activity. Who was live when, on which server, across the curated 26 creators.">
+<meta name="twitter:description" content="Visual timeline of UK GTA RP streaming activity. Who was live when, on which server, across the 26 tracked streamers.">
 <meta name="twitter:image" content="https://contentlore.com/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -138,7 +138,7 @@ body>*{position:relative;z-index:3}
   <div class="hero-inner">
     <div class="hero-kicker">Scene Activity</div>
     <h1>Scene <span class="neon">Timeline</span></h1>
-    <p class="hero-sub">When the UK GTA RP scene was active. Who streamed, when, on which server. Sessions reconstructed from the scheduler's polling history.</p>
+    <p class="hero-sub">When the UK GTA RP scene was active. Who streamed, when, on which server.</p>
   </div>
 </div>
 
@@ -156,7 +156,7 @@ body>*{position:relative;z-index:3}
     <div class="stat"><div class="v" id="s-hours">—</div><div class="l">Total hours</div><div class="extra">across all creators</div></div>
     <div class="stat"><div class="v" id="s-peak">—</div><div class="l">Peak concurrent</div><div class="extra">most overlapping sessions</div></div>
     <div class="stat"><div class="v" id="s-server">—</div><div class="l">Most active server</div><div class="extra" id="s-server-x">—</div></div>
-    <div class="stat"><div class="v" id="s-hour">—</div><div class="l">Busiest hour</div><div class="extra" id="s-hour-x">—</div></div>
+    <div class="stat"><div class="v" id="s-hour">—</div><div class="l">Busiest hour (UK time)</div><div class="extra" id="s-hour-x">—</div></div>
   </div>
 
   <div class="legend" id="legend"></div>
@@ -226,7 +226,7 @@ function render() {
 
   if (sessions.length === 0) {
     document.getElementById('content').innerHTML =
-      '<div class="empty"><div class="icon">📅</div>No scene activity recorded for this period.<span class="sub">As the scheduler observes more streams, sessions will populate here.</span></div>';
+      '<div class="empty"><div class="icon">📅</div>No scene activity recorded for this period.<span class="sub">More sessions will appear here as the scene streams.</span></div>';
     return;
   }
 
@@ -285,19 +285,18 @@ function renderStats(sessions, window) {
     : '—';
   document.getElementById('s-server-x').textContent = topN ? `${topN} session${topN === 1 ? '' : 's'}` : '—';
 
-  // Busiest hour of day (in viewer's local timezone)
+  // Busiest hour of day in UK time (Europe/London — handles BST/GMT
+  // automatically). Bucketed in 5-min slices so we don't have to
+  // compute exact UK hour boundaries each iteration.
   const hourCount = new Array(24).fill(0);
+  const ukHourFmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: 'Europe/London' });
   for (const s of sessions) {
     const lo = Math.max(s.started_at, window.start);
     const hi = Math.min(s.ended_at, window.end);
-    let cursor = lo;
-    while (cursor < hi) {
-      const d = new Date(cursor * 1000);
-      const hour = d.getHours();
-      const nextHour = new Date(d); nextHour.setMinutes(0, 0, 0); nextHour.setHours(hour + 1);
-      const stop = Math.min(hi, Math.floor(nextHour.getTime() / 1000));
-      hourCount[hour] += (stop - cursor);
-      cursor = stop;
+    for (let t = lo; t < hi; t += 300) {
+      const stop = Math.min(t + 300, hi);
+      const ukH = parseInt(ukHourFmt.format(new Date(t * 1000)), 10);
+      if (Number.isFinite(ukH)) hourCount[ukH] += (stop - t);
     }
   }
   let busyHour = -1, busySec = 0;
@@ -332,7 +331,7 @@ function renderTimeline(sessions, window) {
     // Day labels — 7 ticks at the centre of each day
     for (let i = 0; i < 7; i++) {
       const d = new Date((winStart + i * 86400 + 43200) * 1000);
-      const dayLabel = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
+      const dayLabel = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', timeZone: 'Europe/London' });
       const pct = ((i + 0.5) * 86400 / winSpan) * 100;
       ticks.push({ pct, label: dayLabel });
     }
@@ -400,8 +399,8 @@ function showTooltip(e) {
   let data;
   try { data = JSON.parse(e.currentTarget.dataset.tip); } catch { return; }
   const dur = (data.endedAt - data.startedAt) / 60;
-  const startLocal = new Date(data.startedAt * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  const endLocal = data.ongoing ? 'now' : new Date(data.endedAt * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const startLocal = new Date(data.startedAt * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
+  const endLocal = data.ongoing ? 'now' : new Date(data.endedAt * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
   tooltipEl.innerHTML = `
     <div class="t-creator">${escHtml(data.creator)}</div>
     <div class="t-server">${escHtml(data.server)}</div>

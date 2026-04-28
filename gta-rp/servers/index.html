@@ -178,7 +178,7 @@ body>*{position:relative;z-index:3}
     <div>
       <div class="hero-kicker">Status Board · auto-refresh 60s</div>
       <h1>RP <span class="neon">Servers</span></h1>
-      <div class="hero-sub">Live status of every RP server we track — UK-founded and American servers UK creators play on. Detected from the curated 26's stream titles.</div>
+      <div class="hero-sub">Live status of every RP server we track — UK-founded and American servers UK streamers play on. Detected from the 26 tracked streamers' stream titles.</div>
     </div>
     <div class="hero-stats">
       <div class="hs"><div class="v" style="color:var(--signal)" id="s-active">—</div><div class="l">live now</div></div>
@@ -299,7 +299,7 @@ async function load() {
     document.getElementById('s-viewers').textContent = fmtBig(totalViewers);
     document.getElementById('s-total').textContent = SERVERS.length;
     document.getElementById('last-update').textContent =
-      'Updated ' + new Date().toLocaleTimeString('en-GB', { hour12: false });
+      'Updated ' + new Date().toLocaleTimeString('en-GB', { hour12: false, timeZone: 'Europe/London' }) + ' UK';
 
     // Sort: live (streamers OR populated server) first by combined signal,
     // then idle by player count desc, then alphabetical.

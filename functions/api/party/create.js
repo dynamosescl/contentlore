@@ -45,7 +45,7 @@ export async function onRequestPost({ request, env }) {
   const hostName = String(body?.host_name || '').trim().slice(0, 32) || 'Host';
   const curated = await getCuratedEntry(env, handle);
   if (!curated) {
-    return jsonResponse({ ok: false, error: 'handle must be one of the curated allowlist' }, 400);
+    return jsonResponse({ ok: false, error: 'handle must be one of the tracked streamers' }, 400);
   }
   const platform = ALLOWED_PLATFORMS.has(body?.platform)
     ? body.platform

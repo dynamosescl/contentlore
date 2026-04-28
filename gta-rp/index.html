@@ -13,12 +13,12 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ContentLore">
 <meta property="og:title" content="UK GTA RP — Live Hub · ContentLore">
-<meta property="og:description" content="The curated 26 UK GTA RP creators across Twitch and Kick. See who's live, what they're playing, why it matters.">
+<meta property="og:description" content="26 UK GTA RP streamers across Twitch and Kick. See who's live, what they're playing, why it matters.">
 <meta property="og:image" content="https://contentlore.com/logo.png">
 <meta property="og:url" content="https://contentlore.com/gta-rp/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="UK GTA RP — Live Hub · ContentLore">
-<meta name="twitter:description" content="The curated 26 UK GTA RP creators across Twitch and Kick. See who's live, what they're playing, why it matters.">
+<meta name="twitter:description" content="26 UK GTA RP streamers across Twitch and Kick. See who's live, what they're playing, why it matters.">
 <meta name="twitter:image" content="https://contentlore.com/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -282,7 +282,7 @@ body>*{position:relative;z-index:3}
     <div class="hero-kicker"><div class="dot" id="h-dot"></div><span id="h-status">Loading scene…</span></div>
     <h1>UK GTA RP,<br><span class="neon">live.</span></h1>
     <div class="hero-stats">
-      <div class="hero-stat"><div class="val" id="s-live">0</div><div class="lbl">creators on</div></div>
+      <div class="hero-stat"><div class="val" id="s-live">0</div><div class="lbl">streamers on</div></div>
       <div class="hero-stat"><div class="val" id="s-viewers">0</div><div class="lbl">watching</div></div>
       <div class="hero-stat"><div class="val" id="s-scene">0</div><div class="lbl">in scene</div></div>
       <div class="hero-stat"><div class="val" id="s-plat">0</div><div class="lbl">platforms</div></div>
@@ -454,7 +454,7 @@ function renderAll() {
   // Roster
   const rsec = document.getElementById('roster-section');
   if (allCreators.length > 0) {
-    rsec.innerHTML = `<div class="sh"><div class="sh-left"><div class="kicker">The roster</div><h2>Scene tracker</h2><div class="sub">${allCreators.length} creators not live right now · the people we watch</div></div></div>
+    rsec.innerHTML = `<div class="sh"><div class="sh-left"><div class="kicker">The roster</div><h2>Scene tracker</h2><div class="sub">${allCreators.length} streamers not live right now · the people we watch</div></div></div>
     <div class="roster">${allCreators.map(renderRosterCard).join('')}</div>`;
   } else {
     rsec.innerHTML = '';

@@ -99,7 +99,7 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
 
     <div class="tabs">
       <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
-      <div class="tab" onclick="switchTab('curated')">Curated</div>
+      <div class="tab" onclick="switchTab('curated')">Streamers</div>
       <div class="tab" onclick="switchTab('creators')">Creators</div>
       <div class="tab" onclick="switchTab('controls')">Controls</div>
       <div class="tab" onclick="switchTab('discovery')">Discovery</div>
@@ -114,10 +114,10 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
     </div>
 
     <div class="tab-content" id="tab-curated">
-      <div class="sh">Curated Allowlist <span style="font-family:var(--font-m);font-size:12px;color:var(--ink-faint);font-weight:400;letter-spacing:2px;text-transform:uppercase">D1: curated_creators</span></div>
+      <div class="sh">Tracked streamers <span style="font-family:var(--font-m);font-size:12px;color:var(--ink-faint);font-weight:400;letter-spacing:2px;text-transform:uppercase">single source of truth · changes propagate within 5 minutes</span></div>
       <div class="panel" style="margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button class="btn" onclick="openCuratedAdd()">+ Add creator</button>
+          <button class="btn" onclick="openCuratedAdd()">+ Add streamer</button>
           <button class="btn" onclick="loadCurated()">Refresh</button>
           <span id="curated-count" style="font-family:var(--font-m);font-size:12px;color:var(--ink-dim);margin-left:auto">—</span>
         </div>
@@ -126,7 +126,7 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
     </div>
 
     <div class="tab-content" id="tab-creators">
-      <div class="sh">All Creators (D1 dump)</div>
+      <div class="sh">All creators (legacy DB dump)</div>
       <div class="panel" id="creators-panel"></div>
     </div>
 
@@ -136,11 +136,11 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
         <h3>Scheduler & avatars</h3>
         <button class="btn" onclick="triggerPoll()">Trigger Poll (scheduler)</button>
         <button class="btn" onclick="rebuildSessions()">Rebuild Sessions (scheduler)</button>
-        <button class="btn" onclick="backfillAvatars()">Backfill Avatars (curated 26)</button>
+        <button class="btn" onclick="backfillAvatars()">Backfill Avatars (26 streamers)</button>
         <div style="font-family:var(--font-m);font-size:11px;color:var(--ink-faint);margin-top:8px;letter-spacing:1px;line-height:1.5">
           Scheduler buttons use the X-Admin-Password header (ADMIN_PASSWORD env on the scheduler worker).
           If you get a 401 here, log out and enter the scheduler password in the second login field.
-          Backfill is now scoped to the curated 26 — no longer touches the 7790-row legacy table.
+          Backfill is now scoped to the 26 tracked streamers — no longer touches the 7790-row legacy table.
         </div>
         <div class="log" id="control-log">Ready. Click a button to execute.</div>
       </div>
@@ -157,10 +157,10 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
       <div class="panel" id="discovery-panel"><div class="log">Loading...</div></div>
     </div>
 
-    <!-- ========== Curated Add/Edit Modal ========== -->
+    <!-- ========== Streamer Add/Edit Modal ========== -->
     <div id="curated-modal" style="display:none;position:fixed;inset:0;background:oklch(0.05 0.03 190/.9);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center;padding:20px">
       <div style="background:var(--card);border:1px solid var(--signal);max-width:560px;width:100%;padding:24px;max-height:90vh;overflow-y:auto">
-        <h2 id="curated-modal-title" style="font-family:var(--font-d);font-size:24px;letter-spacing:1px;margin-bottom:14px">Add curated creator</h2>
+        <h2 id="curated-modal-title" style="font-family:var(--font-d);font-size:24px;letter-spacing:1px;margin-bottom:14px">Add streamer</h2>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
           <div>
             <label style="display:block;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-bottom:4px">Handle (lowercase)</label>
@@ -298,7 +298,7 @@ async function loadDashboard() {
     document.getElementById('kpis').innerHTML = `
       <div class="kpi"><div class="v ${live.length>0?'ok':'warn'}">${live.length}</div><div class="l">live now</div></div>
       <div class="kpi"><div class="v signal">${fmtBig(viewers)}</div><div class="l">viewers</div></div>
-      <div class="kpi"><div class="v">${totalCurated}</div><div class="l">curated creators</div></div>
+      <div class="kpi"><div class="v">${totalCurated}</div><div class="l">tracked streamers</div></div>
       <div class="kpi"><div class="v ${missingAv>0?'warn':'ok'}">${missingAv}</div><div class="l">missing avatars</div></div>
     `;
 
@@ -330,7 +330,7 @@ async function loadDashboard() {
     if (!r.ok) throw new Error('HTTP '+r.status);
     const d = await r.json();
     const c = d.curated || {};
-    const startedAt = c.started_at ? new Date(c.started_at).toLocaleString() : 'Never';
+    const startedAt = c.started_at ? new Date(c.started_at).toLocaleString('en-GB', { timeZone: 'Europe/London' }) + ' UK' : 'Never';
     const ageStr = c.started_at
       ? ((Date.now() - new Date(c.started_at).getTime()) / 60000).toFixed(1) + ' min ago'
       : '—';
@@ -358,7 +358,7 @@ async function loadDashboard() {
         </tbody>
       </table>
       <div style="margin-top:8px;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px">
-        Started ${escapeHtml(startedAt)} · ${(c.creators||0)} curated creators polled
+        Started ${escapeHtml(startedAt)} · ${(c.creators||0)} streamers polled
         ${(c.creators_missing_id && c.creators_missing_id.length) ? ` · <span style="color:var(--red)">missing id: ${c.creators_missing_id.map(escapeHtml).join(', ')}</span>` : ''}
       </div>
       <details style="margin-top:10px"><summary style="cursor:pointer;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-faint)">Raw response</summary>
@@ -380,7 +380,7 @@ async function loadCreators() {
         <td>${c.display_name}</td>
         <td><span class="badge ${(c.primary_platform||'twitch').toLowerCase()}">${c.primary_platform||'twitch'}</span></td>
         <td>${c.avatar_url && !c.avatar_url.includes('previews-ttv') ? '✓' : '<span style="color:var(--red)">✗</span>'}</td>
-        <td style="color:var(--ink-faint);font-size:12px">${c.updated_at ? new Date(c.updated_at).toLocaleDateString() : '—'}</td>
+        <td style="color:var(--ink-faint);font-size:12px">${c.updated_at ? new Date(c.updated_at).toLocaleDateString('en-GB', { timeZone: 'Europe/London' }) : '—'}</td>
       </tr>`).join('')}</tbody></table>`;
   } catch(e) {
     document.getElementById('creators-panel').innerHTML = `<div class="log" style="color:var(--red)">Error: ${e.message}</div>`;
@@ -482,7 +482,7 @@ function escapeHtml(s) {
 }
 function fmtDate(s) {
   if (!s) return '—';
-  try { return new Date(s.replace(' ','T') + 'Z').toLocaleString(); } catch { return s; }
+  try { return new Date(s.replace(' ','T') + 'Z').toLocaleString('en-GB', { timeZone: 'Europe/London' }) + ' UK'; } catch { return s; }
 }
 
 async function loadSubmissions(status) {
@@ -637,7 +637,7 @@ async function loadCurated() {
     document.getElementById('curated-count').textContent = `${list.filter(c => c.active).length} active · ${list.length} total`;
 
     if (list.length === 0) {
-      panel.innerHTML = '<div style="padding:16px;color:var(--ink-dim)">No curated creators yet.</div>';
+      panel.innerHTML = '<div style="padding:16px;color:var(--ink-dim)">No tracked streamers yet.</div>';
       return;
     }
 
@@ -668,8 +668,7 @@ async function loadCurated() {
       </tbody>
     </table>
     <div style="margin-top:12px;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;line-height:1.6">
-      Changes propagate to all endpoints within 5 minutes (cache TTL). The cache is dropped immediately on every write,
-      so the next request from any isolate already on a warm cache will see the new data.
+      Changes show up everywhere on the site within 5 minutes. Edits take effect immediately on the next page load.
     </div>`;
   } catch (e) {
     panel.innerHTML = `<div class="log" style="color:var(--red)">Error: ${escapeHtml(e.message)}</div>`;
@@ -678,7 +677,7 @@ async function loadCurated() {
 
 function openCuratedAdd() {
   curatedEditing = null;
-  document.getElementById('curated-modal-title').textContent = 'Add curated creator';
+  document.getElementById('curated-modal-title').textContent = 'Add streamer';
   document.getElementById('cu-handle').disabled = false;
   for (const id of ['cu-handle','cu-display','cu-s-twitch','cu-s-kick','cu-s-youtube','cu-s-tiktok','cu-s-x','cu-s-instagram','cu-s-discord']) {
     document.getElementById(id).value = '';

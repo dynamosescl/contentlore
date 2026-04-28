@@ -39,7 +39,7 @@ function fmtN(n) {
 // limit, network error). Better than a stack trace on the page.
 function fallbackRecap(d) {
   const parts = [];
-  parts.push(`Over the last seven days, the curated UK GTA RP scene logged ${fmtN(d.totalHours)} streamed hours across ${d.creatorsLive} creators.`);
+  parts.push(`Over the last seven days, the tracked UK GTA RP scene logged ${fmtN(d.totalHours)} streamed hours across ${d.creatorsLive} streamers.`);
   if (d.peak) {
     parts.push(`The peak moment came from ${d.peak.who}, pulling ${fmtN(d.peak.viewers)} viewers on ${d.peak.platform}.`);
   }
@@ -59,8 +59,8 @@ async function callAnthropic(env, data) {
 
   const dataLines = [];
   dataLines.push(`Window: last 7 days (rolling, UTC)`);
-  dataLines.push(`Total hours streamed across the curated 26: ${data.totalHours}`);
-  dataLines.push(`Creators who went live: ${data.creatorsLive} of 26`);
+  dataLines.push(`Total hours streamed across the 26 tracked streamers: ${data.totalHours}`);
+  dataLines.push(`Streamers who went live: ${data.creatorsLive} of 26`);
   dataLines.push(`Total stream sessions: ${data.sessionsCount}`);
   if (data.peak) {
     dataLines.push(`Peak viewership moment: ${data.peak.who} on ${data.peak.platform} with ${data.peak.viewers} viewers, stream titled "${data.peak.title || '(no title)'}"`);
@@ -92,7 +92,7 @@ async function callAnthropic(env, data) {
     system: [
       {
         type: 'text',
-        text: 'You are a UK GTA RP scene reporter writing for ContentLore, a streaming intelligence site. Your audience already follows the scene. Write a 200-word engaging summary of what happened in the UK GTA RP scene based on the data provided. Write like a sports match reporter covering the day\'s action: vivid, specific, energetic. Name creators, servers, and viewer counts directly. Don\'t hedge, don\'t list — narrate. Don\'t open with "Here\'s your recap" or restate the prompt. Don\'t mention that the data is from the last 7 days unless it\'s relevant to a callout. Use UK English spelling. Output plain prose only — no headings, no markdown, no bullet points.',
+        text: 'You are a UK GTA RP scene reporter writing for ContentLore, a streaming intelligence site. Your audience already follows the scene. Write a 200-word engaging summary of what happened in the UK GTA RP scene based on the data provided. Write like a sports match reporter covering the day\'s action: vivid, specific, energetic. Name streamers, servers, and viewer counts directly. Don\'t hedge, don\'t list — narrate. Don\'t open with "Here\'s your recap" or restate the prompt. Don\'t mention that the data is from the last 7 days unless it\'s relevant to a callout. Don\'t use the word "creators" — call them streamers. Use UK English spelling. Output plain prose only — no headings, no markdown, no bullet points.',
         cache_control: { type: 'ephemeral' },
       },
     ],

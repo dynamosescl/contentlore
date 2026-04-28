@@ -357,7 +357,7 @@
       try { localStorage.setItem(STATE_KEY, sub.endpoint); } catch {}
       btn.dataset.state = 'on';
       btn.querySelector('.lbl').textContent = 'Notifications on';
-      showToast(filter_handles === 'all' ? "You'll get a ping when any curated creator goes live." : "You'll get a ping when this creator goes live.");
+      showToast(filter_handles === 'all' ? "You'll get a ping when any tracked streamer goes live." : "You'll get a ping when this streamer goes live.");
     } catch (err) {
       console.error('[push] subscribe error', err);
       btn.dataset.state = 'off';

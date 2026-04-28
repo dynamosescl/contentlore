@@ -138,7 +138,7 @@ body>*{position:relative;z-index:3}
 <div class="hero"><div class="hero-inner">
   <div class="hero-kicker">Weekly Report · Auto-generated</div>
   <h1>This Week in <span class="neon">UK GTA RP</span></h1>
-  <p class="hero-sub">A rolling 7-day summary of the curated 26: hours streamed, peak viewership moment, the busiest server, freshly discovered creators, and the top clips of the week.</p>
+  <p class="hero-sub">A rolling 7-day summary of the 26 tracked streamers: hours streamed, peak viewership moment, the busiest server, freshly discovered streamers, and the top clips of the week.</p>
   <div class="window" id="window">—</div>
 </div></div>
 
@@ -161,8 +161,8 @@ body>*{position:relative;z-index:3}
         <div class="title" id="peak-title">—</div>
       </div>
       <div class="summary-grid">
-        <div class="skv"><div class="v" id="k-hours" style="color:var(--signal-cyan)">—</div><div class="l">total hours streamed</div><div class="sub">across the curated 26</div></div>
-        <div class="skv"><div class="v" id="k-creators" style="color:var(--green)">—</div><div class="l">creators went live</div><div class="sub">of 26 curated</div></div>
+        <div class="skv"><div class="v" id="k-hours" style="color:var(--signal-cyan)">—</div><div class="l">total hours streamed</div><div class="sub">across the 26 streamers</div></div>
+        <div class="skv"><div class="v" id="k-creators" style="color:var(--green)">—</div><div class="l">streamers went live</div><div class="sub">of 26 tracked</div></div>
         <div class="skv"><div class="v" id="k-server" style="color:var(--amber)">—</div><div class="l">most active server</div><div class="sub" id="k-server-sub">—</div></div>
         <div class="skv"><div class="v" id="k-sessions" style="color:var(--signal)">—</div><div class="l">stream sessions</div><div class="sub">7-day window</div></div>
       </div>
@@ -187,7 +187,7 @@ body>*{position:relative;z-index:3}
     </div>
     <div class="tile">
       <h3>How to read this</h3>
-      <p style="font-size:15px;color:var(--ink-dim);line-height:1.6">Hours come from <code style="font-family:var(--font-m);color:var(--signal-cyan)">stream_sessions</code>, which is rebuilt each cron tick from the curated polling pass. Sessions that started before the window are clipped to its bounds. Peak counts are per-snapshot maxes from the same window.</p>
+      <p style="font-size:15px;color:var(--ink-dim);line-height:1.6">Hours are the total time each streamer was live across the last 7 days. Sessions that started before this window are trimmed to its edges. Peak viewers is the highest single-moment count seen in each session.</p>
     </div>
   </div>
 
@@ -197,7 +197,7 @@ body>*{position:relative;z-index:3}
   <div class="sh">New Creators Discovered <span class="sh-meta">pending_creators · 7d window</span></div>
   <div id="new-wrap"><div class="empty">Loading…</div></div>
 
-  <p style="font-family:var(--font-m);font-size:13px;color:var(--ink-faint);letter-spacing:1px;line-height:1.6;background:var(--card2);border:1px dashed var(--border);padding:14px 16px;margin-bottom:18px">Generated from D1 + the Twitch clips API at request time, then cached at the edge for 10 minutes. The 7-day window is rolling, not calendar — refreshing tomorrow gives you tomorrow's window.</p>
+  <p style="font-family:var(--font-m);font-size:13px;color:var(--ink-faint);letter-spacing:1px;line-height:1.6;background:var(--card2);border:1px dashed var(--border);padding:14px 16px;margin-bottom:18px">Refreshes every 10 minutes. The 7-day window rolls forward each day — tomorrow's digest covers the most recent week from that point.</p>
 </div>
 
 <div class="footer">ContentLore · Weekly Digest · Rolling 7-day window · Updated every 10 min · <a href="/submit/" style="color:inherit;text-decoration:underline">Submit your channel →</a></div>
@@ -212,19 +212,19 @@ const fmt = (n) => {
 const fmtTime = (ts) => {
   if (!ts) return '—';
   const d = new Date(ts * 1000);
-  return d.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
 };
 const fmtDateOnly = (ts) => {
   if (!ts) return '—';
   const d = new Date(ts * 1000);
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: 'Europe/London' });
 };
 const escapeHtml = (s) =>
   String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 function renderPeak(p) {
   if (!p) {
-    document.getElementById('peak-card').innerHTML = '<div class="label">Peak viewership moment</div><div class="empty">No live samples in window yet — the polling pass needs more data.</div>';
+    document.getElementById('peak-card').innerHTML = '<div class="label">Peak viewership moment</div><div class="empty">No live data in this window yet — check back as more streams happen.</div>';
     return;
   }
   document.getElementById('peak-value').textContent = fmt(p.viewers) + ' viewers';
@@ -249,7 +249,7 @@ function renderTopCreators(list) {
 function renderClips(clips) {
   const wrap = document.getElementById('clips-wrap');
   if (!clips || !clips.length) {
-    wrap.innerHTML = '<div class="empty">No clips returned for this window. Either Twitch hasn\'t indexed any GTA V / Just Chatting clips for the curated 20 yet, or the clip API is rate-limited. Refresh in a moment.</div>';
+    wrap.innerHTML = '<div class="empty">No clips for this week yet. Twitch may still be indexing recent moments — try refreshing in a few minutes.</div>';
     return;
   }
   const html = clips.map(c => {
@@ -290,9 +290,9 @@ async function load() {
     if (!data.ok) throw new Error(data.error || 'Digest failed');
 
     document.getElementById('window').textContent =
-      `${fmtDateOnly(data.window.start)} → ${fmtDateOnly(data.window.end)} · UTC`;
+      `${fmtDateOnly(data.window.start)} → ${fmtDateOnly(data.window.end)} · UK time`;
     document.getElementById('generated-at').textContent =
-      'Generated ' + new Date(data.generated_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      'Generated ' + new Date(data.generated_at).toLocaleString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' }) + ' UK';
 
     document.getElementById('k-hours').textContent = fmt(data.stats.total_hours);
     document.getElementById('k-creators').textContent = fmt(data.stats.unique_creators_live);
@@ -325,7 +325,7 @@ async function loadRecap() {
     prose.classList.remove('skel');
     prose.textContent = d.recap;
     document.getElementById('recap-meta').textContent =
-      `${d.source === 'fallback' ? 'Template' : (d.model || 'Claude')} · ${new Date(d.generated_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+      `${d.source === 'fallback' ? 'Template' : (d.model || 'Claude')} · ${new Date(d.generated_at).toLocaleString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' })} UK`;
 
     const dataLine = document.getElementById('recap-data');
     if (d.data) {

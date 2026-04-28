@@ -160,7 +160,7 @@ body>*{position:relative;z-index:3}
     <div class="pulse-stats">
       <div class="ps"><span class="ps-val" style="color:var(--signal)" id="p-live">—</span><span class="ps-lbl">live</span></div>
       <div class="ps"><span class="ps-val" style="color:var(--signal-cyan)" id="p-viewers">—</span><span class="ps-lbl">viewers</span></div>
-      <div class="ps"><span class="ps-val" style="color:var(--fg)" id="p-tracked">26</span><span class="ps-lbl">creators</span></div>
+      <div class="ps"><span class="ps-val" style="color:var(--fg)" id="p-tracked">26</span><span class="ps-lbl">streamers</span></div>
     </div>
   </div>
 </div>
@@ -222,7 +222,7 @@ async function loadSpotlight() {
     const bio = p.bio ? `<div class="sp-bio">${esc(p.bio)}</div>` : '';
     const stats = (p.sessions > 0)
       ? `${p.sessions} sessions · ${p.total_hours}h · ${p.avg_viewers} avg viewers`
-      : 'Curated 26 — daily rotation';
+      : '26 streamers · daily rotation';
     document.getElementById('spotlight-host').innerHTML =
       `<a class="spotlight" href="${esc(p.profile_url)}">
         ${av}

@@ -9,16 +9,16 @@
 <script src="/pwa.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scene Analytics — UK GTA RP · ContentLore</title>
-<meta name="description" content="Viewer trends, scene heatmap and server popularity across the curated 26 UK GTA RP creators.">
+<meta name="description" content="Viewer trends, scene heatmap and server popularity across the 26 tracked UK GTA RP streamers.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ContentLore">
 <meta property="og:title" content="Scene Analytics — UK GTA RP · ContentLore">
-<meta property="og:description" content="Viewer trends, scene heatmap and server popularity across the curated 26 UK GTA RP creators.">
+<meta property="og:description" content="Viewer trends, scene heatmap and server popularity across the 26 tracked UK GTA RP streamers.">
 <meta property="og:image" content="https://contentlore.com/logo.png">
 <meta property="og:url" content="https://contentlore.com/gta-rp/analytics/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Scene Analytics — UK GTA RP · ContentLore">
-<meta name="twitter:description" content="Viewer trends, scene heatmap and server popularity across the curated 26 UK GTA RP creators.">
+<meta name="twitter:description" content="Viewer trends, scene heatmap and server popularity across the 26 tracked UK GTA RP streamers.">
 <meta name="twitter:image" content="https://contentlore.com/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -125,25 +125,25 @@ table.heatmap td.lvl-5{background:oklch(0.82 0.20 195/.85);color:var(--bg);font-
 <div class="hero"><div class="hero-inner">
   <div class="hero-kicker">Scene Intelligence · 7-day Window</div>
   <h1>Scene <span class="neon">Analytics</span></h1>
-  <p class="hero-sub">Viewer trends, scene heatmap and server popularity across the curated 26. Data updates every 15 minutes from the polling pass — charts fill in as the scheduler accumulates more samples.</p>
+  <p class="hero-sub">Viewer trends, scene heatmap and server popularity across the 26 tracked streamers. Updates every 15 minutes — charts fill in as more data is captured.</p>
 </div></div>
 
 <div class="mx">
   <div class="stats" id="stats">
     <div class="stat"><div class="v" id="k-hours" style="color:var(--signal-cyan)">—</div><div class="l">total hours streamed</div><div class="sub">last 7 days</div></div>
-    <div class="stat"><div class="v" id="k-creators" style="color:var(--green)">—</div><div class="l">unique creators live</div><div class="sub">of 26 curated</div></div>
+    <div class="stat"><div class="v" id="k-creators" style="color:var(--green)">—</div><div class="l">unique streamers live</div><div class="sub">of 26 tracked</div></div>
     <div class="stat"><div class="v" id="k-peak" style="color:var(--amber)">—</div><div class="l">peak concurrent viewers</div><div class="sub" id="k-peak-when">—</div></div>
     <div class="stat"><div class="v" id="k-server" style="color:var(--signal)">—</div><div class="l">most active server</div><div class="sub">by viewer-hours</div></div>
   </div>
 
-  <div id="data-notice" class="notice" style="display:none">Data accumulates over time — charts will fill in over the coming days as the scheduler captures more samples.</div>
+  <div id="data-notice" class="notice" style="display:none">Data builds up over time — charts will fill in over the coming days.</div>
 
   <div class="sh">Viewers Over Time <span class="sh-meta">7 days · hourly buckets</span></div>
   <div class="panel">
     <div class="panel-h">
       <div>
         <div class="panel-t">Total Concurrent Viewers</div>
-        <div class="panel-d">Sum of viewer counts across all live curated creators, hour-bucketed.</div>
+        <div class="panel-d">Total viewers across all live tracked streamers, grouped by hour.</div>
       </div>
     </div>
     <div class="svg-wrap" id="line-wrap"><div class="empty">Loading…</div></div>
@@ -154,7 +154,7 @@ table.heatmap td.lvl-5{background:oklch(0.82 0.20 195/.85);color:var(--bg);font-
     <div class="panel-h">
       <div>
         <div class="panel-t">When the UK Scene is Busiest</div>
-        <div class="panel-d">Average concurrent viewers by hour-of-day (UTC) and day-of-week. Brighter cells = more viewers.</div>
+        <div class="panel-d">Average concurrent viewers by hour-of-day (UK time) and day-of-week. Brighter cells = more viewers.</div>
       </div>
     </div>
     <div class="heatmap-wrap" id="heatmap-wrap"><div class="empty">Loading…</div></div>
@@ -196,7 +196,7 @@ table.heatmap td.lvl-5{background:oklch(0.82 0.20 195/.85);color:var(--bg);font-
     <div class="panel-h">
       <div>
         <div class="panel-t">Follower Count Over Time</div>
-        <div class="panel-d">Daily-bucketed follower count from the polling pass. Sorted by absolute delta — biggest gainers first. Kick creators show "no data" because the Kick Public API doesn't expose follower counts.</div>
+        <div class="panel-d">Daily follower counts. Sorted by biggest gainers first. Kick streamers show "no data" because Kick doesn't make follower counts available.</div>
       </div>
     </div>
     <div id="follow-wrap"><div class="empty">Loading…</div></div>
@@ -212,16 +212,27 @@ const fmt = (n) => {
   if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
   return String(Math.round(n));
 };
+function ukOffsetHours() {
+  // Europe/London offset from UTC, in hours, computed against the
+  // current moment so BST/GMT is handled automatically.
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', hour12: false });
+  const ukH = parseInt(fmt.format(now), 10);
+  let diff = ukH - now.getUTCHours();
+  if (diff > 12) diff -= 24;
+  if (diff < -12) diff += 24;
+  return diff;
+}
 const fmtTime = (ts) => {
   if (!ts) return '—';
   const d = new Date(ts * 1000);
-  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
 };
 
 function renderLine(hourly) {
   const wrap = document.getElementById('line-wrap');
   if (!hourly || hourly.length === 0) {
-    wrap.innerHTML = '<div class="empty">No data yet — check back after the scheduler has run a few more passes.</div>';
+    wrap.innerHTML = '<div class="empty">No data yet — check back as more streams happen.</div>';
     return;
   }
   const W = 1100, H = 280;
@@ -262,7 +273,7 @@ function renderLine(hourly) {
     if (t < minX) continue;
     const x = xScale(t);
     const d2 = new Date(t * 1000);
-    const lbl = d2.toLocaleString(undefined, { month: 'short', day: 'numeric' });
+    const lbl = d2.toLocaleString('en-GB', { month: 'short', day: 'numeric', timeZone: 'Europe/London' });
     xLabels += `<line x1="${x}" x2="${x}" y1="${pad.t + innerH}" y2="${pad.t + innerH + 4}" stroke="oklch(0.55 0.06 190)" stroke-width="1" />`;
     xLabels += `<text x="${x}" y="${pad.t + innerH + 18}" text-anchor="middle" fill="oklch(0.55 0.06 190)" font-family="JetBrains Mono, monospace" font-size="10">${lbl}</text>`;
   }
@@ -299,14 +310,23 @@ function renderHeatmap(grid) {
     return 5;
   };
   const dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  // Shift column labels by the current UK offset (Europe/London) so
+  // the header reads in UK time. Data buckets stay UTC-keyed; the
+  // shift is approximate around DST transitions but matches the
+  // "what hour does the UK scene peak at" question well enough.
+  const ukOff = ukOffsetHours();
   let html = '<table class="heatmap"><thead><tr><th></th>';
-  for (let h = 0; h < 24; h++) html += `<th>${String(h).padStart(2,'0')}</th>`;
+  for (let h = 0; h < 24; h++) {
+    const ukH = (h + ukOff + 24) % 24;
+    html += `<th>${String(ukH).padStart(2,'0')}</th>`;
+  }
   html += '</tr></thead><tbody>';
   for (let d = 0; d < 7; d++) {
     html += `<tr><th class="dow-label">${dows[d]}</th>`;
     for (let h = 0; h < 24; h++) {
       const v = grid[d][h];
-      html += `<td class="lvl-${lvl(v)}" title="${dows[d]} ${h}:00 UTC · avg ${fmt(v)} viewers">${v > 0 ? fmt(v) : ''}</td>`;
+      const ukH = (h + ukOff + 24) % 24;
+      html += `<td class="lvl-${lvl(v)}" title="${dows[d]} ${String(ukH).padStart(2,'0')}:00 UK · avg ${fmt(v)} viewers">${v > 0 ? fmt(v) : ''}</td>`;
     }
     html += '</tr>';
   }
@@ -360,7 +380,7 @@ function renderGrowth(growth) {
 function renderFollowers(list) {
   const wrap = document.getElementById('follow-wrap');
   if (!list || !list.length) {
-    wrap.innerHTML = '<div class="empty">Follower history is empty — the polling pass needs to capture at least two days of data per creator before trends can render. Growth tracking starts now — check back in a few days.</div>';
+    wrap.innerHTML = '<div class="empty">Follower history is still building — at least two days of data per streamer is needed before trends appear. Check back in a few days.</div>';
     return;
   }
   // Render Twitch creators (with data) first, then Kick (no-data) last

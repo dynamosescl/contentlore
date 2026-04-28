@@ -28,7 +28,7 @@ export async function onRequestPut({ params, request, env }) {
   const hostToken = String(body?.host_token || '').trim();
   const curated = await getCuratedEntry(env, handle);
   if (!curated) {
-    return jsonResponse({ ok: false, error: 'handle must be one of the curated allowlist' }, 400);
+    return jsonResponse({ ok: false, error: 'handle must be one of the tracked streamers' }, 400);
   }
   if (!hostToken) {
     return jsonResponse({ ok: false, error: 'host_token required' }, 401);

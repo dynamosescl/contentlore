@@ -192,7 +192,7 @@ async function queryMonthRanks(env) {
 function buildReportCard(handle, sessions, monthRanks) {
   const start = monthStartUnix();
   const monthSessions = sessions.filter(s => Number(s.started_at || 0) >= start);
-  const monthLabel = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const monthLabel = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Europe/London' });
   if (!monthSessions.length) {
     return { hasData: false, monthLabel };
   }
@@ -702,7 +702,7 @@ function renderReportCard(handle, name, rc) {
         <div class="rc-rank">
           <div class="rc-rank-badge">${rc.rank != null ? `#${rc.rank}` : '—'}<span class="of"> / ${rc.rankOf}</span></div>
           <div class="rc-rank-text">
-            <strong>${esc(name)}</strong> sits at <strong>${rc.rank != null ? `rank ${rc.rank}` : '—'}</strong> on the curated 26 hours leaderboard for ${esc(rc.monthLabel)}.
+            <strong>${esc(name)}</strong> sits at <strong>${rc.rank != null ? `rank ${rc.rank}` : '—'}</strong> on the 26-streamer hours leaderboard for ${esc(rc.monthLabel)}.
           </div>
         </div>
 
@@ -773,7 +773,7 @@ function notFoundPage(handle) {
   const body = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Not Found · ContentLore</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>body{background:oklch(0.09 0.04 295);color:oklch(0.97 0.02 320);font-family:'JetBrains Mono',monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:24px}h1{font-family:'Bebas Neue';font-size:96px;letter-spacing:4px;color:oklch(0.82 0.20 195);margin-bottom:8px}p{font-size:14px;text-transform:uppercase;letter-spacing:2px;color:oklch(0.55 0.06 295);margin-bottom:24px}a{color:oklch(0.82 0.20 195);text-decoration:none;font-size:13px;text-transform:uppercase;letter-spacing:2px;border:1px solid oklch(0.82 0.20 195);padding:11px 22px}a:hover{background:oklch(0.82 0.20 195);color:oklch(0.09 0.04 295)}</style>
-</head><body><h1>404</h1><p>"${esc(handle)}" isn't on the curated UK GTA RP roster.</p><a href="/gta-rp/">← Back to roster</a></body></html>`;
+</head><body><h1>404</h1><p>"${esc(handle)}" isn't on the UK GTA RP streamer roster.</p><a href="/gta-rp/">← Back to roster</a></body></html>`;
   return new Response(body, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } });
 }
 
