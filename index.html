@@ -102,6 +102,27 @@ body>*{position:relative;z-index:3}
 .sh{font-family:var(--font-d);font-size:28px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
 .sh::after{content:'';flex:1;height:1px;background:var(--border)}
 
+/* SPOTLIGHT */
+.spotlight{display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:24px;text-decoration:none;color:var(--fg);transition:all .25s;position:relative;overflow:hidden}
+.spotlight::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at top right,oklch(0.82 0.20 195/.08),transparent 60%);pointer-events:none}
+.spotlight:hover{border-color:var(--signal);box-shadow:0 0 32px oklch(0.82 0.20 195/.3)}
+.sp-av{width:96px;height:96px;border-radius:50%;border:2px solid var(--signal);object-fit:cover;flex-shrink:0;background:var(--card2)}
+.sp-av-ph{width:96px;height:96px;border-radius:50%;border:2px solid var(--signal);background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:48px;color:var(--signal);flex-shrink:0}
+.sp-info{min-width:0}
+.sp-badge{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:4px;display:inline-block;padding:3px 10px;background:oklch(0.82 0.20 195/.12);border:1px solid oklch(0.82 0.20 195/.4)}
+.sp-name{font-family:var(--font-d);font-size:36px;letter-spacing:1px;margin-top:6px;line-height:1}
+.sp-reason{font-size:13px;color:var(--ink-dim);margin-top:6px;line-height:1.5}
+.sp-bio{font-size:13px;color:var(--ink-faint);margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sp-cta{font-family:var(--font-d);font-size:15px;letter-spacing:2px;background:var(--signal);color:var(--bg);padding:12px 22px;clip-path:var(--cut);text-decoration:none;flex-shrink:0;transition:all .2s;white-space:nowrap}
+.sp-cta:hover{box-shadow:0 0 24px oklch(0.82 0.20 195/.6)}
+.sp-clip-thumb{width:160px;height:90px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;background:var(--card2)}
+@media(max-width:700px){
+  .spotlight{grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:16px}
+  .sp-cta{grid-column:1/-1;text-align:center}
+  .sp-clip-thumb{display:none}
+  .sp-name{font-size:28px}
+}
+
 .footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
 .footer a{color:var(--ink-faint);text-decoration:none;margin:0 8px}
 .footer a:hover{color:var(--fg)}
@@ -144,6 +165,11 @@ body>*{position:relative;z-index:3}
   </div>
 </div>
 
+<div class="mx" id="spotlight-mx" style="padding-bottom:0">
+  <div class="sh">Today's Spotlight</div>
+  <div id="spotlight-host"></div>
+</div>
+
 <div class="mx">
   <div class="sh">Hub</div>
   <div class="grid">
@@ -179,6 +205,39 @@ async function loadPulse() {
 }
 loadPulse();
 setInterval(loadPulse, 60000);
+
+async function loadSpotlight() {
+  try {
+    const r = await fetch('/api/spotlight');
+    const d = await r.json();
+    if (!d.ok || !d.pick) return;
+    const p = d.pick;
+    const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const av = p.avatar_url
+      ? `<img class="sp-av" src="${esc(p.avatar_url)}" alt="${esc(p.display_name)}" loading="lazy">`
+      : `<div class="sp-av-ph">${esc((p.display_name||'?').charAt(0))}</div>`;
+    const clipImg = (d.top_clip && d.top_clip.thumbnail_url)
+      ? `<img class="sp-clip-thumb" src="${esc(d.top_clip.thumbnail_url)}" alt="${esc(d.top_clip.title || 'Recent clip')}" loading="lazy">`
+      : '';
+    const bio = p.bio ? `<div class="sp-bio">${esc(p.bio)}</div>` : '';
+    const stats = (p.sessions > 0)
+      ? `${p.sessions} sessions · ${p.total_hours}h · ${p.avg_viewers} avg viewers`
+      : 'Curated 26 — daily rotation';
+    document.getElementById('spotlight-host').innerHTML =
+      `<a class="spotlight" href="${esc(p.profile_url)}">
+        ${av}
+        <div class="sp-info">
+          <span class="sp-badge">⭐ Today's Spotlight</span>
+          <div class="sp-name">${esc(p.display_name)}</div>
+          <div class="sp-reason">${esc(d.reason || stats)}</div>
+          ${bio}
+        </div>
+        ${clipImg}
+        <span class="sp-cta">Watch tonight →</span>
+      </a>`;
+  } catch(e) { /* silent */ }
+}
+loadSpotlight();
 </script>
 <script src="/streak-checkin.js" defer></script>
 </body>

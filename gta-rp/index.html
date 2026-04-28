@@ -82,6 +82,18 @@ body>*{position:relative;z-index:3}
 .hype-fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,oklch(0.65 0.18 245),oklch(0.82 0.20 195),oklch(0.78 0.22 50),oklch(0.68 0.27 25));transition:width .8s cubic-bezier(.2,.7,.2,1)}
 .hype-bar::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 18px,oklch(0.10 0.04 190/.4) 18px 19px);pointer-events:none}
 .hype-sub{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:2px;margin-top:8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+
+/* SPOTLIGHT BANNER */
+.spotlight-banner{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:12px 16px;text-decoration:none;color:var(--fg);transition:all .25s;margin:24px 0;position:relative;overflow:hidden}
+.spotlight-banner::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,oklch(0.82 0.20 195/.08),transparent 50%);pointer-events:none}
+.spotlight-banner:hover{border-color:var(--signal)}
+.spb-av{width:48px;height:48px;border-radius:50%;border:2px solid var(--signal);object-fit:cover;background:var(--card2);flex-shrink:0}
+.spb-av-ph{width:48px;height:48px;border-radius:50%;border:2px solid var(--signal);background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:22px;color:var(--signal);flex-shrink:0}
+.spb-info{min-width:0;flex:1}
+.spb-kicker{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2.5px;color:var(--signal);margin-bottom:2px}
+.spb-name{font-family:var(--font-d);font-size:20px;letter-spacing:1px;line-height:1}
+.spb-reason{font-size:12px;color:var(--ink-dim);margin-top:4px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.spb-cta{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--signal);flex-shrink:0;white-space:nowrap}
 .cta-spin{font-family:var(--font-d);font-size:18px;letter-spacing:2px;padding:14px 28px;background:linear-gradient(135deg,oklch(0.82 0.20 195),oklch(0.85 0.18 200));color:var(--bg);border:none;cursor:pointer;clip-path:var(--cut);transition:all .2s;display:inline-flex;align-items:center;gap:10px;box-shadow:0 0 0 1px var(--signal),0 0 24px oklch(0.82 0.20 195/.4)}
 .cta-spin:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--signal),0 0 32px oklch(0.82 0.20 195/.7)}
 .cta-spin .ico{font-size:24px;line-height:1;animation:wobble 3.5s ease-in-out infinite}
@@ -313,7 +325,8 @@ body>*{position:relative;z-index:3}
   </div>
 </div>
 
-<section class="mx" style="margin-top:40px" id="live-section"></section>
+<section class="mx" style="margin-top:40px" id="spotlight-section"></section>
+<section class="mx" style="margin-top:8px" id="live-section"></section>
 <section class="mx" style="margin-top:48px" id="roster-section"></section>
 
 <div class="footer">ContentLore · UK GTA RP · 2025 · <a href="/submit/" style="color:inherit;text-decoration:underline">Submit your channel →</a></div>
@@ -567,6 +580,29 @@ function renderEmptyState() {
 
 loadAll();
 setInterval(loadAll, 90000);
+
+async function loadSpotlight() {
+  try {
+    const r = await fetch('/api/spotlight');
+    const d = await r.json();
+    if (!d.ok || !d.pick) return;
+    const p = d.pick;
+    const av = p.avatar_url
+      ? `<img class="spb-av" src="${esc(p.avatar_url)}" alt="${esc(p.display_name)}" loading="lazy">`
+      : `<div class="spb-av-ph">${esc((p.display_name||'?').charAt(0))}</div>`;
+    document.getElementById('spotlight-section').innerHTML =
+      `<a class="spotlight-banner" href="${esc(p.profile_url)}">
+        ${av}
+        <div class="spb-info">
+          <div class="spb-kicker">⭐ Today's Spotlight</div>
+          <div class="spb-name">${esc(p.display_name)}</div>
+          <div class="spb-reason">${esc(d.reason || '')}</div>
+        </div>
+        <span class="spb-cta">View profile →</span>
+      </a>`;
+  } catch(e) { /* silent */ }
+}
+loadSpotlight();
 
 // ===== RANDOMISER =====
 // Reads from the same `streams` array loadAll() populates, so it's always
