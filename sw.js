@@ -14,7 +14,7 @@
 // shell cleanly. Bump SW_VERSION when shipping shell changes.
 // ================================================================
 
-const SW_VERSION = 'cl-2026-04-28-1';
+const SW_VERSION = 'cl-2026-04-28-2';
 const SHELL_CACHE = `shell-${SW_VERSION}`;
 const HTML_CACHE  = `html-${SW_VERSION}`;
 

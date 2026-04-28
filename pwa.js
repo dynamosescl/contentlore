@@ -14,6 +14,145 @@
 // the banner with manual instructions instead.
 // ================================================================
 
+// ----------------------------------------------------------------
+// Mobile nav drawer — inject a hamburger + slide-out menu on every
+// hub page that has a `.nav > .nav-links` structure. Active under
+// <=900px (matches the chat-drawer breakpoint so the nav and chat
+// don't fight for horizontal space at the same viewport sizes).
+// ----------------------------------------------------------------
+(function () {
+  const STYLE = `
+    .cl-mn-btn{display:none}
+    @media(max-width:900px){
+      .nav .nav-links{display:none !important}
+      .cl-mn-btn{display:inline-flex;align-items:center;justify-content:center;
+        width:36px;height:36px;background:none;border:1px solid oklch(0.28 0.06 190);
+        color:oklch(0.97 0.02 320);cursor:pointer;font-size:18px;line-height:1;
+        margin-left:auto;margin-right:0;flex:none;padding:0}
+      .cl-mn-btn:hover{border-color:oklch(0.82 0.20 195);color:oklch(0.85 0.18 200)}
+      .cl-mn-btn .bars{display:flex;flex-direction:column;gap:4px}
+      .cl-mn-btn .bars span{display:block;width:18px;height:2px;background:currentColor;border-radius:2px;transition:transform .2s,opacity .2s}
+      body.cl-mn-open .cl-mn-btn .bars span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+      body.cl-mn-open .cl-mn-btn .bars span:nth-child(2){opacity:0}
+      body.cl-mn-open .cl-mn-btn .bars span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+    }
+    .cl-mn-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:198;opacity:0;
+      pointer-events:none;transition:opacity .2s}
+    body.cl-mn-open .cl-mn-overlay{opacity:1;pointer-events:auto}
+    .cl-mn-drawer{position:fixed;top:0;right:0;bottom:0;width:min(280px,82vw);z-index:199;
+      background:oklch(0.14 0.05 190);border-left:1px solid oklch(0.28 0.06 190);
+      transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;
+      box-shadow:-12px 0 32px rgba(0,0,0,.45);font-family:'JetBrains Mono',monospace}
+    body.cl-mn-open .cl-mn-drawer{transform:translateX(0)}
+    .cl-mn-drawer header{display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;border-bottom:1px solid oklch(0.28 0.06 190);flex:none}
+    .cl-mn-drawer header .ttl{font-family:'Bebas Neue',Impact,sans-serif;font-size:22px;
+      letter-spacing:2px;color:oklch(0.97 0.02 320)}
+    .cl-mn-drawer header .ttl .cl{color:oklch(0.82 0.20 195)}
+    .cl-mn-drawer header .x{background:none;border:1px solid oklch(0.28 0.06 190);color:oklch(0.78 0.05 320);
+      width:34px;height:34px;cursor:pointer;font:inherit;font-size:14px}
+    .cl-mn-drawer header .x:hover{border-color:oklch(0.82 0.20 195);color:oklch(0.85 0.18 200)}
+    .cl-mn-drawer nav{flex:1;overflow-y:auto;padding:8px 0}
+    .cl-mn-drawer nav a{display:flex;align-items:center;gap:10px;padding:14px 18px;font-size:12px;
+      letter-spacing:2px;text-transform:uppercase;color:oklch(0.78 0.05 320);text-decoration:none;
+      border-left:3px solid transparent;transition:background .15s,color .15s,border-color .15s}
+    .cl-mn-drawer nav a:hover{background:oklch(0.10 0.04 190);color:oklch(0.97 0.02 320);
+      border-left-color:oklch(0.65 0.18 195)}
+    .cl-mn-drawer nav a.active{color:oklch(0.85 0.18 200);border-left-color:oklch(0.82 0.20 195);
+      background:oklch(0.82 0.20 195/.08)}
+    .cl-mn-drawer footer{padding:14px 18px;border-top:1px solid oklch(0.28 0.06 190);
+      font-size:9px;letter-spacing:2px;text-transform:uppercase;color:oklch(0.55 0.06 190);flex:none}
+  `;
+
+  function ready(fn) {
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+  }
+
+  ready(() => {
+    const nav = document.querySelector('nav.nav');
+    const links = document.querySelector('nav.nav .nav-links');
+    if (!nav || !links) return;
+    if (document.getElementById('cl-mn-btn')) return; // idempotent
+
+    // Inject style.
+    const style = document.createElement('style');
+    style.textContent = STYLE;
+    document.head.appendChild(style);
+
+    // Hamburger button. Inserted as the last child of nav so it sits
+    // on the right, with `margin-left:auto` shoving it past the brand.
+    const btn = document.createElement('button');
+    btn.id = 'cl-mn-btn';
+    btn.type = 'button';
+    btn.className = 'cl-mn-btn';
+    btn.setAttribute('aria-label', 'Open navigation menu');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<span class="bars"><span></span><span></span><span></span></span>';
+    nav.appendChild(btn);
+
+    // Drawer + overlay (live in body so they're not constrained by
+    // any nav z-index/overflow).
+    const overlay = document.createElement('div');
+    overlay.className = 'cl-mn-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+
+    const drawer = document.createElement('aside');
+    drawer.className = 'cl-mn-drawer';
+    drawer.setAttribute('role', 'dialog');
+    drawer.setAttribute('aria-modal', 'true');
+    drawer.setAttribute('aria-label', 'ContentLore navigation');
+    drawer.innerHTML = `
+      <header>
+        <div class="ttl"><span class="cl">CL</span> · MENU</div>
+        <button class="x" type="button" aria-label="Close menu">✕</button>
+      </header>
+      <nav></nav>
+      <footer>ContentLore · UK GTA RP</footer>
+    `;
+
+    // Mirror the existing nav-link items into the drawer. We don't
+    // reuse the same DOM nodes so the desktop nav stays intact.
+    const drawerNav = drawer.querySelector('nav');
+    const items = links.querySelectorAll('a.nav-link');
+    items.forEach(a => {
+      const clone = document.createElement('a');
+      clone.href = a.getAttribute('href') || '#';
+      clone.textContent = a.textContent.trim();
+      if (a.classList.contains('active') || a.classList.contains('nav-live')) {
+        clone.classList.add('active');
+      }
+      drawerNav.appendChild(clone);
+    });
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(drawer);
+
+    function open() {
+      document.body.classList.add('cl-mn-open');
+      btn.setAttribute('aria-expanded', 'true');
+      overlay.setAttribute('aria-hidden', 'false');
+      drawer.querySelector('.x').focus();
+    }
+    function close() {
+      document.body.classList.remove('cl-mn-open');
+      btn.setAttribute('aria-expanded', 'false');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    function toggle() {
+      document.body.classList.contains('cl-mn-open') ? close() : open();
+    }
+
+    btn.addEventListener('click', toggle);
+    overlay.addEventListener('click', close);
+    drawer.querySelector('.x').addEventListener('click', close);
+    drawer.querySelectorAll('nav a').forEach(a => a.addEventListener('click', close));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.classList.contains('cl-mn-open')) close();
+    });
+  });
+})();
+
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
