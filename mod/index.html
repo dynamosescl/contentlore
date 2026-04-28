@@ -74,8 +74,14 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
 <div class="login" id="login">
   <div class="login-box">
     <h1>Mod Panel</h1>
-    <input type="password" id="pw" placeholder="Admin token" onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="password" id="pw" placeholder="Admin token (Bearer)" onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="password" id="pw-sched" placeholder="Scheduler password (optional, defaults to token)" onkeydown="if(event.key==='Enter')doLogin()" style="margin-top:6px">
     <button onclick="doLogin()">Authenticate</button>
+    <div style="font-family:var(--font-m);font-size:11px;color:var(--ink-faint);margin-top:10px;letter-spacing:1px;line-height:1.5">
+      Pages uses <strong style="color:var(--ink-dim)">ADMIN_TOKEN</strong> (Bearer).
+      Scheduler uses <strong style="color:var(--ink-dim)">ADMIN_PASSWORD</strong> (X-Admin-Password header).
+      If both are set to the same value, leave the second field blank.
+    </div>
     <div class="err" id="err">Invalid token</div>
   </div>
 </div>
@@ -127,10 +133,15 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
     <div class="tab-content" id="tab-controls">
       <div class="sh">Manual Controls</div>
       <div class="panel">
-        <h3>Scheduler</h3>
-        <button class="btn" onclick="triggerPoll()">Trigger Poll</button>
-        <button class="btn" onclick="rebuildSessions()">Rebuild Sessions</button>
-        <button class="btn" onclick="backfillAvatars()">Backfill Avatars</button>
+        <h3>Scheduler & avatars</h3>
+        <button class="btn" onclick="triggerPoll()">Trigger Poll (scheduler)</button>
+        <button class="btn" onclick="rebuildSessions()">Rebuild Sessions (scheduler)</button>
+        <button class="btn" onclick="backfillAvatars()">Backfill Avatars (curated 26)</button>
+        <div style="font-family:var(--font-m);font-size:11px;color:var(--ink-faint);margin-top:8px;letter-spacing:1px;line-height:1.5">
+          Scheduler buttons use the X-Admin-Password header (ADMIN_PASSWORD env on the scheduler worker).
+          If you get a 401 here, log out and enter the scheduler password in the second login field.
+          Backfill is now scoped to the curated 26 — no longer touches the 7790-row legacy table.
+        </div>
         <div class="log" id="control-log">Ready. Click a button to execute.</div>
       </div>
       <div class="panel">
@@ -199,17 +210,25 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
 </div>
 
 <script>
+// Two secrets:
+//   TOKEN     — Pages-side ADMIN_TOKEN, sent as Authorization: Bearer.
+//   SCHED_PASS — scheduler's ADMIN_PASSWORD, sent as X-Admin-Password.
+// If the user leaves the scheduler field blank, we use TOKEN for both
+// (the default for installs that share one secret across both layers).
 let TOKEN = '';
+let SCHED_PASS = '';
 const SCHED_URL = 'https://contentlore-scheduler.dynamomc2019.workers.dev';
 
 function doLogin() {
   TOKEN = document.getElementById('pw').value;
+  SCHED_PASS = document.getElementById('pw-sched').value || TOKEN;
   fetch('/api/admin/backfill-avatars', {headers:{Authorization:'Bearer '+TOKEN}})
     .then(r => {
       if (r.ok) {
         document.getElementById('login').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         sessionStorage.setItem('mod_token', TOKEN);
+        sessionStorage.setItem('mod_sched_pass', SCHED_PASS);
         loadDashboard();
       } else {
         document.getElementById('err').style.display = 'block';
@@ -219,14 +238,23 @@ function doLogin() {
 
 function doLogout() {
   sessionStorage.removeItem('mod_token');
+  sessionStorage.removeItem('mod_sched_pass');
   TOKEN = '';
+  SCHED_PASS = '';
   document.getElementById('app').style.display = 'none';
   document.getElementById('login').style.display = 'flex';
 }
 
 // Auto-login if token saved
 const saved = sessionStorage.getItem('mod_token');
-if (saved) { TOKEN = saved; document.getElementById('pw').value = saved; doLogin(); }
+const savedSched = sessionStorage.getItem('mod_sched_pass');
+if (saved) {
+  TOKEN = saved;
+  SCHED_PASS = savedSched || saved;
+  document.getElementById('pw').value = saved;
+  if (savedSched && savedSched !== saved) document.getElementById('pw-sched').value = savedSched;
+  doLogin();
+}
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -383,9 +411,10 @@ async function loadDiscovery() {
 
 async function triggerPoll() {
   const log = document.getElementById('control-log');
-  log.textContent = 'Triggering poll...';
+  log.textContent = 'Triggering poll…';
   try {
-    const r = await fetch(SCHED_URL+'/trigger', {method:'POST', headers:{'X-Admin-Password':TOKEN}});
+    const r = await fetch(SCHED_URL+'/trigger', {method:'POST', headers:{'X-Admin-Password':SCHED_PASS}});
+    if (r.status === 401) { log.textContent = 'Scheduler 401 — wrong scheduler password.\nPages and scheduler use SEPARATE secrets (ADMIN_TOKEN vs ADMIN_PASSWORD).\nLog out and enter the scheduler password in the second login field.'; return; }
     const d = await r.json();
     log.textContent = 'Poll result:\n' + JSON.stringify(d, null, 2);
     loadDashboard();
@@ -394,9 +423,10 @@ async function triggerPoll() {
 
 async function rebuildSessions() {
   const log = document.getElementById('control-log');
-  log.textContent = 'Rebuilding sessions...';
+  log.textContent = 'Rebuilding sessions…';
   try {
-    const r = await fetch(SCHED_URL+'/rebuild-sessions', {method:'POST', headers:{'X-Admin-Password':TOKEN}});
+    const r = await fetch(SCHED_URL+'/rebuild-sessions', {method:'POST', headers:{'X-Admin-Password':SCHED_PASS}});
+    if (r.status === 401) { log.textContent = 'Scheduler 401 — wrong scheduler password. Log out and enter the scheduler password in the second login field.'; return; }
     const d = await r.json();
     log.textContent = 'Sessions result:\n' + JSON.stringify(d, null, 2);
   } catch(e) { log.textContent = 'Error: '+e.message; }
