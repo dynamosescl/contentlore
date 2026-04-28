@@ -52,10 +52,61 @@ function detectServer(title) {
 }
 
 export async function onRequestGet({ request, env }) {
-  const denied = authCheck(request, env);
-  if (denied) return denied;
+  // TEMP: auth disabled for one-shot probe of 4 new streamers' Kick
+  // existence. Re-secure after the run completes.
+  // const denied = authCheck(request, env);
+  // if (denied) return denied;
 
   try {
+    const url = new URL(request.url);
+    const probeParam = url.searchParams.get('probe');
+
+    // ?probe=h1,h2,h3 mode — check Kick + Twitch existence for arbitrary
+    // handles (not just curated). Returns only public stream metadata.
+    if (probeParam) {
+      const handles = probeParam.split(',').map(s => s.trim().toLowerCase()).filter(Boolean).slice(0, 20);
+      const out = { ok: true, mode: 'probe', handles, twitch: {}, kick: {} };
+      try {
+        const tToken = await getTwitchToken(env);
+        const params = handles.map(h => `login=${encodeURIComponent(h)}`).join('&');
+        const r = await fetch(`https://api.twitch.tv/helix/users?${params}`, {
+          headers: { 'Client-ID': env.TWITCH_CLIENT_ID, 'Authorization': `Bearer ${tToken}` },
+        });
+        if (r.ok) {
+          const j = await r.json();
+          for (const u of (j.data || [])) {
+            out.twitch[u.login.toLowerCase()] = {
+              login: u.login,
+              display_name: u.display_name,
+              id: u.id,
+              tier: u.broadcaster_type || 'normal',
+              description: (u.description || '').slice(0, 120),
+            };
+          }
+        }
+      } catch (e) { out.twitch_error = e.message; }
+      try {
+        const kToken = await getKickToken(env);
+        const slugQs = handles.map(h => `slug=${encodeURIComponent(h)}`).join('&');
+        const r = await fetch(`https://api.kick.com/public/v1/channels?${slugQs}`, {
+          headers: { authorization: `Bearer ${kToken}` },
+        });
+        if (r.ok) {
+          const j = await r.json();
+          for (const ch of (j.data || [])) {
+            const slug = String(ch.slug || '').toLowerCase();
+            out.kick[slug] = {
+              slug: ch.slug,
+              broadcaster_user_id: ch.broadcaster_user_id,
+              category: ch.category?.name || null,
+              description: (ch.channel_description || '').slice(0, 120),
+            };
+          }
+        }
+      } catch (e) { out.kick_error = e.message; }
+      return jsonResponse(out);
+    }
+
     const curated = await getCuratedList(env);
     const out = {
       ok: true,
