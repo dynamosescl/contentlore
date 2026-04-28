@@ -32,6 +32,7 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 - `https://contentlore.com/gta-rp/fivem-enhanced/` — FiveM Enhanced migration tracker
 - `https://contentlore.com/gta-rp/gta-6/` — platform deep-dive
 - `https://contentlore.com/creator-profile/{handle}` — per-creator profile (dynamic Function)
+- `https://contentlore.com/submit/` — public creator submission form (rate-limited 3/IP/day)
 - `https://contentlore.com/mod/` — admin dashboard (requires `ADMIN_TOKEN`)
 - `https://contentlore.com/admin/content.html` — beef + lore editor
 - `https://contentlore.com/admin/discovery.html` — pending creator triage
@@ -41,34 +42,41 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 
 ## 2. Current State
 
-**Active hub surfaces (17):**
-- Static pages (13): `/`, `/gta-rp/{,now/,multi/,clips/,timeline/,analytics/,network/,digest/,streaks/,servers/,fivem-enhanced/,gta-6/}`
+**Active hub surfaces (18):**
+- Static pages (14): `/`, `/submit/`, `/gta-rp/{,now/,multi/,clips/,timeline/,analytics/,network/,digest/,streaks/,servers/,fivem-enhanced/,gta-6/}`
 - Admin pages (3): `/mod/`, `/admin/content.html`, `/admin/discovery.html`
 - Dynamic page (1): `/creator-profile/{handle}` rendered by `functions/creator-profile/[handle].js`
 
+Every hub page is now a PWA candidate — manifest linked, theme-color set, service worker registered via `/pwa.js`. Mobile (<=768px) gets a fork of `/gta-rp/multi/` (single stream + chat below + bottom tabbar + roster bottom-sheet); the global nav collapses to a hamburger drawer at <=900px.
+
 The repo also contains several legacy directories (`about/`, `contact/`, `creators/`, `ethics/`, `ledger/`, `rising/`, `signals/`, `the-platform/`, `gta-rp/beef/`, `gta-rp/lore/`) that survived the 2026-04-26 cleanup sweep but aren't part of the active navigation. They serve via `_redirects` catch-all if anyone deep-links them. Worth a re-audit eventually.
 
-**Active Pages Functions (22, plus 1 helper):**
+**Active Pages Functions (27, plus 1 helper):**
 
 | Endpoint | File | Purpose |
 |---|---|---|
-| `GET /api/uk-rp-live` | `api/uk-rp-live.js` | Curated 26 live state (direct platform APIs, 30s KV cache) |
+| `GET /api/uk-rp-live` | `api/uk-rp-live.js` | Curated 26 live state with full multi-platform `socials` per entry (direct platform APIs, 30s Cache API) |
 | `GET /api/live-now` | `api/live-now.js` | DB-backed live list (anyone in `creators` table) |
 | `GET /api/clips?range=24h\|7d\|30d` | `api/clips.js` | Top Twitch clips for the 20 Twitch handles, GTA V + Just Chatting filtered, 5-min Cache API |
 | `GET /api/timeline?range=today\|yesterday\|7d` | `api/timeline.js` | `stream_sessions` rows overlapping window for the 26, server-id annotated, 5-min Cache API |
 | `GET /api/analytics` | `api/analytics.js` | 7d hourly viewer buckets, 7×24 heatmap, server-hours bars, week-over-week growth, 30d follower trend per creator. 5-min Cache API |
 | `GET /api/network` | `api/network.js` | Curated-26 nodes (avg viewer weight) + curated-only edges from `creator_edges`. 5-min Cache API |
 | `GET /api/digest` | `api/digest.js` | "This week in UK GTA RP" report — peak moment, top creators, top clips (delegates to `/api/clips?range=7d`), new pending_creators, server hours. 10-min Cache API |
-| `GET /api/cfx-populations` | `api/cfx-populations.js` | Live FiveM player counts for 5 known UK server CFX IDs, 60s KV |
+| `GET /api/cfx-populations` | `api/cfx-populations.js` | Live FiveM player counts for 5 known UK server CFX IDs, 60s Cache API |
 | `POST /api/streaks/check-in` | `api/streaks/check-in.js` | Idempotent daily-visit increment (anonymous UUID), badge state |
 | `GET /api/streaks/leaderboard?order=current\|max` | `api/streaks/leaderboard.js` | Top opt-in users with display names, 5-min Cache API |
-| `GET\|POST /api/gta6-pulse` | `api/gta6-pulse.js` | Anonymous one-vote-per-device GTA 6 readiness poll, 30s KV tallies cache |
+| `GET\|POST /api/gta6-pulse` | `api/gta6-pulse.js` | Anonymous one-vote-per-device GTA 6 readiness poll, 30s Cache API tallies |
+| `GET /api/push/vapid-public-key` | `api/push/vapid-public-key.js` | Hands `env.VAPID_PUBLIC_KEY` to clients for `pushManager.subscribe()` |
+| `POST /api/push/subscribe` | `api/push/subscribe.js` | Upserts a `push_subscriptions` row keyed by endpoint (idempotent re-subscribes) |
+| `POST /api/push/unsubscribe` | `api/push/unsubscribe.js` | Deletes a subscription by endpoint (anon — endpoint is the secret) |
+| `POST /api/submit` | `api/submit.js` | Public creator-submission endpoint. KV-rate-limited 3 / IP / UTC day. Inserts into `pending_creators` with `notes` prefixed `SUBMITTED:` |
 | `GET /api/creators` | `api/creators.js` | Paged creator directory (D1) |
 | `GET /api/stats` | `api/stats.js` | Aggregate counters (D1) |
 | `GET /api/beefs` | `api/beefs.js` | Editorial beef list (D1) |
 | `GET /api/lore-arcs` | `api/lore-arcs.js` | Editorial lore arc list (D1) |
-| `* /creator-profile/{handle}` | `creator-profile/[handle].js` | Server-rendered profile page (HTML response, not JSON) |
+| `* /creator-profile/{handle}` | `creator-profile/[handle].js` | Server-rendered profile page (HTML response). Renders the multi-platform PLATFORMS section from `entry.socials`. |
 | `GET\|POST /api/admin/discovery` | `api/admin/discovery.js` | Pending creator triage (Bearer auth) |
+| `GET\|POST /api/admin/submissions` | `api/admin/submissions.js` | List + approve/reject form submissions (Bearer auth). Filters by the `SUBMITTED:` notes prefix. |
 | `GET\|POST /api/admin/beef` | `api/admin/beef.js` | Beef CRUD (Bearer auth) |
 | `GET\|POST /api/admin/lore` | `api/admin/lore.js` | Lore arc CRUD (Bearer auth) |
 | `GET\|POST /api/admin/backfill-avatars` | `api/admin/backfill-avatars.js` | One-shot Twitch avatar backfill (Bearer auth) |
@@ -76,8 +84,11 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 | _helper_ | `_lib.js` | `jsonResponse`, `getTwitchToken`, `getKickToken`, `fetchKickChannel`, etc. |
 
 **26-creator allowlist** (source of truth: `functions/api/uk-rp-live.js`; mirrored in `contentlore-scheduler/src/discovery.js` as `ALLOWLIST_HANDLES`)
-- 20 Twitch: tyrone, lbmm, reeclare, stoker, samham, deggyuk, megsmary, tazzthegeeza, wheelydev, rexality, steeel, justj0hnnyhd, cherish_remedy, lorddorro, jck0__, absthename, essellz, lewthescot, angels365, fantasiasfantasy
-- 6 Kick: kavsual, shammers, bags, dynamoses, dcampion, elliewaller
+- 20 Twitch primary: tyrone, lbmm, reeclare, stoker, samham, deggyuk, megsmary, tazzthegeeza, wheelydev, rexality, steeel, justj0hnnyhd, cherish_remedy, lorddorro, jck0__, absthename, essellz, lewthescot, angels365, fantasiasfantasy
+- 6 Kick primary: kavsual, shammers, bags, dynamoses, dcampion, elliewaller
+- Confirmed multi-platform (entry has both `socials.twitch` AND `socials.kick` populated): **dynamoses**, **bags** (both have D1 platform rows on both sides per migration 010)
+
+Each ALLOWLIST entry now carries a `socials: { twitch, kick, tiktok, youtube, x, instagram, discord }` object with seven fixed slots — each either a username string (no @, no full URL) or null. Discord is the exception: it stores a full invite URL since `discord.gg/{code}` codes are opaque. The shape is fixed so consumers iterate predictably without null-guarding the object itself. TikTok / YouTube / X / Instagram are all null today — populated as creators submit them via `/submit/` or via manual edits to the allowlist file.
 
 **12 UK servers tracked** (source of truth: `SERVERS` array in `gta-rp/servers/index.html`, mirrored in `functions/api/cfx-populations.js` for live populations)
 - With known CFX IDs (5): Unique RP `ok4qzr`, Orbit RP `5j8edz`, Unmatched RP `r43qej`, New Era RP `z5okp5`, Prodigy RP `775kda`
@@ -94,6 +105,7 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 - `beefs`, `lore_arcs` (editorial)
 - `watch_streaks` (Phase 3 — anon UUID, current/max streak, total_visits, optional display_name)
 - `gta6_pulse_votes` (Phase 4 — anon UUID, choice ∈ {ready, optimistic, worried, not-thinking}, voted_at)
+- `push_subscriptions` (Phase 5 PWA — endpoint UNIQUE, p256dh, auth, user_uuid, filter_handles. Migration `011_push_subscriptions.sql`. Driven by the scheduler's `pollCurated` go-live transition path via `src/web-push.js`)
 
 **Data pipeline:** Scheduler worker (every 15 min) runs four steps in order:
 1. `pollCurated` — batched Twitch + Kick fetch for **all 26 curated creators**, writes one snapshot per creator (~3.5s). After writes, diffs current liveness against `curated:livestate:v1` in KV; for each offline → online transition, calls `notifyGoLive` (`src/discord.js`) which posts a rich embed to `env.DISCORD_WEBHOOK_URL`. Then persists the new livestate blob for next-tick comparison. First-tick-ever liveness is treated as "was offline" so deploying on a busy day doesn't spam the channel.
@@ -222,13 +234,19 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - [x] **Creator Growth Tracker** (`ad04b4e`) — first half ("Fastest Growing This Week") landed in the analytics commit; this commit added per-creator follower-trend sparklines (30d, daily-bucketed) to `/gta-rp/analytics/`. Cards show first → last follower count + delta %, sorted by absolute delta. Kick rows surface the Public-API limitation honestly ("API limitation" sub-line) rather than appearing as flat-zero trends.
 
 ### PHASE 5 — GROWTH (external reach)
-- [x] **Discord Bot** (`e7b1491` Pages-side, scheduler-side awaits manual `npx wrangler deploy`) — Pages-side admin endpoint `GET\|POST /api/admin/discord-test` (Bearer-authed, GET returns config status with masked URL, POST sends a test embed). Scheduler-side `src/discord.js` exports `notifyGoLive(env, transitions[])` which posts rich embeds (Twitch purple / Kick green colour-coded, profile URL, stream title, viewers, category) — chunked at 10 embeds per webhook to respect Discord's per-message limit. `pollCurated` now diffs current liveness against `curated:livestate:v1` in KV and fires `notifyGoLive` for every offline → online transition; first-tick-ever liveness is treated as offline so deployments don't spam the channel. Set `DISCORD_WEBHOOK_URL` on **both** Pages and scheduler before this is live, then redeploy the scheduler.
-- [x] **Social Sharing — OG meta tags** (`6305eb9`) — every hub page now ships og:type / og:site_name / og:title / og:description / og:image / og:url plus Twitter card counterparts, all pointing at `/logo.png` for now. Per-page generated OG images (with live data) still on the roadmap below.
-- [ ] **Browser Push Notifications** — opt-in alerts when favourite creators go live.
+- [x] **Discord Bot** (`e7b1491` Pages-side; scheduler shipped to prod the same day) — Pages-side admin endpoint `GET\|POST /api/admin/discord-test` (Bearer-authed, GET returns config status with masked URL, POST sends a test embed). Scheduler-side `src/discord.js` exports `notifyGoLive(env, transitions[])` which posts rich embeds (Twitch purple / Kick green colour-coded, profile URL, stream title, viewers, category). `pollCurated` diffs current liveness against `curated:livestate:v1` in KV and fires `notifyGoLive` for every offline → online transition; first-tick-ever liveness is treated as offline so deployments don't spam the channel. **Confirmed firing in production 2026-04-28** — ABsTheName + Angels365 go-live embeds appeared in the configured Discord channel.
+- [x] **Social Sharing — OG meta tags** (`6305eb9`) — every hub page ships og:type / og:site_name / og:title / og:description / og:image / og:url plus Twitter card counterparts, all pointing at `/logo.png`. Per-page generated OG images (with live data) still on the roadmap below.
+- [x] **Mobile PWA** (`0456b66`, `c21cb63`, `3efba8e`, `dff7b86`) — Four-part build:
+  - **Manifest + service worker + install prompt** (`0456b66`): `manifest.json` with teal theme, four shortcuts (Live, Multi, Timeline, Digest), 192/180/512 icons. `sw.js` does cache-first for static shell, network-first for HTML with offline fallback, pure-network for `/api/*`. `pwa.js` registers the SW, tracks visit count, surfaces a dismissable install banner from visit 2 onward (Chromium beforeinstallprompt + iOS Safari "Add to Home Screen" hint). `_headers` updated with `Service-Worker-Allowed: /` for root scope.
+  - **Mobile multi-view** (`c21cb63`): At <=768px, `/gta-rp/multi/` swaps the desktop grid + drawer for a single full-width 16:9 stream + info bar + chat iframe + 64px bottom tabbar with creator-avatar tabs and a "+" button that opens a slide-up roster sheet. iframe cache keys prevent reload churn on the 90s poll. Desktop layout untouched.
+  - **Hamburger nav drawer** (`3efba8e`): Single-file change in `pwa.js` injects a hamburger button + 280px right-side slide-in drawer at <=900px on every hub page that has a `nav.nav > .nav-links` structure. Mirrors the page's nav links with active-state preservation, ESC + overlay tap close.
+  - **Browser push notifications** (`dff7b86`): `push_subscriptions` table (migration 011), three Pages endpoints (`/api/push/{vapid-public-key,subscribe,unsubscribe}`), and a `<span data-cl-notify>` button hydrator in `pwa.js`. Creator profile pages use `data-cl-notify="<handle>"` for per-creator opt-in; the live hub uses `data-cl-notify="all"` for global opt-in. Scheduler-side `src/web-push.js` does pure-Workers RFC 8291 aes128gcm encryption + ES256 VAPID JWT signing — no npm dependency. `pollCurated`'s transition path now fans out push alongside Discord, prunes 410-Gone endpoints from the table.
+- [x] **Multi-platform creator footprint** (`8ad2ef5`) — every ALLOWLIST entry now carries a `socials` object with seven slots (twitch, kick, tiktok, youtube, x, instagram, discord). Creator profile pages render a "PLATFORMS" section with branded buttons + inline-SVG icons + handle subtext per platform. Roster cards on `/gta-rp/` show small brand-coloured pills (TW/KK/YT/TT/X/IG/DC) under each name. The two confirmed dual-platform creators (dynamoses, bags) now render two pills on the roster and two PLATFORMS buttons on their profile.
+- [x] **Public creator submission form** (`a0bb8fb`) — `/submit/` GTA-styled form (display name + 5 platform handles + 12 server checkboxes + bio + honeypot) → `POST /api/submit` (no auth, KV-rate-limited 3 / IP / UTC day, dedupe-rejects against `creator_platforms`) → `pending_creators` row with `notes` prefixed `SUBMITTED:` and the full JSON payload. New `/mod/` "Submissions" tab with filter chips (Pending / Approved / Rejected), live pending-count badge on the tab name, per-card preview of platforms + servers + bio + IP + user-agent, and Approve/Reject buttons. Approval just stamps `status='approved'` — wiring the row into the live ALLOWLIST is still a manual deploy step (the array lives in code, not D1, mirrored in 9 places per the gotchas).
 - [ ] **Per-page generated OG images** — render shareable cards with live data (e.g. for clips, creator profiles, weekly digest). Today's commit covers the meta-tag scaffolding pointing at the static logo; next step is dynamic image generation.
-- [ ] **Mobile PWA** — service worker, offline support, install prompt. Multi-view needs mobile layout (one stream + swipeable chat tabs).
 - [ ] **Character Wiki** — community-contributed character database. Who plays who on which server. Search by character name. Huge for RP — viewers know character names not streamer names.
 - [ ] **Sound Alerts** — GTA-themed sound when someone goes live (optional, toggleable). Vice City radio jingle vibes.
+- [ ] **Submission → ALLOWLIST automation** — today's submission flow ends at "approved in D1". To actually start tracking an approved creator the allowlist file needs editing + 5 mirrors updated + a deploy. A future automation could read approved submissions from D1 at runtime instead of compile-time, removing the deploy step entirely.
 
 ---
 
@@ -248,9 +266,11 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 │  cron */15 * * * *      │  │   /api/clips         (Twitch helix)  │
 │                         │  │   /api/cfx-populations (FiveM master)│
 │  curated → snapshots    │  │   /api/streaks/check-in  (D1 write)  │
-│             (all 26/tick)│  │  30s–600s Cache API / KV-cached      │
-│   ↳ diff livestate KV   │  └──────────────┬───────────────────────┘
-│   ↳ Discord webhook     │                 │
+│             (all 26/tick)│  │   /api/push/{vapid-public-key,      │
+│   ↳ diff livestate KV   │  │              subscribe,unsubscribe} │
+│   ↳ Discord webhook     │  │   /api/submit        (public, KV RL) │
+│      on go-live         │  │  30s–600s Cache API / KV-cached      │
+│   ↳ Web Push fanout     │  └──────────────┬───────────────────────┘
 │      on go-live         │                 │
 │  sessions → stream_     │                 │
 │             sessions    │                 │
@@ -273,6 +293,7 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 │   beefs, lore_arcs       │                │
 │   watch_streaks (Ph3)    │                │
 │   gta6_pulse_votes (Ph4) │                │
+│   push_subscriptions(Ph5)│                │
 └──────────┬───────────────┘                │
            │                                │
            ▼                                ▼
@@ -294,9 +315,10 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 ┌────────────────────────────────────────────────────────────────────┐
 │  Static HTML pages                                                 │
 │   /                   homepage           (live-now)                │
+│   /submit/            channel submission (submit)                  │
 │   /gta-rp/            curated hub        (uk-rp-live)              │
 │   /gta-rp/now/        scene ticker       (live-now)                │
-│   /gta-rp/multi/      6-tile player      (uk-rp-live)              │
+│   /gta-rp/multi/      6-tile player + mobile fork (uk-rp-live)     │
 │   /gta-rp/clips/      Clip Wall          (clips)                   │
 │   /gta-rp/timeline/   scene Gantt        (timeline)                │
 │   /gta-rp/analytics/  scene analytics    (analytics)               │
@@ -307,6 +329,12 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 │   /gta-rp/fivem-enhanced/  migration tracker                       │
 │   /gta-rp/gta-6/      intel deep-dive                              │
 │   /mod/, /admin/*     admin surface                                │
+│                                                                    │
+│   PWA: every page links manifest.json + loads /pwa.js (deferred):  │
+│     • /sw.js          shell cache + push handler                   │
+│     • install prompt  fires on visit 2+, dismissable               │
+│     • hamburger nav   <=900px slide-in drawer                      │
+│     • notify button   <span data-cl-notify="all|<handle>">          │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -322,7 +350,8 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - `kick:avatar:{slug}` — Kick profile_picture cache (7 days, populated when broadcaster is live)
 - `cron:live-scan:cursor`, `cron:pass-count`, `cron:handle-map:v1` — scheduler state (legacy round-robin; no longer written but old rows may persist)
 - `cron:last-run`, `sessions:last-run`, `curated:last-run` — diagnostic summaries (7-day TTL)
-- `curated:livestate:v1` — per-creator liveness blob from the previous tick (`{ "twitch:tyrone": 1, "kick:bags": 0, ... }`). Driven by `pollCurated`, used to detect offline → online transitions for the Discord webhook. 7-day TTL — if it expires, the next tick treats every live creator as "newly went live" but the first-tick-as-offline rule prevents spam since there's no live data on a totally cold deploy.
+- `curated:livestate:v1` — per-creator liveness blob from the previous tick (`{ "twitch:tyrone": 1, "kick:bags": 0, ... }`). Driven by `pollCurated`, used to detect offline → online transitions for both the Discord webhook **and** the Web Push fan-out. 7-day TTL — if it expires, the next tick treats every live creator as "newly went live" but the first-tick-as-offline rule prevents spam since there's no live data on a totally cold deploy.
+- `submit:rl:{ip}:{yyyy-mm-dd}` — submission form rate limit, 25h TTL. Counter increments on each `/api/submit` POST; rejects with 429 once it hits 3 in a UTC day.
 
 **Cache API keys** (Cloudflare's edge HTTP cache, _not_ KV — that's where response caches now live since commit `7bf7940`. Cleared automatically after their TTL; manual busting requires a Cloudflare cache purge):
 - `https://contentlore.com/cache/uk-rp-live` — `/api/uk-rp-live` payload (30s)
@@ -350,10 +379,11 @@ Set in the Cloudflare dashboard for each project. **Never commit values.**
 | `TWITCH_CLIENT_SECRET` | same | helix API OAuth |
 | `KICK_CLIENT_ID` | `_lib.js`, `uk-rp-live` | Kick OAuth 2.1 |
 | `KICK_CLIENT_SECRET` | same | Kick OAuth 2.1 |
-| `ADMIN_TOKEN` | `admin/{discovery, beef, lore, backfill-avatars, discord-test}` | Bearer auth |
+| `ADMIN_TOKEN` | `admin/{discovery, submissions, beef, lore, backfill-avatars, discord-test}` | Bearer auth |
 | `ADMIN_PASSWORD` | `_lib.js`'s `requireAdminAuth` | currently unused after cleanup; kept for legacy revival |
 | `ANTHROPIC_API_KEY` | currently unused | reserved for Phase 4 AI summaries |
-| `DISCORD_WEBHOOK_URL` | `admin/discord-test.js` | Phase 5 live notifications. Set via `npx wrangler pages secret put DISCORD_WEBHOOK_URL --project-name=contentlore` |
+| `DISCORD_WEBHOOK_URL` | `admin/discord-test.js` | Live notifications. Confirmed working in production. Set via `npx wrangler pages secret put DISCORD_WEBHOOK_URL --project-name=contentlore` |
+| `VAPID_PUBLIC_KEY` | `api/push/vapid-public-key.js` | Web Push public key (base64url, raw 65-byte uncompressed P-256 point). Same value as the scheduler's `VAPID_PUBLIC_KEY`. Generate with `npx web-push generate-vapid-keys`. |
 
 **Planned (Phase 5+):**
 | Var | Purpose |
@@ -367,7 +397,10 @@ Set in the Cloudflare dashboard for each project. **Never commit values.**
 | `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | polling |
 | `KICK_CLIENT_ID` / `KICK_CLIENT_SECRET` | polling (official API since Phase 1) |
 | `ADMIN_PASSWORD` | gates `/trigger`, `/rebuild-sessions`, `/backfill-sessions` |
-| `DISCORD_WEBHOOK_URL` | Used by `src/discord.js`'s `notifyGoLive` whenever `pollCurated` detects an offline → online transition. Set via `cd D:/contentlore-scheduler && npx wrangler secret put DISCORD_WEBHOOK_URL`. **Must be set on both Pages and the scheduler** — the Pages admin endpoint and the scheduler each call the webhook independently. |
+| `DISCORD_WEBHOOK_URL` | Used by `src/discord.js`'s `notifyGoLive` whenever `pollCurated` detects an offline → online transition. Set via `cd D:/contentlore-scheduler && npx wrangler secret put DISCORD_WEBHOOK_URL`. **Must be set on both Pages and the scheduler** — the Pages admin endpoint and the scheduler each call the webhook independently. **Confirmed firing in prod 2026-04-28**. |
+| `VAPID_PUBLIC_KEY` | Web Push public key (same value as Pages-side). Used in the VAPID JWT `k=` header by `src/web-push.js`. |
+| `VAPID_PRIVATE_KEY` | Web Push private key (base64url, raw 32-byte P-256 scalar). Scheduler-only — never exposed to clients. |
+| `VAPID_SUBJECT` | VAPID JWT `sub` claim — must be a `mailto:` URI or a `https://` URL. Defaults to `mailto:noreply@contentlore.com` if unset. |
 
 **Two-token gotcha:** the Pages admin endpoints use `ADMIN_TOKEN` (Bearer). The scheduler worker uses `ADMIN_PASSWORD` (`X-Admin-Password` header). The mod panel knows both — token for Pages calls, password for scheduler calls. Don't unify them without updating mod panel JS.
 
@@ -396,7 +429,7 @@ Updates take effect immediately. Cron continues on its existing schedule. The sc
 # Production
 npx wrangler d1 execute contentlore-db --file=migrations/00X_name.sql --remote
 ```
-Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. Migration numbering has historical gaps and a duplicate (002, 004, two 005, 006, 008, 009 — no 003 or 007). Pick the next free number for new ones.
+Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. Migration numbering has historical gaps and a duplicate (002, 004, two 005, 006, 008, 009, 010, 011 — no 003 or 007). Pick the next free number for new ones.
 
 ### Smoke tests after deploy
 ```bash
@@ -413,6 +446,17 @@ curl https://contentlore-scheduler.dynamomc2019.workers.dev/status | jq '.curate
 # Discord webhook — should drop a test embed in the configured channel:
 curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" \
   https://contentlore.com/api/admin/discord-test
+
+# Web Push wiring — should return the VAPID public key:
+curl https://contentlore.com/api/push/vapid-public-key | jq '.key'
+
+# Public submission endpoint — should reject empty body with 400:
+curl -X POST -H "Content-Type: application/json" \
+  https://contentlore.com/api/submit -d '{}'
+
+# Submissions queue (admin) — should return ok:true and the pending list:
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  'https://contentlore.com/api/admin/submissions?status=pending' | jq '.counts, .count'
 ```
 Most should return non-zero. The scheduler `/status` shows the most recent poll summary including `discord.sent` count.
 
@@ -534,4 +578,28 @@ Every hub page now ships og:type / og:site_name / og:title / og:description / og
 **Homepage stat fix — "7,770 TRACKED" → "26 CREATORS"** (`4fb51c5`)
 The pulse strip was showing `total_creators` from `/api/stats` (which counts every row in the creators table including dead/legacy entries — falling back to 7770 when the call failed). Hardcoded 26 since the curated allowlist is fixed and dropped the redundant stats fetch.
 
-**CLAUDE.md sync** (this commit) — flipped Phase 4 to fully done, marked Phase 5 #1 (Discord) and the OG-tag scaffold complete, refreshed Active Functions count (17 → 22), Active hub surfaces (14 → 17), Key URLs (added analytics/network/digest), data pipeline description (4 steps now, dropped legacy round-robin notation, called out the new Discord-on-go-live step), Architecture diagram, KV keys list (added `curated:livestate:v1`), Cache API keys list (split out from KV — most response caches moved to Cache API in commit `7bf7940`), env vars (DISCORD_WEBHOOK_URL added on both Pages and scheduler), allowlist-mirror gotcha now lists 9 places, and added smoke-test commands for the new endpoints + the Discord webhook test.
+**CLAUDE.md sync** (`2d2c880`) — flipped Phase 4 to fully done, marked Phase 5 #1 (Discord) and the OG-tag scaffold complete, refreshed Active Functions count (17 → 22), Active hub surfaces (14 → 17), Key URLs (added analytics/network/digest), data pipeline description (4 steps now, dropped legacy round-robin notation, called out the new Discord-on-go-live step), Architecture diagram, KV keys list (added `curated:livestate:v1`), Cache API keys list (split out from KV — most response caches moved to Cache API in commit `7bf7940`), env vars (DISCORD_WEBHOOK_URL added on both Pages and scheduler), allowlist-mirror gotcha now lists 9 places, and added smoke-test commands for the new endpoints + the Discord webhook test.
+
+---
+
+**Discord webhook live verification** (afternoon)
+Set `DISCORD_WEBHOOK_URL` on both Pages and the scheduler, redeployed the scheduler. ABsTheName + Angels365 go-live transitions fired real Discord embeds in the configured channel — end-to-end pipeline confirmed working. No code changes needed.
+
+**Mobile PWA + browser push** (`0456b66`, `c21cb63`, `3efba8e`, `dff7b86`)
+Four-commit build of the full mobile/PWA story.
+
+`0456b66` — manifest, service worker, install prompt scaffold. `manifest.json` with teal theme + four shortcuts (Live, Multi, Timeline, Digest). `sw.js` does cache-first for static shell, network-first for HTML with offline fallback to cached pages, pure-network for `/api/*`. `pwa.js` registers the SW, tracks visit count in localStorage, surfaces a dismissable install banner from visit 2 onward (Chromium beforeinstallprompt + iOS Safari "Add to Home Screen" hint). `_headers` updated with `Service-Worker-Allowed: /` for root scope. All 13 hub pages link the manifest, set `theme-color: #0d1f1f`, and load `pwa.js` deferred.
+
+`c21cb63` — mobile multi-view at <=768px. `/gta-rp/multi/` swaps the desktop grid + drawer for a single full-width 16:9 stream + info bar + chat iframe + 64px bottom tabbar. Tabbar shows one square per selected creator (avatar + live dot + active highlight) + a "+" button at the right end that opens a slide-up roster sheet. Tap a tab to switch; iframe cache keys prevent reload churn on the 90s poll. Desktop layout untouched (>=769px).
+
+`3efba8e` — hamburger nav drawer at <=900px. Single-file change in `pwa.js` that injects a hamburger button + 280px right-side slide-in drawer on every hub page that has a `nav.nav > .nav-links` structure. Mirrors the page's nav links with active-state preservation. ESC + overlay tap + link click all close. Bumped SW_VERSION to evict the stale shell.
+
+`dff7b86` — Web Push end-to-end. `migrations/011_push_subscriptions.sql` adds the table (endpoint UNIQUE, p256dh/auth keys, user_uuid, filter_handles). New endpoints `/api/push/{vapid-public-key,subscribe,unsubscribe}`. New `<span data-cl-notify>` button hydrator in `pwa.js` — `data-cl-notify="all"` on the live hub for global opt-in, `data-cl-notify="<handle>"` on creator profiles for per-creator opt-in. Scheduler-side `D:/contentlore-scheduler/src/web-push.js` is a pure-Workers RFC 8291 (aes128gcm) implementation with ES256 VAPID JWT signing — no npm dependency, all crypto from `SubtleCrypto`. `pollCurated`'s transition path now fans out push alongside Discord, prunes 410-Gone endpoints from the table after each tick. Activation needs the migration run + `VAPID_PUBLIC_KEY` on Pages + all three VAPID secrets on the scheduler + a redeploy.
+
+**Multi-platform creator profiles** (`8ad2ef5`)
+Every ALLOWLIST entry in `functions/api/uk-rp-live.js` now carries a `socials: { twitch, kick, tiktok, youtube, x, instagram, discord }` object with seven fixed slots. Confirmed multi-platform handles populated for dynamoses + bags (both have D1 platform rows on both sides per migration 010). Everyone else gets `{primary}: handle` and null for the other six — TikTok/YouTube/X/Instagram/Discord all null today, to be filled in via `/submit/` or manual edits. New `entrySocials()` helper backfills the primary handle defensively. Both build paths (`buildTwitchEntry`, `buildKickEntry`) and the offline stub emit `socials` in the API response. Top-level `tiktok` / `youtube` retained for back-compat. Creator profile pages got a proper "Platforms" section: branded square buttons with inline-SVG icons + handle subtext, three new colours (X near-white, Instagram pink, Discord blurple). Roster cards on `/gta-rp/` now show small brand-coloured pills (TW/KK/YT/TT/X/IG/DC) under each name. Verified before changes via `curl /api/uk-rp-live` that dynamoses appears in the response (offline at the moment, avatar null because Kick avatars only warm-cache from `/livestreams` when broadcaster is live).
+
+**Public creator submission form** (`a0bb8fb`)
+New `/submit/` page — GTA-styled form with display name, optional Twitch/Kick/TikTok/YouTube/X handles, 12 server checkboxes, free-text bio, and a hidden honeypot for spam. Posts to `/api/submit` (no auth, KV-rate-limited 3 / IP / UTC day via key `submit:rl:{ip}:{yyyy-mm-dd}`). The endpoint sanitises handles (strips @, URL prefixes; rejects anything not in `[A-Za-z0-9._-]`), validates server values against a whitelist, dedupe-rejects against `creator_platforms` so submissions for the curated 26 don't pollute the queue. INSERTs into `pending_creators` with `discovery_count=0`, `status='pending'`, and `notes` prefixed with the literal `SUBMITTED:` followed by the full JSON payload (socials, servers, bio, ip, user_agent). The sentinel is what separates form submissions from auto-discovery rows in the same table — no schema migration needed. New `/api/admin/submissions` endpoint (Bearer auth) lists/decides them, and `/mod/` got a new "Submissions" tab with filter chips (Pending / Approved / Rejected), live pending-count badge on the tab name, and per-card Approve/Reject buttons. Footer "Submit your channel →" link added on every hub page that has one (skipped multi-view since its sticky chat drawer doesn't leave room for a footer).
+
+**CLAUDE.md sync** (this commit) — refreshed Active Functions count (22 → 27, with the five new endpoints), Active hub surfaces (17 → 18, /submit/), added the PWA paragraph below the surface counts, expanded the allowlist section to call out the new `socials` shape and the two confirmed multi-platform creators, added `push_subscriptions` to the D1 tables list, flipped the rest of Phase 5 (Discord, OG tags, Mobile PWA, multi-platform footprint, public submission form) to done with commit refs, refreshed the Architecture diagram (push endpoints + push fanout + /submit + push_subscriptions table + the PWA footer block), added `submit:rl:*` to KV keys, added VAPID_* env vars on both Pages and scheduler, added migration 011 to the migration numbering note, added smoke-test curl commands for `/api/push/vapid-public-key`, `/api/submit`, `/api/admin/submissions`, and added this entry. Also flipped the "Discord confirmed working in production" status into the Phase 5 roadmap entry.
