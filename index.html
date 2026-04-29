@@ -9,17 +9,17 @@
 <meta name="theme-color" content="#0d1f1f">
 <script src="/pwa.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ContentLore — UK Streaming Intelligence</title>
-<meta name="description" content="The UK GTA RP streaming intelligence platform. Live tracking, scene detection, editorial analysis.">
+<title>ContentLore — UK GTA RP Streaming Intelligence</title>
+<meta name="description" content="Live tracking, clips, scene health, and intelligence for the UK GTA RP scene. 30 creators across Twitch and Kick, polled every 15 minutes.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ContentLore">
 <meta property="og:title" content="ContentLore — UK GTA RP Streaming Intelligence">
-<meta property="og:description" content="The UK GTA RP streaming intelligence platform. Live tracking, scene detection, editorial analysis.">
+<meta property="og:description" content="Live tracking, clips, scene health, and intelligence for the UK GTA RP scene.">
 <meta property="og:image" content="https://contentlore.com/logo.png">
 <meta property="og:url" content="https://contentlore.com/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ContentLore — UK GTA RP Streaming Intelligence">
-<meta name="twitter:description" content="The UK GTA RP streaming intelligence platform. Live tracking, scene detection, editorial analysis.">
+<meta name="twitter:description" content="Live tracking, clips, scene health, and intelligence for the UK GTA RP scene.">
 <meta name="twitter:image" content="https://contentlore.com/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -35,177 +35,370 @@
   --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
   --cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
 }
-html{background:var(--bg);color-scheme:dark}
-body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
+html{color-scheme:dark}
+body{color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
 body>*{position:relative;z-index:3}
 
-.nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:100}
-.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;text-decoration:none;color:var(--fg);margin-right:auto}
-.nav-brand span{color:var(--signal)}
-.nav a.link{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px 12px;transition:color .2s}
-.nav a.link:hover{color:var(--fg)}
-.nav a.link.hub{color:var(--signal)}
+.nav{height:48px;display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;text-decoration:none;color:var(--fg);margin-right:24px;display:inline-flex;align-items:center}
+.nav-brand img{height:40px;filter:brightness(1.1)}
+.nav-links{display:flex;align-items:center;gap:0}
+.nav-link{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px 12px;transition:color .2s}
+.nav-link:hover{color:var(--fg)}
+.nav-link.active{color:var(--signal-cyan)}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--live);margin-right:6px;vertical-align:middle;box-shadow:0 0 8px var(--live)}
 
 /* HERO */
-.hero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
-.hero h1{font-family:var(--font-d);font-size:clamp(48px,10vw,96px);line-height:.92;letter-spacing:3px}
-.hero h1 .accent{color:var(--signal);text-shadow:0 0 6px oklch(0.82 0.20 195/.4),0 0 18px oklch(0.82 0.20 195/.25)}
-.hero-tag{font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:4px;color:var(--ink-dim);margin-top:12px}
-.hero-cta{display:flex;gap:12px;margin-top:28px}
-.cta{font-family:var(--font-d);font-size:16px;letter-spacing:2px;padding:12px 28px;text-decoration:none;clip-path:var(--cut);transition:all .25s}
+.hero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:96px 24px 72px}
+.hero h1{font-family:var(--font-d);font-size:clamp(56px,11vw,112px);line-height:.9;letter-spacing:4px}
+.hero h1 .accent{color:var(--signal);text-shadow:0 0 8px oklch(0.82 0.20 195/.55),0 0 24px oklch(0.82 0.20 195/.30)}
+.hero-sub{font-family:var(--font-m);font-size:14px;text-transform:uppercase;letter-spacing:3px;color:var(--ink-dim);margin-top:18px;min-height:1.5em;transition:opacity .25s}
+.hero-sub .pip{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 10px var(--live);margin-right:8px;vertical-align:middle;animation:lp 2s infinite}
+@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.82 0.20 195/.7)}70%{box-shadow:0 0 0 8px oklch(0.82 0.20 195/0)}}
+.hero-cta{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;justify-content:center}
+.cta{font-family:var(--font-d);font-size:16px;letter-spacing:2px;padding:13px 30px;text-decoration:none;clip-path:var(--cut);transition:all .25s}
 .cta-primary{background:var(--signal);color:var(--bg)}
 .cta-primary:hover{box-shadow:0 0 28px oklch(0.82 0.20 195/.5);transform:translateY(-2px)}
-.cta-secondary{background:var(--card);border:1px solid var(--border);color:var(--fg)}
+.cta-secondary{background:transparent;border:1px solid var(--border);color:var(--fg)}
 .cta-secondary:hover{border-color:var(--signal-cyan);color:var(--signal-cyan);transform:translateY(-2px)}
 
-/* LIVE PULSE */
-.pulse{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px}
-.pulse-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px}
-.pulse-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;animation:lp 2s infinite}
-.pulse-dot.on{background:var(--live)}
-.pulse-dot.off{background:var(--ink-faint)}
-@keyframes lp{0%,100%{box-shadow:0 0 0 0 oklch(0.82 0.20 195/.8)}70%{box-shadow:0 0 0 8px oklch(0.82 0.20 195/0)}}
-.pulse-text{font-family:var(--font-m);font-size:13px;color:var(--ink-dim);flex:1}
-.pulse-stats{display:flex;gap:20px}
-.ps{display:flex;align-items:baseline;gap:4px}
-.ps-val{font-family:var(--font-d);font-size:22px}
-.ps-lbl{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
+/* SCENE STATS STRIP */
+.mx{max-width:1200px;margin:0 auto;padding:0 24px}
+.sstrip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px auto;max-width:1200px;padding:0 24px}
+.ss-item{padding:18px 20px;clip-path:var(--cut)}
+.ss-label{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:3px;color:var(--ink-faint);margin-bottom:6px}
+.ss-val{font-family:var(--font-d);font-size:28px;letter-spacing:1px;line-height:1;color:var(--fg);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ss-val .em{font-size:22px}
+.ss-sub{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-dim);margin-top:6px}
+@media(max-width:760px){.sstrip{grid-template-columns:1fr 1fr}}
 
-/* GRID */
-.mx{max-width:1100px;margin:0 auto;padding:40px 24px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.card{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:20px;text-decoration:none;color:var(--fg);display:block;transition:all .25s}
-.card:hover{border-color:var(--signal);transform:translateY(-3px);box-shadow:0 0 20px oklch(0.82 0.20 195/.3)}
-.card-icon{font-size:22px;margin-bottom:8px}
-.card-title{font-family:var(--font-d);font-size:20px;letter-spacing:1px}
-.card-desc{font-size:13px;color:var(--ink-dim);margin-top:6px;line-height:1.6}
-.card-tag{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;display:inline-block;margin-top:10px}
-.card-tag.live{background:oklch(0.82 0.22 145/.12);color:oklch(0.82 0.22 145);border:1px solid oklch(0.82 0.22 145/.3)}
-.card-tag.edit{background:oklch(0.82 0.20 195/.1);color:var(--signal);border:1px solid oklch(0.82 0.20 195/.3)}
-.card-tag.intel{background:oklch(0.85 0.18 200/.1);color:var(--signal-cyan);border:1px solid oklch(0.85 0.18 200/.3)}
+/* FEED SECTIONS */
+.feed{padding:32px 0 8px}
+.feed-head{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.feed-title{font-family:var(--font-d);font-size:26px;letter-spacing:2px;color:var(--fg)}
+.feed-title .count{font-family:var(--font-m);font-size:12px;letter-spacing:2px;color:var(--ink-faint);margin-left:10px;text-transform:uppercase}
+.feed-more{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--signal-cyan);text-decoration:none}
+.feed-more:hover{color:var(--signal)}
 
-/* EDITORIAL */
-.ed-row{display:grid;grid-template-columns:1.5fr 1fr;gap:12px;margin-top:12px}
-@media(max-width:700px){.ed-row{grid-template-columns:1fr}}
-.ed-main{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:24px;text-decoration:none;color:var(--fg);display:block;transition:all .2s}
-.ed-main:hover{border-color:var(--signal)}
-.ed-kicker{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px}
-.ed-title{font-family:var(--font-d);font-size:24px}
-.ed-desc{font-size:16px;color:var(--ink-dim);margin-top:8px;line-height:1.6}
-.ed-side{display:flex;flex-direction:column;gap:12px}
-.ed-card{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:16px;text-decoration:none;color:var(--fg);display:block;flex:1;transition:all .2s}
-.ed-card:hover{border-color:var(--signal)}
-.ed-card .ed-kicker{margin-bottom:4px}
-.ed-card .ed-title{font-size:16px}
+/* HORIZONTAL SCROLL */
+.hscroll-wrap{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:var(--border) transparent;-webkit-overflow-scrolling:touch}
+.hscroll-wrap::-webkit-scrollbar{height:8px}
+.hscroll-wrap::-webkit-scrollbar-track{background:transparent}
+.hscroll-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.hscroll{display:flex;gap:14px;padding:6px 24px 18px;max-width:1200px;margin:0 auto;min-height:200px}
+.hscroll > *{scroll-snap-align:start;flex:0 0 auto}
 
-.sh{font-family:var(--font-d);font-size:28px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
-.sh::after{content:'';flex:1;height:1px;background:var(--border)}
+.scard{width:300px;clip-path:var(--cut);text-decoration:none;color:var(--fg);overflow:hidden;display:flex;flex-direction:column}
+.scard-thumb{width:100%;aspect-ratio:16/9;background:var(--card2);object-fit:cover;display:block}
+.scard-thumb-ph{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,oklch(0.20 0.06 195),oklch(0.14 0.04 245));display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:34px;color:var(--ink-faint);letter-spacing:2px}
+.scard-body{padding:12px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.scard-name{font-family:var(--font-d);font-size:18px;letter-spacing:1px;line-height:1;display:flex;align-items:center;gap:8px}
+.scard-plat{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:2px;padding:2px 6px;border-radius:2px}
+.scard-plat.tw{background:oklch(0.65 0.25 295/.18);color:oklch(0.78 0.20 295);border:1px solid oklch(0.65 0.25 295/.4)}
+.scard-plat.kk{background:oklch(0.82 0.22 145/.15);color:oklch(0.82 0.22 145);border:1px solid oklch(0.82 0.22 145/.4)}
+.scard-title{font-size:13px;color:var(--ink-dim);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.scard-meta{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);margin-top:auto}
+.scard-meta .v{color:var(--signal-cyan)}
+.scard-thumb-wrap{position:relative}
+.scard-live-tag{position:absolute;top:8px;left:8px;background:oklch(0.65 0.25 25);color:#fff;font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;padding:3px 7px;text-transform:uppercase;font-weight:600;display:flex;align-items:center;gap:5px;z-index:2}
+.scard-live-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+
+.ccard{width:300px;clip-path:var(--cut);text-decoration:none;color:var(--fg);overflow:hidden;display:flex;flex-direction:column;cursor:pointer}
+.ccard-thumb-wrap{position:relative}
+.ccard-thumb{width:100%;aspect-ratio:16/9;background:var(--card2);object-fit:cover;display:block}
+.ccard-rank{position:absolute;top:8px;left:8px;font-family:var(--font-d);font-size:24px;letter-spacing:1px;color:var(--signal);background:rgba(0,0,0,.55);padding:2px 10px;line-height:1;border:1px solid var(--signal-dim)}
+.ccard-views{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.7);color:#fff;font-family:var(--font-m);font-size:10px;letter-spacing:1px;padding:3px 7px;font-weight:600}
+.ccard-body{padding:12px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.ccard-title{font-size:14px;font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ccard-creator{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1.5px}
 
 /* SPOTLIGHT */
-.spotlight{display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:24px;text-decoration:none;color:var(--fg);transition:all .25s;position:relative;overflow:hidden}
-.spotlight::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at top right,oklch(0.82 0.20 195/.08),transparent 60%);pointer-events:none}
-.spotlight:hover{border-color:var(--signal);box-shadow:0 0 32px oklch(0.82 0.20 195/.3)}
-.sp-av{width:96px;height:96px;border-radius:50%;border:2px solid var(--signal);object-fit:cover;flex-shrink:0;background:var(--card2)}
-.sp-av-ph{width:96px;height:96px;border-radius:50%;border:2px solid var(--signal);background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:48px;color:var(--signal);flex-shrink:0}
+.spot{display:grid;grid-template-columns:auto 1fr auto auto;gap:24px;align-items:center;padding:24px;clip-path:var(--cut);text-decoration:none;color:var(--fg);max-width:1200px;margin:0 auto;position:relative;overflow:hidden}
+.spot::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at top right,oklch(0.82 0.20 195/.10),transparent 60%);pointer-events:none}
+.sp-av{width:108px;height:108px;border-radius:50%;border:2px solid var(--signal);object-fit:cover;background:var(--card2)}
+.sp-av-ph{width:108px;height:108px;border-radius:50%;border:2px solid var(--signal);background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:52px;color:var(--signal)}
 .sp-info{min-width:0}
-.sp-badge{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:4px;display:inline-block;padding:3px 10px;background:oklch(0.82 0.20 195/.12);border:1px solid oklch(0.82 0.20 195/.4)}
-.sp-name{font-family:var(--font-d);font-size:36px;letter-spacing:1px;margin-top:6px;line-height:1}
-.sp-reason{font-size:13px;color:var(--ink-dim);margin-top:6px;line-height:1.5}
-.sp-bio{font-size:13px;color:var(--ink-faint);margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.sp-cta{font-family:var(--font-d);font-size:15px;letter-spacing:2px;background:var(--signal);color:var(--bg);padding:12px 22px;clip-path:var(--cut);text-decoration:none;flex-shrink:0;transition:all .2s;white-space:nowrap}
+.sp-badge{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);display:inline-block;padding:3px 10px;background:oklch(0.82 0.20 195/.12);border:1px solid oklch(0.82 0.20 195/.4)}
+.sp-name{font-family:var(--font-d);font-size:42px;letter-spacing:1px;margin-top:8px;line-height:1}
+.sp-reason{font-size:14px;color:var(--ink-dim);margin-top:8px;line-height:1.5}
+.sp-clip-thumb{width:200px;height:112px;object-fit:cover;flex-shrink:0;background:var(--card2);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+.sp-cta{font-family:var(--font-d);font-size:15px;letter-spacing:2px;background:var(--signal);color:var(--bg);padding:12px 22px;clip-path:var(--cut);text-decoration:none;white-space:nowrap;transition:all .2s}
 .sp-cta:hover{box-shadow:0 0 24px oklch(0.82 0.20 195/.6)}
-.sp-clip-thumb{width:160px;height:90px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;background:var(--card2)}
-@media(max-width:700px){
-  .spotlight{grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:16px}
+@media(max-width:900px){
+  .spot{grid-template-columns:auto 1fr;grid-template-rows:auto auto auto}
+  .sp-clip-thumb{grid-column:1/-1;width:100%;height:auto;aspect-ratio:16/9}
   .sp-cta{grid-column:1/-1;text-align:center}
-  .sp-clip-thumb{display:none}
-  .sp-name{font-size:28px}
 }
+@media(max-width:560px){.sp-name{font-size:30px}.sp-av,.sp-av-ph{width:80px;height:80px;font-size:38px}}
 
-.footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
-.footer a{color:var(--ink-faint);text-decoration:none;margin:0 8px}
-.footer a:hover{color:var(--fg)}
+/* HUB GRID — compact 2-col */
+.hub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:1200px;margin:0 auto;padding:0 24px}
+@media(max-width:760px){.hub-grid{grid-template-columns:1fr}}
+.hub-item{display:flex;align-items:center;gap:14px;padding:16px 18px;clip-path:var(--cut);text-decoration:none;color:var(--fg);transition:all .2s}
+.hub-ico{font-size:24px;flex-shrink:0;width:36px;text-align:center}
+.hub-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hub-name{font-family:var(--font-d);font-size:18px;letter-spacing:1.5px;line-height:1}
+.hub-desc{font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:var(--ink-faint);text-transform:uppercase}
+
+/* NEW TO UK GTA RP */
+.newto{padding:48px 24px 36px;max-width:900px;margin:24px auto 0}
+.newto-card{padding:28px 32px;clip-path:var(--cut)}
+.newto-kicker{font-family:var(--font-m);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--signal);margin-bottom:8px}
+.newto h2{font-family:var(--font-d);font-size:32px;letter-spacing:2px;margin-bottom:12px}
+.newto p{font-size:15px;line-height:1.6;color:var(--ink-dim);margin-bottom:14px}
+.newto ol{padding-left:22px;color:var(--ink-dim);font-size:14px;line-height:1.8}
+.newto ol li{margin-bottom:6px}
+.newto a{color:var(--signal-cyan);text-decoration:none}
+.newto a:hover{text-decoration:underline;color:var(--signal)}
+
+/* FOOTER */
+.footer{padding:36px 24px;text-align:center;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:48px}
+.footer a{color:var(--ink-faint);text-decoration:none;margin:0 8px;transition:color .15s}
+.footer a:hover{color:var(--signal-cyan)}
+
+/* Skeleton */
+.sk-card{width:300px;height:200px;background:var(--card2);clip-path:var(--cut);position:relative;overflow:hidden;flex:0 0 auto}
+.sk-card::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,oklch(0.20 0.06 195/.4),transparent);animation:sk 1.6s infinite}
+@keyframes sk{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 
 ::selection{background:var(--signal);color:var(--bg)}
-@media(max-width:600px){.grid{grid-template-columns:1fr 1fr}.hero{padding:48px 24px 36px}.pulse-stats{gap:12px}}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
-@keyframes glow-pulse{0%,100%{box-shadow:0 0 4px oklch(0.82 0.20 195/.4)}50%{box-shadow:0 0 16px oklch(0.82 0.20 195/.6),0 0 32px oklch(0.82 0.20 195/.2)}}
-.card:hover,.sc:hover,.scard:hover,.rcard:hover,.featured:hover{animation:glow-pulse 1.5s ease infinite}
-.hero h1,.sec-title,.sh{animation:fadeUp .6s ease both}
-
+@media(max-width:600px){.hero{padding:48px 24px 36px}.feed-title{font-size:22px}}
 </style>
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:40px;filter:brightness(1.1)" loading="eager"></a>
-  <a href="/gta-rp/" class="link hub">GTA RP Hub</a>
+  <a href="/" class="nav-brand"><img src="/logo.png" alt="ContentLore"></a>
+  <div class="nav-links">
+    <a href="/gta-rp/" class="nav-link"><span class="live-dot" id="nav-dot" style="display:none"></span>Live</a>
+    <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/clips/" class="nav-link">Clips</a>
+    <a href="/gta-rp/servers/" class="nav-link">Servers</a>
+  </div>
 </nav>
 
 <div class="hero">
   <h1>CONTENT<br><span class="accent">LORE</span></h1>
-  <div class="hero-tag">UK Streaming Intelligence</div>
+  <div class="hero-sub" id="hero-sub">Scanning the scene…</div>
   <div class="hero-cta">
     <a href="/gta-rp/" class="cta cta-primary">Enter the Hub</a>
-    <a href="/gta-rp/now/" class="cta cta-secondary">What's Live</a>
+    <a href="/gta-rp/multi/" class="cta cta-secondary">Multi-View</a>
   </div>
 </div>
 
-<div class="pulse">
-  <div class="pulse-inner">
-    <div class="pulse-dot" id="p-dot"></div>
-    <span class="pulse-text" id="p-text">Scanning…</span>
-    <div class="pulse-stats">
-      <div class="ps"><span class="ps-val" style="color:var(--signal)" id="p-live">—</span><span class="ps-lbl">live</span></div>
-      <div class="ps"><span class="ps-val" style="color:var(--signal-cyan)" id="p-viewers">—</span><span class="ps-lbl">viewers</span></div>
-      <div class="ps"><span class="ps-val" style="color:var(--fg)" id="p-tracked">26</span><span class="ps-lbl">streamers</span></div>
+<div class="sstrip">
+  <div class="ss-item card"><div class="ss-label">Hype</div><div class="ss-val" id="ss-hype"><span class="em">—</span></div><div class="ss-sub" id="ss-hype-sub">vs 7-day avg</div></div>
+  <div class="ss-item card"><div class="ss-label">Health</div><div class="ss-val" id="ss-health"><span class="em">—</span></div><div class="ss-sub" id="ss-health-sub">Week-on-week</div></div>
+  <div class="ss-item card"><div class="ss-label">Live</div><div class="ss-val" id="ss-live">—</div><div class="ss-sub" id="ss-live-sub">Streamers on</div></div>
+  <div class="ss-item card"><div class="ss-label">Top Ranked</div><div class="ss-val" id="ss-top">—</div><div class="ss-sub" id="ss-top-sub">This week</div></div>
+</div>
+
+<section class="feed">
+  <div class="feed-head">
+    <div class="feed-title">Live Right Now <span class="count" id="live-count"></span></div>
+    <a href="/gta-rp/" class="feed-more">All streams →</a>
+  </div>
+  <div class="hscroll-wrap">
+    <div class="hscroll" id="live-scroll">
+      <div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div>
     </div>
   </div>
-</div>
+</section>
 
-<div class="mx" id="spotlight-mx" style="padding-bottom:0">
-  <div class="sh">Today's Spotlight</div>
-  <div id="spotlight-host"></div>
-</div>
-
-<div class="mx">
-  <div class="sh">Hub</div>
-  <div class="grid">
-    <a href="/gta-rp/" class="card"><div class="card-icon">📡</div><div class="card-title">Live</div><div class="card-desc">Who's streaming right now across Twitch and Kick.</div><span class="card-tag live">Live Data</span></a>
-    <a href="/gta-rp/now/" class="card"><div class="card-icon">⚡</div><div class="card-title">Now</div><div class="card-desc">Real-time command centre. Server bars, scene clusters, viewer deltas.</div><span class="card-tag live">Live Data</span></a>
-    <a href="/gta-rp/multi/" class="card"><div class="card-icon">📺</div><div class="card-title">Multi-View</div><div class="card-desc">Watch up to 6 streams side by side with chat.</div><span class="card-tag live">Live Data</span></a>
-    <a href="/gta-rp/clips/" class="card"><div class="card-icon">🎬</div><div class="card-title">Clip Wall</div><div class="card-desc">The best moments from the UK GTA RP scene. Filterable by date and creator.</div><span class="card-tag live">Live Data</span></a>
-    <a href="/gta-rp/servers/" class="card"><div class="card-icon">🖥</div><div class="card-title">Servers</div><div class="card-desc">RP server directory with live activity overlay.</div><span class="card-tag live">Live Data</span></a>
-    <a href="/gta-rp/fivem-enhanced/" class="card"><div class="card-icon">🔧</div><div class="card-title">FiveM Enhanced</div><div class="card-desc">Platform migration tracker. Server readiness dashboard.</div><span class="card-tag intel">Intelligence</span></a>
-    <a href="/gta-rp/gta-6/" class="card"><div class="card-icon">🔮</div><div class="card-title">GTA 6</div><div class="card-desc">Impact analysis, transition scenarios, community preparedness.</div><span class="card-tag intel">Intelligence</span></a>
+<section class="feed">
+  <div class="feed-head">
+    <div class="feed-title">Top Clips This Week</div>
+    <a href="/gta-rp/clips/" class="feed-more">Clip wall →</a>
   </div>
+  <div class="hscroll-wrap">
+    <div class="hscroll" id="clips-scroll">
+      <div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div>
+    </div>
+  </div>
+</section>
 
-</div>
+<section class="feed">
+  <div class="feed-head">
+    <div class="feed-title">Today's Spotlight</div>
+    <a href="/gta-rp/" class="feed-more">All creators →</a>
+  </div>
+  <div class="mx">
+    <div id="spotlight-host"></div>
+  </div>
+</section>
+
+<section class="feed">
+  <div class="feed-head"><div class="feed-title">Explore</div></div>
+  <div class="hub-grid">
+    <a href="/gta-rp/timeline/"  class="hub-item card"><span class="hub-ico">📊</span><div class="hub-text"><span class="hub-name">Timeline</span><span class="hub-desc">What happened today</span></div></a>
+    <a href="/gta-rp/analytics/" class="hub-item card"><span class="hub-ico">📈</span><div class="hub-text"><span class="hub-name">Analytics</span><span class="hub-desc">Viewer trends + heatmap</span></div></a>
+    <a href="/gta-rp/digest/"    class="hub-item card"><span class="hub-ico">📰</span><div class="hub-text"><span class="hub-name">Digest</span><span class="hub-desc">AI scene recap + weekly report</span></div></a>
+    <a href="/gta-rp/health/"    class="hub-item card"><span class="hub-ico">💓</span><div class="hub-text"><span class="hub-name">Health</span><span class="hub-desc">Scene trend, week-over-week</span></div></a>
+    <a href="/gta-rp/network/"   class="hub-item card"><span class="hub-ico">🕸</span><div class="hub-text"><span class="hub-name">Network</span><span class="hub-desc">Force-directed creator graph</span></div></a>
+    <a href="/gta-rp/party/"     class="hub-item card"><span class="hub-ico">🎉</span><div class="hub-text"><span class="hub-name">Watch Party</span><span class="hub-desc">Synced viewing + shared chat</span></div></a>
+    <a href="/gta-rp/streaks/"   class="hub-item card"><span class="hub-ico">🔥</span><div class="hub-text"><span class="hub-name">Streaks</span><span class="hub-desc">Daily check-in leaderboard</span></div></a>
+    <a href="/gta-rp/gta-6/"     class="hub-item card"><span class="hub-ico">🔮</span><div class="hub-text"><span class="hub-name">GTA 6</span><span class="hub-desc">Impact analysis + countdown</span></div></a>
+  </div>
+</section>
+
+<section class="newto">
+  <div class="newto-card card">
+    <div class="newto-kicker">First time here?</div>
+    <h2>New to UK GTA RP?</h2>
+    <p>UK GTA RP is roleplaying inside Grand Theft Auto V's modded "FiveM" servers — British creators play characters living, working, and getting into trouble across cities like Los Santos. Stories run for weeks. Drama spans creators. Servers feel like neighbourhoods.</p>
+    <p>ContentLore is the only platform that tracks the British scene specifically. We poll Twitch and Kick every 15 minutes, surface who's live, what server they're on, and the storylines worth following.</p>
+    <ol>
+      <li>Pick a stream from <a href="/gta-rp/">Live</a> — see who's broadcasting now</li>
+      <li>Browse the <a href="/gta-rp/clips/">Clip Wall</a> for the best moments of the week</li>
+      <li>Read the <a href="/gta-rp/digest/">Daily Digest</a> for AI-written scene context</li>
+      <li>Compare creators on the weekly <a href="/gta-rp/health/">Scene Health</a> dashboard</li>
+    </ol>
+  </div>
+</section>
 
 <div class="footer">
-  ContentLore © 2025 · <a href="/submit/" style="color:inherit">Submit your channel →</a>
+  ContentLore © 2025 · <a href="/submit/">Submit your channel →</a>
 </div>
 
 <script>
-async function loadPulse() {
+const esc = s => (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtN = n => n>=1000 ? (n/1000).toFixed(n>=10000?0:1)+'k' : String(n||0);
+const fmtMins = m => m==null?'':(m>=60?Math.floor(m/60)+'h '+(m%60)+'m':m+'m');
+
+async function loadLive() {
   try {
-    const r = await fetch('/api/live-now');
+    const r = await fetch('/api/uk-rp-live');
     const d = await r.json();
-    const live = (d.ok && d.live) ? d.live : [];
-    const viewers = live.reduce((s,c) => s + (c.viewers||0), 0);
-    document.getElementById('p-live').textContent = live.length;
-    document.getElementById('p-viewers').textContent = viewers >= 1000 ? (viewers/1000).toFixed(1)+'k' : viewers;
-    document.getElementById('p-dot').className = 'pulse-dot ' + (live.length > 0 ? 'on' : 'off');
-    document.getElementById('p-text').textContent = live.length > 0
-      ? live.length + ' UK RP creator' + (live.length!==1?'s':'') + ' streaming to ' + (viewers>=1000?(viewers/1000).toFixed(1)+'k':viewers) + ' viewers'
-      : 'No UK RP streams live right now';
-  } catch(e) { console.error(e); }
+    const live = (d.live||[]).filter(c => c.is_live).sort((a,b)=>(b.viewers||0)-(a.viewers||0));
+    const totalLive = live.length;
+    const totalViewers = live.reduce((s,c) => s + (c.viewers||0), 0);
+
+    const sub = document.getElementById('hero-sub');
+    if (totalLive > 0) {
+      sub.innerHTML = `<span class="pip"></span>${totalLive} creator${totalLive===1?'':'s'} live right now to ${fmtN(totalViewers)} viewer${totalViewers===1?'':'s'}`;
+    } else {
+      const ukHour = new Date().getUTCHours();
+      const peakWindow = (ukHour < 18 && ukHour > 5);
+      sub.textContent = peakWindow
+        ? 'Scene quiet — peak hours start around 7pm UK'
+        : 'Scene quiet right now — check back in a bit';
+    }
+
+    document.getElementById('ss-live').textContent = String(totalLive);
+    document.getElementById('ss-live-sub').textContent = totalViewers > 0
+      ? `${fmtN(totalViewers)} viewers total` : 'Streamers on';
+    if (totalLive > 0) {
+      document.getElementById('nav-dot').style.display = 'inline-block';
+    }
+
+    const top = live[0];
+    const ssTop = document.getElementById('ss-top');
+    const ssTopSub = document.getElementById('ss-top-sub');
+    if (!ssTop.dataset.fromRankings && top) {
+      ssTop.textContent = top.display_name;
+      ssTopSub.textContent = `${fmtN(top.viewers)} viewers · ${top.platform}`;
+    } else if (!ssTop.dataset.fromRankings) {
+      ssTop.textContent = '—';
+      ssTopSub.textContent = 'Nobody live';
+    }
+
+    const scrollEl = document.getElementById('live-scroll');
+    document.getElementById('live-count').textContent = totalLive ? `· ${totalLive} on air` : '';
+    if (!live.length) {
+      scrollEl.innerHTML = `<div style="padding:24px;color:var(--ink-faint);font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px">Nobody is live right now. Browse <a href="/gta-rp/clips/" style="color:var(--signal-cyan)">recent clips</a> instead.</div>`;
+      return;
+    }
+    scrollEl.innerHTML = live.map(c => {
+      const thumb = c.thumbnail_url
+        ? `<img class="scard-thumb" src="${esc(c.thumbnail_url.replace('{width}','480').replace('{height}','270'))}" alt="${esc(c.stream_title||c.display_name)}" loading="lazy">`
+        : `<div class="scard-thumb-ph">${esc((c.display_name||'?').slice(0,2).toUpperCase())}</div>`;
+      const platCls = c.platform==='kick'?'kk':'tw';
+      return `<a class="scard card" href="${esc(c.profile_url)}">
+        <div class="scard-thumb-wrap">
+          ${thumb}
+          <span class="scard-live-tag">LIVE</span>
+        </div>
+        <div class="scard-body">
+          <div class="scard-name">${esc(c.display_name)} <span class="scard-plat ${platCls}">${esc(c.platform)}</span></div>
+          <div class="scard-title">${esc(c.stream_title||'(untitled)')}</div>
+          <div class="scard-meta">
+            <span>${esc(c.game_name||'GTA V')}</span>
+            <span><span class="v">${fmtN(c.viewers||0)}</span> · ${fmtMins(c.uptime_mins)||'just on'}</span>
+          </div>
+        </div>
+      </a>`;
+    }).join('');
+  } catch(e) { console.error('live', e); }
 }
-loadPulse();
-setInterval(loadPulse, 60000);
+
+async function loadClips() {
+  try {
+    const r = await fetch('/api/clips?range=7d');
+    const d = await r.json();
+    const clips = (d.clips||[]).slice(0, 14);
+    const scrollEl = document.getElementById('clips-scroll');
+    if (!clips.length) {
+      scrollEl.innerHTML = `<div style="padding:24px;color:var(--ink-faint);font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px">No clips this week yet.</div>`;
+      return;
+    }
+    scrollEl.innerHTML = clips.map((c, i) => {
+      const tu = (c.thumbnail_url||'').replace('%{width}','480').replace('%{height}','270');
+      const thumb = tu
+        ? `<img class="ccard-thumb" src="${esc(tu)}" alt="${esc(c.title||'clip')}" loading="lazy">`
+        : `<div class="scard-thumb-ph"></div>`;
+      const views = c.view_count != null ? `${fmtN(c.view_count)} views` : '';
+      return `<a class="ccard card" href="${esc(c.url)}" target="_blank" rel="noopener">
+        <div class="ccard-thumb-wrap">
+          ${thumb}
+          <span class="ccard-rank">#${i+1}</span>
+          ${views ? `<span class="ccard-views">${views}</span>` : ''}
+        </div>
+        <div class="ccard-body">
+          <div class="ccard-title">${esc(c.title||'(untitled)')}</div>
+          <div class="ccard-creator">${esc(c.creator_name||c.creator_handle||'')}</div>
+        </div>
+      </a>`;
+    }).join('');
+  } catch(e) { console.error('clips', e); }
+}
+
+async function loadHype() {
+  try {
+    const r = await fetch('/api/hype');
+    const d = await r.json();
+    if (!d.ok) return;
+    const v = document.getElementById('ss-hype');
+    const sub = document.getElementById('ss-hype-sub');
+    v.innerHTML = `<span class="em" style="color:${d.band.color||'var(--signal)'}">${esc(d.band.emoji||'')}</span> <span style="font-size:22px">${esc(d.band.label||'')}</span>`;
+    if (d.ratio_pct != null && d.average && d.average.samples > 0) {
+      const arrow = d.ratio_pct >= 100 ? '↑' : '↓';
+      const diff = Math.abs(d.ratio_pct - 100);
+      sub.textContent = `${arrow} ${diff}% vs 7-day avg`;
+    } else {
+      sub.textContent = 'No baseline yet';
+    }
+  } catch(e) { console.error('hype', e); }
+}
+
+async function loadHealth() {
+  try {
+    const r = await fetch('/api/scene-health');
+    const d = await r.json();
+    if (!d.ok) return;
+    const v = document.getElementById('ss-health');
+    const sub = document.getElementById('ss-health-sub');
+    const trend = d.trend||{};
+    const arrow = trend.id==='growing'?'↑':trend.id==='cooling'?'↓':trend.id==='building'?'+':'·';
+    const color = trend.id==='growing'?'var(--signal)':trend.id==='cooling'?'oklch(0.65 0.20 25)':'var(--signal-cyan)';
+    v.innerHTML = `<span class="em" style="color:${color}">${arrow}</span> <span style="font-size:22px">${esc(trend.label||'—')}</span>`;
+    const pct = d.delta && d.delta.viewer_hours_pct;
+    if (pct != null && isFinite(pct)) {
+      sub.textContent = `${pct>=0?'+':''}${pct}% viewer-hours WoW`;
+    } else {
+      sub.textContent = 'Building baseline';
+    }
+  } catch(e) { console.error('health', e); }
+}
 
 async function loadSpotlight() {
   try {
@@ -213,32 +406,51 @@ async function loadSpotlight() {
     const d = await r.json();
     if (!d.ok || !d.pick) return;
     const p = d.pick;
-    const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const av = p.avatar_url
       ? `<img class="sp-av" src="${esc(p.avatar_url)}" alt="${esc(p.display_name)}" loading="lazy">`
       : `<div class="sp-av-ph">${esc((p.display_name||'?').charAt(0))}</div>`;
-    const clipImg = (d.top_clip && d.top_clip.thumbnail_url)
-      ? `<img class="sp-clip-thumb" src="${esc(d.top_clip.thumbnail_url)}" alt="${esc(d.top_clip.title || 'Recent clip')}" loading="lazy">`
-      : '';
-    const bio = p.bio ? `<div class="sp-bio">${esc(p.bio)}</div>` : '';
-    const stats = (p.sessions > 0)
-      ? `${p.sessions} sessions · ${p.total_hours}h · ${p.avg_viewers} avg viewers`
-      : '26 streamers · daily rotation';
+    const tu = (d.top_clip && d.top_clip.thumbnail_url ? d.top_clip.thumbnail_url : '').replace('%{width}','400').replace('%{height}','225');
+    const clipImg = tu ? `<img class="sp-clip-thumb" src="${esc(tu)}" alt="recent clip" loading="lazy">` : '';
     document.getElementById('spotlight-host').innerHTML =
-      `<a class="spotlight" href="${esc(p.profile_url)}">
+      `<a class="spot card" href="${esc(p.profile_url)}">
         ${av}
         <div class="sp-info">
           <span class="sp-badge">⭐ Today's Spotlight</span>
           <div class="sp-name">${esc(p.display_name)}</div>
-          <div class="sp-reason">${esc(d.reason || stats)}</div>
-          ${bio}
+          <div class="sp-reason">${esc(d.reason||'')}</div>
         </div>
         ${clipImg}
         <span class="sp-cta">Watch tonight →</span>
       </a>`;
   } catch(e) { /* silent */ }
 }
+
+// /api/rankings is expected to ship in a follow-up; until it does,
+// the Top Ranked tile falls back to the highest-viewer live creator.
+async function loadRankings() {
+  try {
+    const r = await fetch('/api/rankings');
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d.ok || !d.rankings || !d.rankings.length) return;
+    const top = d.rankings[0];
+    const ssTop = document.getElementById('ss-top');
+    ssTop.dataset.fromRankings = '1';
+    ssTop.textContent = top.display_name;
+    const mv = top.movement;
+    const mvText = mv > 0 ? `↑${mv}` : mv < 0 ? `↓${Math.abs(mv)}` : '·';
+    document.getElementById('ss-top-sub').textContent = `Score ${Math.round(top.score)} · ${mvText} from last week`;
+  } catch { /* not deployed yet — leave fallback */ }
+}
+
+loadLive();
+loadClips();
+loadHype();
+loadHealth();
 loadSpotlight();
+loadRankings();
+setInterval(loadLive, 60_000);
+setInterval(loadHype, 90_000);
 </script>
 <script src="/streak-checkin.js" defer></script>
 </body>
