@@ -36,16 +36,95 @@
 })();
 
 // ----------------------------------------------------------------
-// Mobile nav drawer — inject a hamburger + slide-out menu on every
-// hub page that has a `.nav > .nav-links` structure. Active under
-// <=900px (matches the chat-drawer breakpoint so the nav and chat
-// don't fight for horizontal space at the same viewport sizes).
+// Nav restructure — desktop primary 4 + "More" dropdown, mobile
+// hamburger drawer with grouped sections.
+//
+// The site originally had 11+ flat links across the top. This
+// hides everything except the four primary destinations, drops the
+// rest into a "More ▾" popover on desktop, and groups them into
+// labelled sections in the mobile drawer.
+//
+// Source-of-truth lists below; existing per-page <a class="nav-link">
+// items are matched by href and either kept, hidden (folded into
+// the dropdown), or surfaced in their mobile group. Items not in any
+// group (e.g. legacy "Now") fall through to the dropdown's tail so
+// nothing becomes unreachable.
 // ----------------------------------------------------------------
 (function () {
+  // Primary desktop links — always visible at >900px.
+  const PRIMARY = [
+    { href: '/gta-rp/',         label: 'Live' },
+    { href: '/gta-rp/multi/',   label: 'Multi-View' },
+    { href: '/gta-rp/clips/',   label: 'Clips' },
+    { href: '/gta-rp/servers/', label: 'Servers' },
+  ];
+  // Desktop "More" dropdown contents (in order shown).
+  const MORE = [
+    { href: '/gta-rp/timeline/',  label: 'Timeline' },
+    { href: '/gta-rp/analytics/', label: 'Analytics' },
+    { href: '/gta-rp/network/',   label: 'Network' },
+    { href: '/gta-rp/digest/',    label: 'Digest' },
+    { href: '/gta-rp/health/',    label: 'Health' },
+    { href: '/gta-rp/streaks/',   label: 'Streaks' },
+    { href: '/gta-rp/party/',     label: 'Party' },
+    { href: '/gta-rp/now/',       label: 'Now' },
+  ];
+  // Mobile drawer groups.
+  const MOBILE_GROUPS = [
+    { label: 'Watch', items: [
+      { href: '/gta-rp/',        label: 'Live' },
+      { href: '/gta-rp/multi/',  label: 'Multi-View' },
+      { href: '/gta-rp/party/',  label: 'Party' },
+    ]},
+    { label: 'Explore', items: [
+      { href: '/gta-rp/clips/',    label: 'Clips' },
+      { href: '/gta-rp/servers/',  label: 'Servers' },
+      { href: '/gta-rp/timeline/', label: 'Timeline' },
+    ]},
+    { label: 'Intelligence', items: [
+      { href: '/gta-rp/analytics/', label: 'Analytics' },
+      { href: '/gta-rp/health/',    label: 'Health' },
+      { href: '/gta-rp/digest/',    label: 'Digest' },
+      { href: '/gta-rp/network/',   label: 'Network' },
+    ]},
+    { label: 'Community', items: [
+      { href: '/gta-rp/streaks/', label: 'Streaks' },
+      { href: '/submit/',         label: 'Submit' },
+    ]},
+  ];
+
   const STYLE = `
+    /* ---------- Desktop "More" dropdown ---------- */
+    .cl-more-wrap{position:relative;display:inline-flex;align-items:stretch}
+    .cl-more-btn{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2px;
+      text-transform:uppercase;color:oklch(0.78 0.05 320);background:transparent;border:0;
+      padding:14px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+      transition:color .15s}
+    .cl-more-btn:hover,.cl-more-btn[aria-expanded="true"]{color:oklch(0.85 0.18 200)}
+    .cl-more-btn .caret{display:inline-block;width:0;height:0;border-left:4px solid transparent;
+      border-right:4px solid transparent;border-top:5px solid currentColor;
+      transition:transform .15s}
+    .cl-more-btn[aria-expanded="true"] .caret{transform:rotate(180deg)}
+    .cl-more-pop{position:absolute;top:calc(100% + 6px);right:0;min-width:200px;z-index:120;
+      background:oklch(0.10 0.04 195 / .92);backdrop-filter:blur(16px) saturate(1.1);
+      -webkit-backdrop-filter:blur(16px) saturate(1.1);
+      border:1px solid oklch(0.95 0.02 195 / .08);box-shadow:0 12px 36px rgba(0,0,0,.45);
+      padding:6px 0;display:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+    .cl-more-pop[data-open="1"]{display:block}
+    .cl-more-pop a{display:block;padding:10px 16px;font-family:'JetBrains Mono',monospace;
+      font-size:12px;letter-spacing:2px;text-transform:uppercase;color:oklch(0.78 0.05 320);
+      text-decoration:none;border-left:3px solid transparent;
+      transition:background .12s,color .12s,border-left-color .12s}
+    .cl-more-pop a:hover{background:oklch(0.82 0.20 195 / .10);color:oklch(0.97 0.02 320);
+      border-left-color:oklch(0.65 0.18 195)}
+    .cl-more-pop a.active{color:oklch(0.85 0.18 200);border-left-color:oklch(0.82 0.20 195);
+      background:oklch(0.82 0.20 195 / .12)}
+
+    /* ---------- Hamburger button (mobile only) ---------- */
     .cl-mn-btn{display:none}
     @media(max-width:900px){
       .nav .nav-links{display:none !important}
+      .cl-more-wrap{display:none !important}
       .cl-mn-btn{display:inline-flex;align-items:center;justify-content:center;
         width:36px;height:36px;background:none;border:1px solid oklch(0.28 0.06 190);
         color:oklch(0.97 0.02 320);cursor:pointer;font-size:18px;line-height:1;
@@ -57,31 +136,37 @@
       body.cl-mn-open .cl-mn-btn .bars span:nth-child(2){opacity:0}
       body.cl-mn-open .cl-mn-btn .bars span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
     }
+
+    /* ---------- Mobile drawer ---------- */
     .cl-mn-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:198;opacity:0;
       pointer-events:none;transition:opacity .2s}
     body.cl-mn-open .cl-mn-overlay{opacity:1;pointer-events:auto}
-    .cl-mn-drawer{position:fixed;top:0;right:0;bottom:0;width:min(280px,82vw);z-index:199;
-      background:oklch(0.14 0.05 190);border-left:1px solid oklch(0.28 0.06 190);
+    .cl-mn-drawer{position:fixed;top:0;right:0;bottom:0;width:min(300px,84vw);z-index:199;
+      background:oklch(0.10 0.04 195 / .96);backdrop-filter:blur(20px) saturate(1.1);
+      -webkit-backdrop-filter:blur(20px) saturate(1.1);
+      border-left:1px solid oklch(0.95 0.02 195 / .08);
       transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;
-      box-shadow:-12px 0 32px rgba(0,0,0,.45);font-family:'JetBrains Mono',monospace}
+      box-shadow:-12px 0 32px rgba(0,0,0,.5);font-family:'JetBrains Mono',monospace}
     body.cl-mn-open .cl-mn-drawer{transform:translateX(0)}
     .cl-mn-drawer header{display:flex;align-items:center;justify-content:space-between;
-      padding:14px 16px;border-bottom:1px solid oklch(0.28 0.06 190);flex:none}
+      padding:14px 16px;border-bottom:1px solid oklch(0.95 0.02 195 / .06);flex:none}
     .cl-mn-drawer header .ttl{font-family:'Bebas Neue',Impact,sans-serif;font-size:22px;
       letter-spacing:2px;color:oklch(0.97 0.02 320)}
     .cl-mn-drawer header .ttl .cl{color:oklch(0.82 0.20 195)}
     .cl-mn-drawer header .x{background:none;border:1px solid oklch(0.28 0.06 190);color:oklch(0.78 0.05 320);
       width:34px;height:34px;cursor:pointer;font:inherit;font-size:16px}
     .cl-mn-drawer header .x:hover{border-color:oklch(0.82 0.20 195);color:oklch(0.85 0.18 200)}
-    .cl-mn-drawer nav{flex:1;overflow-y:auto;padding:8px 0}
-    .cl-mn-drawer nav a{display:flex;align-items:center;gap:10px;padding:14px 18px;font-size:13px;
+    .cl-mn-drawer nav{flex:1;overflow-y:auto;padding:8px 0 16px}
+    .cl-mn-group{padding:14px 18px 6px;font-size:10px;letter-spacing:3px;text-transform:uppercase;
+      color:oklch(0.55 0.06 195);font-weight:600}
+    .cl-mn-drawer nav a{display:flex;align-items:center;gap:10px;padding:12px 18px;font-size:13px;
       letter-spacing:2px;text-transform:uppercase;color:oklch(0.78 0.05 320);text-decoration:none;
       border-left:3px solid transparent;transition:background .15s,color .15s,border-color .15s}
     .cl-mn-drawer nav a:hover{background:oklch(0.10 0.04 190);color:oklch(0.97 0.02 320);
       border-left-color:oklch(0.65 0.18 195)}
     .cl-mn-drawer nav a.active{color:oklch(0.85 0.18 200);border-left-color:oklch(0.82 0.20 195);
       background:oklch(0.82 0.20 195/.08)}
-    .cl-mn-drawer footer{padding:14px 18px;border-top:1px solid oklch(0.28 0.06 190);
+    .cl-mn-drawer footer{padding:14px 18px;border-top:1px solid oklch(0.95 0.02 195 / .06);
       font-size:11px;letter-spacing:2px;text-transform:uppercase;color:oklch(0.55 0.06 190);flex:none}
   `;
 
@@ -89,6 +174,17 @@
     if (document.readyState !== 'loading') fn();
     else document.addEventListener('DOMContentLoaded', fn);
   }
+
+  // Normalise an href for matching: lowercase + ensure trailing slash on
+  // gta-rp paths so '/gta-rp/multi' and '/gta-rp/multi/' both match.
+  function norm(h) {
+    if (!h) return '';
+    let s = h.split('?')[0].split('#')[0].toLowerCase();
+    if (s.endsWith('/index.html')) s = s.slice(0, -10);
+    if (!s.endsWith('/') && !s.includes('.')) s += '/';
+    return s;
+  }
+  const HERE = norm(location.pathname);
 
   ready(() => {
     const nav = document.querySelector('nav.nav');
@@ -101,8 +197,75 @@
     style.textContent = STYLE;
     document.head.appendChild(style);
 
-    // Hamburger button. Inserted as the last child of nav so it sits
-    // on the right, with `margin-left:auto` shoving it past the brand.
+    // ---- Desktop: hide non-primary, inject "More" dropdown. -------
+    // Index existing nav-links by normalised href so we can preserve
+    // any inline content (e.g., the live-dot span on the Live link).
+    const existing = new Map();
+    links.querySelectorAll('a.nav-link').forEach(a => {
+      existing.set(norm(a.getAttribute('href')), a);
+    });
+
+    const primaryHrefs = new Set(PRIMARY.map(p => norm(p.href)));
+
+    // Hide every link that isn't in the primary 4. They get cloned
+    // into the dropdown below.
+    existing.forEach((a, h) => {
+      if (!primaryHrefs.has(h)) a.style.display = 'none';
+    });
+
+    // Make sure every primary link exists in the desktop nav. If
+    // missing (older page that hadn't updated), append it.
+    PRIMARY.forEach(p => {
+      const hn = norm(p.href);
+      if (!existing.has(hn)) {
+        const a = document.createElement('a');
+        a.href = p.href;
+        a.className = 'nav-link';
+        a.textContent = p.label;
+        if (HERE === hn) a.classList.add('active');
+        links.appendChild(a);
+        existing.set(hn, a);
+      }
+    });
+
+    // Build the More dropdown.
+    const moreWrap = document.createElement('div');
+    moreWrap.className = 'cl-more-wrap';
+    moreWrap.innerHTML = `
+      <button class="cl-more-btn" type="button" aria-haspopup="true" aria-expanded="false">
+        More <span class="caret"></span>
+      </button>
+      <div class="cl-more-pop" role="menu"></div>`;
+    const moreBtn = moreWrap.querySelector('.cl-more-btn');
+    const morePop = moreWrap.querySelector('.cl-more-pop');
+    MORE.forEach(m => {
+      const a = document.createElement('a');
+      a.href = m.href;
+      a.textContent = m.label;
+      a.setAttribute('role', 'menuitem');
+      if (HERE === norm(m.href)) a.classList.add('active');
+      morePop.appendChild(a);
+    });
+    links.appendChild(moreWrap);
+
+    function closeMore() {
+      morePop.removeAttribute('data-open');
+      moreBtn.setAttribute('aria-expanded', 'false');
+    }
+    moreBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = morePop.getAttribute('data-open') === '1';
+      if (open) closeMore();
+      else { morePop.setAttribute('data-open', '1'); moreBtn.setAttribute('aria-expanded', 'true'); }
+    });
+    document.addEventListener('click', (e) => {
+      if (!moreWrap.contains(e.target)) closeMore();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMore();
+    });
+
+    // ---- Mobile: hamburger button + grouped drawer. ---------------
     const btn = document.createElement('button');
     btn.id = 'cl-mn-btn';
     btn.type = 'button';
@@ -112,8 +275,6 @@
     btn.innerHTML = '<span class="bars"><span></span><span></span><span></span></span>';
     nav.appendChild(btn);
 
-    // Drawer + overlay (live in body so they're not constrained by
-    // any nav z-index/overflow).
     const overlay = document.createElement('div');
     overlay.className = 'cl-mn-overlay';
     overlay.setAttribute('aria-hidden', 'true');
@@ -131,45 +292,43 @@
       <nav></nav>
       <footer>ContentLore · UK GTA RP</footer>
     `;
-
-    // Mirror the existing nav-link items into the drawer. We don't
-    // reuse the same DOM nodes so the desktop nav stays intact.
     const drawerNav = drawer.querySelector('nav');
-    const items = links.querySelectorAll('a.nav-link');
-    items.forEach(a => {
-      const clone = document.createElement('a');
-      clone.href = a.getAttribute('href') || '#';
-      clone.textContent = a.textContent.trim();
-      if (a.classList.contains('active') || a.classList.contains('nav-live')) {
-        clone.classList.add('active');
-      }
-      drawerNav.appendChild(clone);
+    MOBILE_GROUPS.forEach(group => {
+      const lbl = document.createElement('div');
+      lbl.className = 'cl-mn-group';
+      lbl.textContent = group.label;
+      drawerNav.appendChild(lbl);
+      group.items.forEach(item => {
+        const a = document.createElement('a');
+        a.href = item.href;
+        a.textContent = item.label;
+        if (HERE === norm(item.href)) a.classList.add('active');
+        drawerNav.appendChild(a);
+      });
     });
 
     document.body.appendChild(overlay);
     document.body.appendChild(drawer);
 
-    function open() {
+    function openDrawer() {
       document.body.classList.add('cl-mn-open');
       btn.setAttribute('aria-expanded', 'true');
       overlay.setAttribute('aria-hidden', 'false');
       drawer.querySelector('.x').focus();
     }
-    function close() {
+    function closeDrawer() {
       document.body.classList.remove('cl-mn-open');
       btn.setAttribute('aria-expanded', 'false');
       overlay.setAttribute('aria-hidden', 'true');
     }
-    function toggle() {
-      document.body.classList.contains('cl-mn-open') ? close() : open();
-    }
-
-    btn.addEventListener('click', toggle);
-    overlay.addEventListener('click', close);
-    drawer.querySelector('.x').addEventListener('click', close);
-    drawer.querySelectorAll('nav a').forEach(a => a.addEventListener('click', close));
+    btn.addEventListener('click', () => {
+      document.body.classList.contains('cl-mn-open') ? closeDrawer() : openDrawer();
+    });
+    overlay.addEventListener('click', closeDrawer);
+    drawer.querySelector('.x').addEventListener('click', closeDrawer);
+    drawer.querySelectorAll('nav a').forEach(a => a.addEventListener('click', closeDrawer));
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.body.classList.contains('cl-mn-open')) close();
+      if (e.key === 'Escape' && document.body.classList.contains('cl-mn-open')) closeDrawer();
     });
   });
 })();
