@@ -110,8 +110,19 @@ body {
 .kpi,
 .stat-box,
 .stat-card,
+.hero-stat,
 .panel,
-.glass {
+.glass,
+.clip,
+.reel-card,
+.tile,
+.cd-cell,
+.fmwk-status,
+.ni-card,
+.spc-card,
+.health-card,
+.digest-section,
+.rank-row {
   background: var(--cl-glass-bg);
   backdrop-filter: blur(12px) saturate(1.05);
   -webkit-backdrop-filter: blur(12px) saturate(1.05);
@@ -129,8 +140,17 @@ body {
 .kpi:hover,
 .stat-box:hover,
 .stat-card:hover,
+.hero-stat:hover,
 .panel:hover,
-.glass:hover {
+.glass:hover,
+.clip:hover,
+.reel-card:hover,
+.tile:hover,
+.cd-cell:hover,
+.ni-card:hover,
+.spc-card:hover,
+.health-card:hover,
+.rank-row:hover {
   transform: translateY(-2px);
   box-shadow: var(--cl-glass-shadow-hov);
   background: var(--cl-glass-bg-hov);
@@ -138,6 +158,38 @@ body {
   /* Disable the noisy infinite glow-pulse animation on hover that
      some pages declare; transform+shadow do the lift cleanly. */
   animation: none !important;
+}
+
+/* Filter bars / control strips: glass too, no lift on hover. */
+.filters,
+.filter-group,
+.filter-stats,
+.controls,
+.toolbar {
+  background: var(--cl-glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--cl-edge);
+  box-shadow: var(--cl-glass-shadow);
+}
+
+/* Stream tile chrome on multi-view: glass shell, no lift (already
+   has its own active-state ring). The tile content (iframe) stays
+   opaque on top. */
+.tile {
+  border-radius: 2px;
+}
+
+/* Modal surfaces: stronger blur, deeper background. */
+.modal,
+.modal-inner {
+  backdrop-filter: blur(20px) saturate(1.1);
+  -webkit-backdrop-filter: blur(20px) saturate(1.1);
+}
+
+/* Shoutout-card-style stat rows that should still feel like sub-panels. */
+.stats {
+  --cl-glass-bg: oklch(0.13 0.045 195 / .42);
 }
 
 /* Sticky nav and pulse strip: keep them readable, give them their
