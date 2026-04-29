@@ -53,10 +53,11 @@
 (function () {
   // Primary desktop links — always visible at >900px.
   const PRIMARY = [
-    { href: '/gta-rp/',         label: 'Live' },
-    { href: '/gta-rp/multi/',   label: 'Multi-View' },
-    { href: '/gta-rp/clips/',   label: 'Clips' },
-    { href: '/gta-rp/servers/', label: 'Servers' },
+    { href: '/gta-rp/',          label: 'Live' },
+    { href: '/gta-rp/multi/',    label: 'Multi-View' },
+    { href: '/gta-rp/rankings/', label: 'Rankings' },
+    { href: '/gta-rp/clips/',    label: 'Clips' },
+    { href: '/gta-rp/servers/',  label: 'Servers' },
   ];
   // Desktop "More" dropdown contents (in order shown).
   const MORE = [
@@ -82,6 +83,7 @@
       { href: '/gta-rp/timeline/', label: 'Timeline' },
     ]},
     { label: 'Intelligence', items: [
+      { href: '/gta-rp/rankings/',  label: 'Rankings' },
       { href: '/gta-rp/analytics/', label: 'Analytics' },
       { href: '/gta-rp/health/',    label: 'Health' },
       { href: '/gta-rp/digest/',    label: 'Digest' },

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/cl-theme.css">
+<meta name="theme-color" content="#0d1f1f">
+<script src="/pwa.js" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Rankings · ContentLore — UK GTA RP</title>
+<meta name="description" content="Weekly Power Rankings for UK GTA RP creators. Composite score from hours streamed, average viewers, sessions, and growth.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ContentLore">
+<meta property="og:title" content="UK GTA RP Power Rankings — ContentLore">
+<meta property="og:description" content="The weekly leaderboard. Score = hours (30%) + viewers (40%) + sessions (20%) + growth (10%).">
+<meta property="og:image" content="https://contentlore.com/logo.png">
+<meta property="og:url" content="https://contentlore.com/gta-rp/rankings/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="UK GTA RP Power Rankings">
+<meta name="twitter:description" content="The weekly leaderboard. Score = hours (30%) + viewers (40%) + sessions (20%) + growth (10%).">
+<meta name="twitter:image" content="https://contentlore.com/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);
+  --card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);
+  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 190);
+  --signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);
+  --border:oklch(0.28 0.06 190);--live:oklch(0.82 0.20 195);
+  --twitch:oklch(0.65 0.25 295);--kick:oklch(0.82 0.22 145);
+  --up:oklch(0.78 0.20 145);--down:oklch(0.68 0.27 25);--same:oklch(0.55 0.06 190);
+  --gold:oklch(0.82 0.18 80);--silver:oklch(0.85 0.02 320);--bronze:oklch(0.62 0.13 50);
+  --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
+  --cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
+}
+html{color-scheme:dark}
+body{color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body>*{position:relative;z-index:3}
+
+.nav{height:48px;display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;text-decoration:none;color:var(--fg);margin-right:24px;display:inline-flex;align-items:center}
+.nav-brand img{height:40px;filter:brightness(1.1)}
+.nav-links{display:flex;align-items:center;gap:0}
+.nav-link{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px 12px;transition:color .2s}
+.nav-link:hover{color:var(--fg)}
+.nav-link.active{color:var(--signal-cyan)}
+
+/* HERO */
+.hero{padding:64px 24px 36px;text-align:center}
+.hero-kicker{font-family:var(--font-m);font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--signal);margin-bottom:8px}
+.hero h1{font-family:var(--font-d);font-size:clamp(48px,9vw,84px);letter-spacing:3px;line-height:.95}
+.hero h1 .neon{color:var(--signal);text-shadow:0 0 8px oklch(0.82 0.20 195/.55),0 0 24px oklch(0.82 0.20 195/.30)}
+.hero-sub{font-family:var(--font-m);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-dim);margin-top:14px}
+.hero-cta{margin-top:18px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.cta{font-family:var(--font-d);font-size:14px;letter-spacing:2px;padding:10px 20px;text-decoration:none;clip-path:var(--cut);transition:all .2s;cursor:pointer;border:0}
+.cta-primary{background:var(--signal);color:var(--bg)}
+.cta-primary:hover{box-shadow:0 0 20px oklch(0.82 0.20 195/.5);transform:translateY(-2px)}
+.cta-secondary{background:transparent;border:1px solid var(--border);color:var(--fg)}
+.cta-secondary:hover{border-color:var(--signal-cyan);color:var(--signal-cyan);transform:translateY(-2px)}
+
+/* FORMULA STRIP */
+.mx{max-width:1100px;margin:0 auto;padding:0 24px}
+.formula{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:1100px;margin:24px auto;padding:0 24px}
+.f-item{padding:16px;clip-path:var(--cut)}
+.f-pct{font-family:var(--font-d);font-size:30px;color:var(--signal);line-height:1}
+.f-name{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--fg);margin-top:6px}
+.f-desc{font-size:12px;color:var(--ink-faint);margin-top:4px}
+@media(max-width:760px){.formula{grid-template-columns:1fr 1fr}}
+
+/* RANK ROWS */
+.ranks{padding:24px 24px 48px;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.rank-row{display:grid;grid-template-columns:80px 56px 1fr 220px 140px 80px;gap:16px;align-items:center;padding:14px 18px;clip-path:var(--cut);text-decoration:none;color:var(--fg)}
+.rr-pos{display:flex;align-items:baseline;gap:6px;font-family:var(--font-d);font-size:42px;letter-spacing:1px;line-height:1}
+.rr-pos .hash{font-size:22px;color:var(--ink-faint)}
+.rr-pos.gold .num{color:var(--gold);text-shadow:0 0 12px oklch(0.82 0.18 80/.5)}
+.rr-pos.silver .num{color:var(--silver)}
+.rr-pos.bronze .num{color:var(--bronze)}
+.rr-mv{display:flex;align-items:center;gap:4px;font-family:var(--font-m);font-size:13px;letter-spacing:1px}
+.rr-mv.up{color:var(--up)}
+.rr-mv.down{color:var(--down)}
+.rr-mv.same{color:var(--same)}
+.rr-mv.new{color:var(--signal-cyan)}
+.rr-id{display:flex;align-items:center;gap:14px;min-width:0}
+.rr-av{width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--card2);flex-shrink:0;border:2px solid oklch(0.95 0.02 195/.08)}
+.rr-av-ph{width:48px;height:48px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:22px;color:var(--signal)}
+.rr-name{font-family:var(--font-d);font-size:22px;letter-spacing:1px;line-height:1}
+.rr-meta{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--ink-faint);margin-top:4px;display:flex;gap:8px}
+.rr-plat{padding:1px 6px;border-radius:2px;font-size:10px}
+.rr-plat.tw{background:oklch(0.65 0.25 295/.18);color:oklch(0.78 0.20 295);border:1px solid oklch(0.65 0.25 295/.4)}
+.rr-plat.kk{background:oklch(0.82 0.22 145/.15);color:oklch(0.82 0.22 145);border:1px solid oklch(0.82 0.22 145/.4)}
+.rr-bd{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-family:var(--font-m);font-size:11px}
+.rr-bd .b{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+.rr-bd .b-l{color:var(--ink-faint);font-size:9px;letter-spacing:1.5px;text-transform:uppercase}
+.rr-bd .b-v{color:var(--fg);font-size:13px;font-weight:600}
+.rr-bd .b-v.pos{color:var(--up)}
+.rr-bd .b-v.neg{color:var(--down)}
+.rr-spark{height:48px;width:140px;display:block}
+.rr-spark path{fill:none;stroke:var(--signal);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rr-spark .area{fill:var(--signal);opacity:.12}
+.rr-score{font-family:var(--font-d);font-size:34px;letter-spacing:1px;color:var(--signal-cyan);text-align:right;line-height:1}
+.rr-score-lbl{font-family:var(--font-m);font-size:10px;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;text-align:right;margin-top:2px}
+
+@media(max-width:980px){
+  .rank-row{grid-template-columns:60px 50px 1fr 100px;gap:12px;padding:12px 14px}
+  .rr-bd{display:none}
+  .rr-spark{display:none}
+  .rr-score{font-size:26px}
+}
+@media(max-width:520px){
+  .rank-row{grid-template-columns:48px 1fr 80px;gap:10px}
+  .rr-mv{display:none}
+}
+
+.empty{padding:48px;text-align:center;color:var(--ink-faint);font-family:var(--font-m);font-size:13px;letter-spacing:2px;text-transform:uppercase}
+.skel-row{height:80px;clip-path:var(--cut);background:var(--card2);position:relative;overflow:hidden;margin-bottom:8px}
+.skel-row::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,oklch(0.20 0.06 195/.4),transparent);animation:sk 1.6s infinite}
+@keyframes sk{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:oklch(0.14 0.05 190);color:oklch(0.97 0.02 320);border:1px solid oklch(0.82 0.20 195/.4);padding:10px 16px;font-family:var(--font-m);font-size:13px;letter-spacing:1px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+
+.footer{padding:36px 24px;text-align:center;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
+.footer a{color:var(--ink-faint);text-decoration:none;margin:0 8px}
+.footer a:hover{color:var(--signal-cyan)}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-brand"><img src="/logo.png" alt="ContentLore"></a>
+  <div class="nav-links">
+    <a href="/gta-rp/" class="nav-link">Live</a>
+    <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/clips/" class="nav-link">Clips</a>
+    <a href="/gta-rp/rankings/" class="nav-link active">Rankings</a>
+    <a href="/gta-rp/servers/" class="nav-link">Servers</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-kicker">Weekly Power Rankings</div>
+  <h1>Who's <span class="neon">winning</span> the week.</h1>
+  <div class="hero-sub" id="hero-sub">Loading rankings…</div>
+  <div class="hero-cta">
+    <button class="cta cta-primary" id="share-btn">Share these rankings</button>
+    <a class="cta cta-secondary" href="/gta-rp/analytics/">See full analytics →</a>
+  </div>
+</div>
+
+<div class="formula">
+  <div class="f-item card"><div class="f-pct">40%</div><div class="f-name">Avg Viewers</div><div class="f-desc">Average concurrent viewers across snapshots</div></div>
+  <div class="f-item card"><div class="f-pct">30%</div><div class="f-name">Hours Streamed</div><div class="f-desc">Total time live in the last 7 days</div></div>
+  <div class="f-item card"><div class="f-pct">20%</div><div class="f-name">Sessions</div><div class="f-desc">Number of distinct streams</div></div>
+  <div class="f-item card"><div class="f-pct">10%</div><div class="f-name">Growth</div><div class="f-desc">Avg-viewer change vs last week</div></div>
+</div>
+
+<div class="ranks" id="ranks-host">
+  <div class="skel-row"></div><div class="skel-row"></div><div class="skel-row"></div>
+  <div class="skel-row"></div><div class="skel-row"></div>
+</div>
+
+<div class="footer">
+  ContentLore — UK GTA RP · Power Rankings refresh every 5 minutes ·
+  <a href="/">Home</a> · <a href="/gta-rp/">Live</a> · <a href="/gta-rp/digest/">Digest</a> · <a href="/submit/">Submit your channel →</a>
+</div>
+
+<div class="toast" id="toast">Link copied</div>
+
+<script>
+const esc = s => (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtN = n => n>=1000 ? (n/1000).toFixed(n>=10000?0:1)+'k' : String(n||0);
+
+function medalClass(rank){return rank===1?'gold':rank===2?'silver':rank===3?'bronze':''}
+
+function movementHtml(mv, isNew) {
+  if (isNew && (mv == null)) return '<span class="rr-mv new">★ NEW</span>';
+  if (mv == null) return '<span class="rr-mv same">·</span>';
+  if (mv > 0) return `<span class="rr-mv up">▲ ${mv}</span>`;
+  if (mv < 0) return `<span class="rr-mv down">▼ ${Math.abs(mv)}</span>`;
+  return '<span class="rr-mv same">— 0</span>';
+}
+
+function sparklineSvg(points) {
+  if (!points || points.length === 0) return '';
+  const w = 140, h = 48, pad = 2;
+  const max = Math.max(1, ...points);
+  const stepX = points.length > 1 ? (w - pad*2) / (points.length - 1) : 0;
+  const norm = points.map((v, i) => {
+    const x = pad + i * stepX;
+    const y = h - pad - (v / max) * (h - pad*2);
+    return [x, y];
+  });
+  const lineD = norm.map((p,i) => (i===0?'M':'L') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const areaD = `${lineD} L ${norm[norm.length-1][0].toFixed(1)} ${h-pad} L ${pad} ${h-pad} Z`;
+  return `<svg class="rr-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <path class="area" d="${areaD}"/>
+    <path d="${lineD}"/>
+  </svg>`;
+}
+
+function avatarHtml(r, fallbackInitial) {
+  return r.avatar_url
+    ? `<img class="rr-av" src="${esc(r.avatar_url)}" alt="${esc(r.display_name)}" loading="lazy" onerror="this.outerHTML='\\u003cdiv class=rr-av-ph\\u003e${esc(fallbackInitial)}\\u003c/div\\u003e'">`
+    : `<div class="rr-av-ph">${esc(fallbackInitial)}</div>`;
+}
+
+function rowHtml(r) {
+  const mc = medalClass(r.rank);
+  const platCls = r.primary_platform === 'kick' ? 'kk' : 'tw';
+  const initial = (r.display_name || '?').charAt(0).toUpperCase();
+  const g = r.breakdown.growth_pct;
+  const gClass = g == null ? '' : (g >= 0 ? 'pos' : 'neg');
+  const gText = g == null ? '·' : `${g>=0?'+':''}${g}%`;
+  return `<a class="rank-row card" href="${esc(r.profile_url)}">
+    <div class="rr-pos ${mc}"><span class="hash">#</span><span class="num">${r.rank}</span></div>
+    ${movementHtml(r.movement, r.is_new)}
+    <div class="rr-id">
+      ${avatarHtml(r, initial)}
+      <div>
+        <div class="rr-name">${esc(r.display_name)}</div>
+        <div class="rr-meta">
+          <span class="rr-plat ${platCls}">${esc(r.primary_platform)}</span>
+          <span>${r.breakdown.sessions} sessions · ${Math.round(r.breakdown.hours)}h · ${fmtN(r.breakdown.avg_viewers)} avg</span>
+        </div>
+      </div>
+    </div>
+    <div class="rr-bd">
+      <div class="b"><div class="b-l">Hours</div><div class="b-v">${Math.round(r.breakdown.hours)}h</div></div>
+      <div class="b"><div class="b-l">Avg V</div><div class="b-v">${fmtN(r.breakdown.avg_viewers)}</div></div>
+      <div class="b"><div class="b-l">Sess</div><div class="b-v">${r.breakdown.sessions}</div></div>
+      <div class="b"><div class="b-l">Growth</div><div class="b-v ${gClass}">${gText}</div></div>
+    </div>
+    ${sparklineSvg(r.sparkline)}
+    <div>
+      <div class="rr-score">${Math.round(r.score)}</div>
+      <div class="rr-score-lbl">Score</div>
+    </div>
+  </a>`;
+}
+
+async function loadRankings() {
+  try {
+    // Pull /api/uk-rp-live in parallel for avatar enrichment.
+    const [r, lr] = await Promise.all([
+      fetch('/api/rankings').then(r => r.json()),
+      fetch('/api/uk-rp-live').then(r => r.json()).catch(() => null),
+    ]);
+    if (!r.ok) throw new Error(r.error || 'Rankings unavailable');
+    const avatars = new Map();
+    if (lr && lr.live) for (const c of lr.live) avatars.set(c.handle, c.avatar_url);
+    for (const row of r.rankings) {
+      if (!row.avatar_url && avatars.get(row.handle)) row.avatar_url = avatars.get(row.handle);
+    }
+    document.getElementById('hero-sub').textContent =
+      `Top ${r.count} creators · 7-day window · refreshed ${new Date(r.generated_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
+    const host = document.getElementById('ranks-host');
+    if (!r.rankings.length) {
+      host.innerHTML = '<div class="empty">No data yet — rankings rebuild as creators stream.</div>';
+      return;
+    }
+    host.innerHTML = r.rankings.map(rowHtml).join('');
+  } catch (e) {
+    document.getElementById('hero-sub').textContent = 'Could not load rankings';
+    document.getElementById('ranks-host').innerHTML = `<div class="empty">${esc(e.message||e)}</div>`;
+  }
+}
+
+document.getElementById('share-btn').addEventListener('click', async () => {
+  const url = location.href;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'UK GTA RP Power Rankings', url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+  } catch { /* user cancelled */ }
+});
+
+loadRankings();
+setInterval(loadRankings, 5*60*1000);
+</script>
+<script src="/streak-checkin.js" defer></script>
+</body>
+</html>
