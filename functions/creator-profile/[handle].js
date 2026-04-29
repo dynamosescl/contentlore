@@ -57,7 +57,7 @@ export async function onRequestGet({ params, env, request }) {
   if (!entry) return notFoundPage(rawHandle);
 
   // Pull the live state, clips cache, and D1 history in parallel.
-  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks, weekRanks, connections, flaggedMoments] = await Promise.all([
+  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks, weekRanks, connections, flaggedMoments, moderators] = await Promise.all([
     getLiveCache(env, request),
     getClipsCache(env, request),
     lookupDbCreator(env, entry.handle),
@@ -66,6 +66,7 @@ export async function onRequestGet({ params, env, request }) {
     queryWeekRanks(env).catch(() => []),
     queryConnections(env, entry.handle).catch(() => []),
     queryFlaggedMoments(env, entry.handle).catch(() => []),
+    queryModerators(env, entry.handle).catch(() => []),
   ]);
 
   const liveEntry = (liveCache?.live || []).find(c => c.handle === entry.handle) || null;
@@ -84,7 +85,7 @@ export async function onRequestGet({ params, env, request }) {
 
   return new Response(renderProfile({
     handle: entry.handle, name: display, platform: entry.platform,
-    avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments,
+    avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments, moderators,
   }), {
     headers: {
       'content-type': 'text/html; charset=utf-8',
@@ -207,6 +208,33 @@ async function queryWeekRanks(env) {
     handle: String(r.handle).toLowerCase(),
     mins: Number(r.mins || 0),
   })).sort((a, b) => b.mins - a.mins);
+}
+
+// "Moderated by" — verified mods whose creators_modded JSON contains
+// this creator's handle. Sorted by XP descending so the most active
+// mods surface first.
+async function queryModerators(env, handle) {
+  try {
+    const res = await env.DB.prepare(`
+      SELECT id, display_name, twitch_handle, kick_handle, level, xp, mod_of_month
+        FROM mod_accounts
+       WHERE status = 'verified'
+         AND (',' || REPLACE(REPLACE(REPLACE(creators_modded, '"', ''), '[', ','), ']', ',') || ',') LIKE ?
+       ORDER BY xp DESC
+       LIMIT 12
+    `).bind(`%,${handle},%`).all();
+    return (res.results || []).map(r => ({
+      id: r.id,
+      display_name: r.display_name,
+      twitch_handle: r.twitch_handle,
+      kick_handle: r.kick_handle,
+      level: r.level,
+      xp: Number(r.xp || 0),
+      mod_of_month: r.mod_of_month || null,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 // Notable moments — flagged_moments aggregated from mod_stream_notes
@@ -579,7 +607,7 @@ function buildPlatformLinks(socials) {
   return out;
 }
 
-function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments }) {
+function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments, moderators }) {
   const platUrl = platform === 'kick' ? `https://kick.com/${handle}` : `https://twitch.tv/${handle}`;
   const platLabel = platform === 'kick' ? 'Kick' : 'Twitch';
   const isLive = !!liveEntry?.is_live;
@@ -718,6 +746,19 @@ body>*{position:relative;z-index:3}
 .chip{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:1px;padding:9px 14px;background:var(--card);border:1px solid var(--border);color:var(--ink-dim);display:inline-flex;align-items:center;gap:8px;transition:all .15s}
 .chip:hover{border-color:var(--signal);color:var(--fg)}
 .chip .n{font-family:var(--font-d);font-size:15px;color:var(--signal);letter-spacing:0}
+
+/* MODERATED BY — verified mods for this creator */
+.modby{display:flex;flex-wrap:wrap;gap:8px}
+.modby-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);font-family:var(--font-m);font-size:12px;letter-spacing:.5px}
+.modby-chip .name{font-family:var(--font-d);font-size:15px;letter-spacing:.5px;color:var(--fg)}
+.modby-chip .meta{color:var(--ink-faint);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;margin-left:4px}
+.lvl-badge{display:inline-block;font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;border-radius:2px;font-weight:700;color:#0a0c10;line-height:1}
+.lvl-badge.rookie{background:#9aa6b2}
+.lvl-badge.regular{background:#3acc88}
+.lvl-badge.trusted{background:#5b9bff}
+.lvl-badge.senior{background:#b56fff;color:#fff}
+.lvl-badge.head{background:#f5c84a}
+.modby-chip .crown{color:var(--head, #f5c84a);font-size:12px}
 
 /* NOTABLE MOMENTS — flagged by mods */
 .moments{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
@@ -952,6 +993,25 @@ body>*{position:relative;z-index:3}
         </div>
       `).join('')}
     </div>
+  </div>` : ''}
+
+  ${(moderators && moderators.length) ? `
+  <div class="section">
+    <div class="sec-h"><h2>Moderated By</h2><span class="sub">Verified ContentLore mods for ${esc(name)}</span></div>
+    <div class="modby">
+      ${moderators.map(m => {
+        const isMOTM = !!m.mod_of_month;
+        return `<span class="modby-chip">
+          ${isMOTM ? '<span class="crown" title="Mod of the Month">👑</span>' : ''}
+          <span class="name">${esc(m.display_name)}</span>
+          <span class="lvl-badge ${esc(m.level)}">${esc(m.level)}</span>
+          <span class="meta">${m.xp} XP</span>
+        </span>`;
+      }).join('')}
+    </div>
+    <p style="margin-top:12px;font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:var(--ink-faint)">
+      Mod for ${esc(name)} but not on this list? <a href="/moderators/" style="color:var(--signal-cyan);text-decoration:none">Apply →</a>
+    </p>
   </div>` : ''}
 
   <div class="section">
