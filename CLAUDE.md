@@ -44,16 +44,16 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 
 ## 2. Current State
 
-**Active hub surfaces (20):**
-- Static pages (16): `/`, `/submit/`, `/gta-rp/{,now/,multi/,party/,clips/,timeline/,analytics/,network/,digest/,health/,streaks/,servers/,fivem-enhanced/,gta-6/}`
+**Active hub surfaces (22):**
+- Static pages (17): `/`, `/submit/`, `/gta-rp/{,now/,multi/,party/,clips/,timeline/,analytics/,network/,digest/,health/,streaks/,servers/,rankings/,fivem-enhanced/,gta-6/}`
 - Admin pages (3): `/mod/`, `/admin/content.html`, `/admin/discovery.html`
-- Dynamic pages (2): `/creator-profile/{handle}` rendered by `functions/creator-profile/[handle].js`; `/api/shoutout-card/{handle}` is also a server-rendered HTML page (it's under `/api/` only by URL convention, but it returns HTML and serves as the og:image target for profile pages)
+- Dynamic pages (3): `/creator-profile/{handle}` rendered by `functions/creator-profile/[handle].js`; `/api/shoutout-card/{handle}` is also a server-rendered HTML page (it's under `/api/` only by URL convention, but it returns HTML and serves as the og:image target for profile pages); `/api/widget/{handle}` ditto — server-rendered 300×100 HTML for embedding.
 
 Every hub page is now a PWA candidate — manifest linked, theme-color set, service worker registered via `/pwa.js`. Mobile (<=768px) gets a fork of `/gta-rp/multi/` (single stream + chat below + bottom tabbar + roster bottom-sheet); the global nav collapses to a hamburger drawer at <=900px.
 
 The repo also contains several legacy directories (`about/`, `contact/`, `creators/`, `ethics/`, `ledger/`, `rising/`, `signals/`, `the-platform/`, `gta-rp/beef/`, `gta-rp/lore/`) that survived the 2026-04-26 cleanup sweep but aren't part of the active navigation. They serve via `_redirects` catch-all if anyone deep-links them. Worth a re-audit eventually.
 
-**Active Pages Functions (40, plus 2 helpers):**
+**Active Pages Functions (47, plus 2 helpers):**
 
 | Endpoint | File | Purpose |
 |---|---|---|
@@ -67,6 +67,13 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 | `GET /api/network` | `api/network.js` | Curated-26 nodes (avg viewer weight) + curated-only edges from `creator_edges`. 5-min Cache API |
 | `GET /api/digest` | `api/digest.js` | "This week in UK GTA RP" report — peak moment, top creators, top clips (delegates to `/api/clips?range=7d`), new pending_creators, server hours. 10-min Cache API |
 | `GET /api/scene-recap` | `api/scene-recap.js` | Claude-generated 200-word narrative recap of last 7d. Pulls digest + analytics, calls Anthropic API (`claude-sonnet-4-6`, 500 max_tokens, ephemeral cache_control on system prompt), 6h Cache API. Falls back to deterministic prose template if `ANTHROPIC_API_KEY` is missing or the call fails. |
+| `GET\|POST /api/daily-recap` | `api/daily-recap.js` | Daily AI-written narrative for one UTC day. GET returns most recent stored row (or `?date=YYYY-MM-DD`/`?days=N`). POST (Bearer-authed) computes that day's metrics from D1 and asks Claude for a ~150-word recap; idempotent UPSERT into `daily_recaps`. Used by `/gta-rp/digest/` (Yesterday section) and the Discord daily summary. |
+| `GET\|POST /api/clip-of-day` | `api/clip-of-day.js` | One AI-picked clip per UTC day with a ~50-word caption. POST (Bearer-authed) sends yesterday's top-10 clips by view count to Claude and stores `{index, caption}` in `clip_of_day`. Falls back to first-by-views if Anthropic fails. Surfaced as a hero card on `/gta-rp/clips/` and the homepage feed. |
+| `GET /api/server-reviews` | `api/server-reviews.js` | Weekly auto-graded report card per RP server (last 7d): hours, unique streamers, viewer-hours, week-over-week growth, top 3 streamers, A/B/C/D/F grade. One batched Anthropic call returns a one-sentence summary per server. Falls back to a deterministic sentence per row if Claude fails. 1h Cache API. Powers the report-cards section on `/gta-rp/servers/`. |
+| `GET /api/rankings` | `api/rankings.js` | Weekly Power Rankings — composite 0-100 score per curated streamer (avg viewers 40% + hours 30% + sessions 20% + growth 10%). Movement = last_week_rank - this_week_rank. Includes 7-day daily-bucketed sparkline per row. 5-min Cache API. Powers `/gta-rp/rankings/`. |
+| `POST /api/submit-clip` | `api/submit-clip.js` | Public clip submission. Parses Twitch + Kick clip URLs, validates the creator is in the curated allowlist. KV rate limit 5/IP/UTC day. Dedupes by URL. Inserts into `clip_submissions` with status='pending'. |
+| `GET\|POST /api/admin/clip-submissions` | `api/admin/clip-submissions.js` | Bearer-authed list (filter by status) + decide (approve/reject with optional note). |
+| `GET /api/widget/{handle}` | `api/widget/[handle].js` | Self-contained 300×100 HTML card meant to be iframe-embedded on creators' linktrees / sites. Avatar + name + LIVE pill + viewer count + platform pills. 60s edge cache + 60s soft-reload. CSP frame-ancestors:* so it can be embedded anywhere. |
 | `GET /api/scene-health` | `api/scene-health.js` | Week-over-week deltas (viewer-hours, active creators, sessions, total hours), server distribution, peak hour-of-day, trend label (Growing / Stable / Cooling / Building). 5-min Cache API. Powers `/gta-rp/health/`. |
 | `GET /api/spotlight` | `api/spotlight.js` | Daily Spotlight pick. Algorithm rewards consistency (≥ median sessions in last 7d) then surfaces the underdog (lowest avg viewers in that pool), indexed by day-of-year. Falls back to alphabetical rotation. 24h Cache API keyed on UTC date — naturally rolls over at midnight. |
 | `GET /api/hype` | `api/hype.js` | Live "scene energy" gauge. Compares current live count + viewer total to rolling 7-day avg for this UTC hour. Returns band + ratio_pct. 60s Cache API. |
@@ -109,34 +116,40 @@ Each ALLOWLIST entry now carries a `socials: { twitch, kick, tiktok, youtube, x,
 - With known CFX IDs (5): Unique RP `ok4qzr`, Orbit RP `5j8edz`, Unmatched RP `r43qej`, New Era RP `z5okp5`, Prodigy RP `775kda`
 - CFX ID unknown / private (8): TNG, D10, Chase, VeraRP, The Ends RP (formerly The Endz), Let's RP, Drill UK, British Life RP
 
-**D1 tables** (verified 2026-04-27 against prod schema)
+**D1 tables** (verified 2026-04-29 against prod schema)
 - `creators` (id, display_name, role, bio, categories, origin_story, avatar_url, accent_colour, created_at, updated_at)
 - `creator_platforms` (creator_id, platform, handle, platform_id, is_primary, verified, verified_at — PK on creator_id+platform)
 - `creator_edges` (raid/host/shoutout social graph)
 - `snapshots` (per-poll observations of live state)
-- `stream_sessions` (derived sessions from snapshots — actively growing as `pollCurated` writes 26 fresh rows per tick)
-- `scene_snapshots` (server-clustered scene captures — actively populating; first rows produced 2026-04-27 18:33 UTC after the curated polling pass landed. ~4 server rows per tick during peak hours.)
-- `pending_creators` (discovery triage — currently 5 rows after the 2026-04-27 cleanup of US leaks; refills on each cron tick when fresh UK GTA RP candidates appear)
+- `stream_sessions` (derived sessions from snapshots — actively growing as `pollCurated` writes 30 fresh rows per tick)
+- `scene_snapshots` (server-clustered scene captures — actively populating; ~4 server rows per tick during peak hours)
+- `pending_creators` (discovery triage; refills on each cron tick when fresh UK GTA RP candidates appear, including raid/host targets surfaced by `interactions.js`)
 - `beefs`, `lore_arcs` (editorial)
 - `watch_streaks` (Phase 3 — anon UUID, current/max streak, total_visits, optional display_name)
 - `gta6_pulse_votes` (Phase 4 — anon UUID, choice ∈ {ready, optimistic, worried, not-thinking}, voted_at)
 - `push_subscriptions` (Phase 5 PWA — endpoint UNIQUE, p256dh, auth, user_uuid, filter_handles. Migration `011_push_subscriptions.sql`. Driven by the scheduler's `pollCurated` go-live transition path via `src/web-push.js`)
-- `curated_creators` (Phase 8 — handle PK, display_name, primary_platform, socials JSON, added_at, active. Index on active. Migration `013_curated_creators.sql`. **The single source of truth for the 26-creator allowlist** — replaces 14 hardcoded copies across the Functions + scheduler. Read via `functions/_curated.js` on Pages, `contentlore-scheduler/src/curated-list.js` on the scheduler. CRUD via `/api/admin/curated` (Bearer-authed) and the mod panel "Curated" tab.)
+- `curated_creators` (Phase 8 — handle PK, display_name, primary_platform, socials JSON, added_at, active. Index on active. Migration `013_curated_creators.sql`. **The single source of truth for the curated allowlist (30 streamers)** — replaces all hardcoded copies across the Functions + scheduler. Read via `functions/_curated.js` on Pages, `contentlore-scheduler/src/curated-list.js` on the scheduler. CRUD via `/api/admin/curated` (Bearer-authed) and the mod panel "Curated" tab.)
 - `parties` (Phase 6 — id PK, host_token, current_handle, current_platform, host_name, created_at, updated_at, expires_at. Index on expires_at. Migration `012_watch_party.sql`. Used by `/gta-rp/party/`.)
 - `party_messages` (Phase 6 — id auto, party_id, username, message, created_at. Indexes on party_id+created_at and on created_at. Self-trims via opportunistic delete on every write.)
+- `daily_recaps` (date PK, content, source, model, data_snapshot JSON, generated_at — migration `015_daily_recaps.sql`. Stores one Claude-generated narrative per UTC day. Used by `/gta-rp/digest/` Yesterday section + Discord daily summary. Generated by the scheduler at 00:00 UTC and again at 06:00 UTC as a backup.)
+- `clip_of_day` (date PK, clip_id, clip_data JSON, caption, picked_by, model, candidates, generated_at — migration `016_clip_of_day.sql`. Stores one Claude-picked clip per UTC day. Generated by the scheduler at 06:00 UTC. Surfaced as a hero card on `/gta-rp/clips/` and the homepage.)
+- `clip_submissions` (id auto, url, platform, clip_id, creator_handle, description, submitted_by_ip, user_agent, status, decided_at, decided_note, submitted_at — migration `017_clip_submissions.sql`. Public clip submissions. Approved rows surface in `/api/clips` with `community_pick:true` so the wall renders a yellow Community Pick badge.)
 
-Legacy tables that survived earlier sweeps but are no longer referenced by Functions or the scheduler: `category_editorial_notes`, `claims`, `lore_entries`, `rising_posts`, `transition_changelog`, `transition_creators`, `transition_servers`, `transition_timeline`. Plus the internal `_cf_KV` table Cloudflare creates. Total = 23 user tables in prod (verified 2026-04-28).
+Legacy tables dropped by migration `018_drop_legacy_tables.sql` on 2026-04-29: `category_editorial_notes`, `claims`, `lore_entries`, `rising_posts`, `transition_changelog`, `transition_creators`, `transition_servers`, `transition_timeline`. Plus the internal `_cf_KV` table Cloudflare creates. Total = 18 user tables in prod (verified 2026-04-29).
 
 **Data pipeline:** Scheduler worker (every 15 min) runs five steps in order:
-1. `pollCurated` — batched Twitch + Kick fetch for **all 26 curated creators**, writes one snapshot per creator (~3.5s). After writes, diffs current liveness against `curated:livestate:v1` in KV; for each offline → online transition, calls `notifyGoLive` (`src/discord.js`) which posts a rich embed to `env.DISCORD_WEBHOOK_URL`. Then persists the new livestate blob for next-tick comparison. First-tick-ever liveness is treated as "was offline" so deploying on a busy day doesn't spam the channel.
+1. `pollCurated` — batched Twitch + Kick fetch for **all 30 curated streamers**, writes one snapshot per streamer (~3.5s). After writes, diffs current liveness against `curated:livestate:v1` in KV; for each offline → online transition, calls `notifyGoLive` (`src/discord.js`) which posts a rich embed to `env.DISCORD_WEBHOOK_URL` and fans out web-push. After snapshots, calls `detectInteractions` (`src/interactions.js`) which scans the live stream titles for raid/host/shoutout patterns and writes targets to `pending_creators` (with `source='raid'|'host'`, `raid_sources` JSON array of who pointed at them) — these surface in the `/mod/` Discovery "Recommended" tab ranked by distinct-source count.
 2. `rebuildSessions` — stitches new snapshots into `stream_sessions`.
 3. `captureSceneSnapshots` — groups currently-live curated streams by detected RP server, writes one row per active server.
-4. `discoverCreators` — scans top 300 GTA V Twitch streams for new UK RP candidates, writes to `pending_creators`.
-5. `runDiscordCards` (`src/discord-cards.js`) — gates itself on the cron event's UTC hour/minute. Quick Links embed posts at minute 0 of UTC hours 0/6/12/18 (every 6h). Daily Scene Summary embed posts at minute 0 of UTC hour 0, fetching `/api/scene-recap` for the AI-generated narrative. Both use KV idempotency keys (`discord:last-quicklinks:{ymd}-h{h}` and `discord:last-summary:{ymd}`) so a clock-skew double-tick can't double-post.
+4. `discoverCreators` — scans top 300 GTA V Twitch streams for new UK RP candidates, writes to `pending_creators` with `source='discovery'`.
+5. `runDiscordCards` (`src/discord-cards.js`) — gates itself on the cron event's UTC hour/minute. Four time-windowed jobs:
+   - **Quick Links** at minute 0 of UTC hours 0/6/12/18 (every 6h)
+   - **Daily Scene Summary** at minute 0 of UTC hour 0 — first generates yesterday's `daily_recaps` row by calling `POST /api/daily-recap`, then posts the recap content to Discord
+   - **Daily recap backup** at minute 0 of UTC hour 6 — re-attempts generation in case midnight failed (idempotent)
+   - **Clip of the Day** at minute 0 of UTC hour 6 — calls `POST /api/clip-of-day` to pick + caption yesterday's best clip via Claude
+   All use KV idempotency keys so a clock-skew double-tick can't double-post.
 
-(The legacy round-robin `runPollingPass` step was removed — `pollCurated` covers all 26 curated creators every tick, and the long-tail pool wasn't producing useful data on a 6.7-day cadence. If you re-add it, wire it back into `src/index.js`.)
-
-`/api/uk-rp-live` bypasses D1 entirely and queries Twitch + Kick official APIs directly for the 26 allowlisted creators (30s KV cache).
+`/api/uk-rp-live` bypasses D1 entirely and queries Twitch + Kick official APIs directly for the curated streamers (30s KV cache).
 
 ---
 
@@ -286,7 +299,20 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - [ ] **Live reactions / emoji spam during a stream** — let party viewers float emojis over the embed.
 
 ### PHASE 8 — INFRASTRUCTURE (DONE)
-- [x] **Curated allowlist → D1** — replaced 14 hardcoded copies of the 26-creator list with a single `curated_creators` table. New `_curated.js` helper (Pages) + `curated-list.js` helper (scheduler), both with the same API (`getCuratedList`, `getHandlesSet`, `getCuratedEntry`). Pages helper has 5-min per-isolate cache; scheduler has none (one SELECT per cron tick). New `/api/admin/curated` Bearer-authed CRUD endpoint and a "Curated" tab in `/mod/` for add/edit/deactivate. Adding a new creator is now one mod-panel click that propagates to every endpoint within 5 minutes (cache TTL) — no code edit, no deploy. Migration `013_curated_creators.sql`. Killed off the "14-place mirror" gotcha that was the project's biggest single liability.
+- [x] **Curated allowlist → D1** — replaced all hardcoded copies of the curated list with a single `curated_creators` table. New `_curated.js` helper (Pages) + `curated-list.js` helper (scheduler), both with the same API (`getCuratedList`, `getHandlesSet`, `getCuratedEntry`). Pages helper has 5-min per-isolate cache; scheduler has none (one SELECT per cron tick). New `/api/admin/curated` Bearer-authed CRUD endpoint and a "Curated" tab in `/mod/` for add/edit/deactivate. Adding a new creator is now one mod-panel click that propagates to every endpoint within 5 minutes (cache TTL) — no code edit, no deploy. Migration `013_curated_creators.sql`.
+
+### PHASE 9 — DAILY AI + COMMUNITY (DONE 2026-04-29)
+- [x] **Daily AI scene recap** — `/api/daily-recap` endpoint + `daily_recaps` D1 table (migration 015). Scheduler hits POST at 00:00 UTC (and 06:00 backup) to generate yesterday's narrative. `/gta-rp/digest/` shows a "Yesterday in UK GTA RP" section above the existing weekly recap. The Discord daily summary uses the same content.
+- [x] **Clip of the Day** — `/api/clip-of-day` endpoint + `clip_of_day` D1 table (migration 016). Scheduler at 06:00 UTC sends yesterday's top-10 clips by view count to Claude and stores `{index, caption}`. Hero card on `/gta-rp/clips/` and the homepage feed.
+- [x] **Power Rankings** — `/api/rankings` endpoint + `/gta-rp/rankings/` page. Composite 0-100 score (avg viewers 40% + hours 30% + sessions 20% + growth 10%), week-over-week movement arrows, sparklines, "Share these rankings" button. Linked from primary nav.
+- [x] **Server Reviews** — `/api/server-reviews` endpoint + Weekly Server Report Cards section on `/gta-rp/servers/`. A/B/C/D/F grades by activity, AI one-liner per server (one batched Claude call), top streamer per server.
+- [x] **TikTok-style vertical clip Feed Mode** — Feed Mode button on `/gta-rp/clips/` opens a fullscreen vertical overlay; one clip per viewport with scroll-snap, swipe + arrow-key nav, lazy iframe mounting on the active slide.
+- [x] **Community clip submissions** — `/api/submit-clip` (KV-rate-limited 5/IP/UTC day) + `clip_submissions` table (migration 017) + `/api/admin/clip-submissions` decide endpoint + `/mod/` Submissions tab now includes a Clip Submissions section. Approved clips fold into `/api/clips` with `community_pick:true` and render with a yellow "Community Pick" badge.
+- [x] **Creator dashboard ("This Week")** — Prominent dashboard section on every `/creator-profile/{handle}` showing weekly hours/avg/peak/sessions + weekly rank tile, best clip with embed (loaded client-side), server-split bar chart, 7×24 schedule heatmap (UK time, computed from 90-day session window).
+- [x] **Embeddable widget** — `/api/widget/{handle}` returns a self-contained 300×100 HTML card iframe-embeddable on linktrees / sites. Modal on creator profiles to grab the iframe snippet.
+- [x] **Raid-based auto-discovery** (already in `interactions.js`; this round polished `/mod/` Recommended badges to read "★ Raided by tyrone" / "★★ Hosted by stoker +2").
+- [x] **Drop 8 legacy D1 tables** — migration 018. 23 user tables → 18.
+- [x] **rickysonone primary platform** flipped from Twitch → Kick (curated_creators + creator_platforms).
 
 ---
 
@@ -720,3 +746,31 @@ Big day. Nine new pieces of engagement surface area plus a full audit. Each ship
   D1 prod state at audit time: 31,901 snapshots / 1,033 stream_sessions / 160 scene_snapshots / 7,790 creators (26 active + ~7,764 legacy/discovery rows) / 197 pending_creators (discovery + form submissions) / 0 parties (just shipped) / 0 push_subscriptions (no subscribers yet) / 2 watch_streaks / 1 gta6_pulse vote. DB size 7.23 MB. 23 user tables (8 are legacy: `category_editorial_notes`, `claims`, `lore_entries`, `rising_posts`, `transition_changelog`, `transition_creators`, `transition_servers`, `transition_timeline` — none are touched by current Functions or scheduler).
   
   KV write budget: ~419 writes/day baseline (cron diagnostic blobs + livestate + token refresh + 5 Discord card idempotency keys), well under the 1,000/day free tier ceiling. Per-request rate-limit keys (`submit:rl:*`, `party:rl:*`, `party:msg:rl:*`) add at most ~30/day at current traffic levels.
+
+### 2026-04-29 (continued) — Visual overhaul, jargon strip, daily AI loop, community submissions, widget
+
+Marathon day. Six sequential pushes earlier in the session shipped the Tier-1 visual rebuild + Tier-2 Power Rankings + daily AI infrastructure. This second wave shipped 10 more items end-to-end:
+
+**Visual overhaul (commits `3480166`, `a688bff`, `789629e`, `2413283`, `7e7c093`, `547de0f`)** — animated background + glassmorphism + nav restructure + homepage live-feed redesign + `/gta-rp/rankings/` + daily AI recap pipeline. Then a follow-up jargon strip (`0f2326b`) across every user-facing page (no more "scheduler", "polling", "snapshots", "26-creator scene" leaking to viewers — only `/mod/` and `/admin/` keep internals). Then a background swap (`3c18264`) — dropped the gradient mesh + noise in favour of a perspective city-street grid + 18 floating CSS particles + vignette.
+
+**Item 1 — Clip of the Day** (`427ca1d`): migration 016 → `clip_of_day` table. New `/api/clip-of-day` (GET returns latest, POST admin generates). Scheduler `maybeGenerateClipOfDay` at 06:00 UTC sends yesterday's top-10 clips to Claude and stores `{index, caption}`. Hero card on `/gta-rp/clips/` above the reel + on the homepage live feed.
+
+**Item 2 — Server Reviews** (`11024c1`): `/api/server-reviews` computes per-server hours / streamers / viewer-hours / WoW growth / top streamers, assigns A-F grade by weighted activity score, batches one Claude call for a one-sentence summary per server. Renders as colour-coded grade cards on `/gta-rp/servers/`.
+
+**Item 3 — TikTok-style vertical feed** (`2a1f386`): "Feed Mode" button on `/gta-rp/clips/` opens a fullscreen scroll-snap overlay. One clip per viewport, swipe / arrow-key nav, lazy iframe mounting on the active slide, click-to-play on neighbours, action rail (Open / Share).
+
+**Item 4 — Community clip submissions** (`8990a6d`): migration 017 → `clip_submissions`. Public `POST /api/submit-clip` parses Twitch + Kick clip URLs, validates against the curated allowlist, KV-rate-limited 5/IP/UTC day. Approved clips fold into `/api/clips` with `community_pick:true` and render with a yellow "Community Pick" badge. New "Clip Submissions" section in `/mod/` Submissions tab.
+
+**Item 5 — Creator dashboard** (`05fcbbe`): Prominent "This Week" section on every `/creator-profile/{handle}`. Stats row (5 cards including weekly rank), best clip embed (loaded client-side), server-split bars, 7×24 schedule heatmap (UK time). Server-rendered from existing session data plus a single new `queryWeekRanks` D1 query parallelised with the existing month query.
+
+**Item 6 — Embeddable widget** (`c583dfb`): `/api/widget/{handle}` returns a self-contained 300×100 HTML card. Avatar + name + LIVE pill + viewer count + platform pills + "Powered by ContentLore". Iframe-embeddable anywhere (CSP frame-ancestors:* + X-Frame-Options:ALLOWALL). 60s edge cache. "Get widget code" modal on creator profiles with copy-paste snippet.
+
+**Item 7 — Raid-based auto-discovery** (`a9b8104`): pipeline already existed in `scheduler/src/interactions.js`. This round polished `/mod/` Recommended badges to read "★ Raided by tyrone" / "★★ Hosted by stoker +2" with colour coding by source count.
+
+**Item 8 — Drop 8 legacy D1 tables** (`7f296ff`): migration 018 drops `category_editorial_notes`, `claims`, `lore_entries`, `rising_posts`, and the four `transition_*` tables. 23 user tables → 18.
+
+**Item 9 — rickysonone → Kick primary** (`b6e587f`): one-shot migration `_oneshot_2026_04_29_rickysonone_kick_primary.sql` flips `curated_creators.primary_platform` and the `creator_platforms.is_primary` flags accordingly. `chloekins95` confirmed resolving on Twitch (page metadata returns the Chloe Wylder bio) — no change needed.
+
+**Scheduler deploys**: two redeploys today — once for the daily-recap hooks (`bb771acc`), once for the clip-of-day hook (`223538c3`).
+
+**Remaining manual step**: scheduler still needs `ADMIN_TOKEN` secret set so the daily-recap and clip-of-day generators can call back into Pages. Run `cd D:/contentlore-scheduler && npx wrangler secret put ADMIN_TOKEN`.
