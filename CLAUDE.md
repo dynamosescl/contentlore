@@ -36,6 +36,10 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 - `https://contentlore.com/creator-profile/{handle}` — per-creator profile (dynamic Function)
 - `https://contentlore.com/wrapped/{handle}` — Spotify-Wrapped-style monthly recap (dynamic Function)
 - `https://contentlore.com/submit/` — public creator submission form (rate-limited 3/IP/day)
+- `https://contentlore.com/moderators/` — Stream Moderator section: signup, levels, leaderboard, Mod of the Month
+- `https://contentlore.com/moderators/login/` — token-based mod sign-in
+- `https://contentlore.com/moderators/dashboard/` — authenticated mod dashboard (live state, contribution tools, stream notes panel)
+- `https://contentlore.com/moderators/report/?id={mod_id}` — public shareable monthly mod report card
 - `https://contentlore.com/mod/` — admin dashboard (requires `ADMIN_TOKEN`)
 - `https://contentlore.com/admin/content.html` — beef + lore editor
 - `https://contentlore.com/admin/discovery.html` — pending creator triage
@@ -45,8 +49,8 @@ A living document for anyone (or any agent) working on this repo. Update as the 
 
 ## 2. Current State
 
-**Active hub surfaces (22):**
-- Static pages (17): `/`, `/submit/`, `/gta-rp/{,now/,multi/,party/,clips/,timeline/,analytics/,network/,health/,streaks/,servers/,compare/,rankings/,fivem-enhanced/,gta-6/}`
+**Active hub surfaces (26):**
+- Static pages (21): `/`, `/submit/`, `/gta-rp/{,now/,multi/,party/,clips/,timeline/,analytics/,network/,health/,streaks/,servers/,compare/,rankings/,fivem-enhanced/,gta-6/}`, `/moderators/{,login/,dashboard/,report/}`
 - Admin pages (3): `/mod/`, `/admin/content.html`, `/admin/discovery.html`
 - Dynamic pages (4): `/creator-profile/{handle}` rendered by `functions/creator-profile/[handle].js`; `/wrapped/{handle}` rendered by `functions/wrapped/[handle].js` (Spotify-Wrapped-style monthly recap, _routes.json includes `/wrapped/*`); `/api/shoutout-card/{handle}` is also a server-rendered HTML page (it's under `/api/` only by URL convention, but it returns HTML and serves as the og:image target for profile pages); `/api/widget/{handle}` ditto — server-rendered 300×100 HTML for embedding.
 
@@ -54,7 +58,7 @@ Every hub page is now a PWA candidate — manifest linked, theme-color set, serv
 
 The repo also contains several legacy directories (`about/`, `contact/`, `creators/`, `ethics/`, `ledger/`, `rising/`, `signals/`, `the-platform/`, `gta-rp/beef/`, `gta-rp/lore/`) that survived the 2026-04-26 cleanup sweep but aren't part of the active navigation. They serve via `_redirects` catch-all if anyone deep-links them. Worth a re-audit eventually.
 
-**Active Pages Functions (50, plus 2 helpers):**
+**Active Pages Functions (68, plus 3 helpers):**
 
 | Endpoint | File | Purpose |
 |---|---|---|
@@ -108,8 +112,28 @@ The repo also contains several legacy directories (`about/`, `contact/`, `creato
 | `GET\|POST /api/admin/lore` | `api/admin/lore.js` | Lore arc CRUD (Bearer auth) |
 | `GET\|POST /api/admin/backfill-avatars` | `api/admin/backfill-avatars.js` | One-shot Twitch avatar backfill (Bearer auth) |
 | `GET\|POST /api/admin/discord-test` | `api/admin/discord-test.js` | Discord webhook config status + test embed (Bearer auth) |
+| `POST /api/mod/signup` | `api/mod/signup.js` | Public mod application. KV rate-limited 3/IP/UTC day. Validates display name + handles + creators_modded against the curated allowlist. Generates a 32-char hex token, inserts mod_accounts row at status='pending'. Token is NOT returned to the caller — surfaced once at admin approval. |
+| `POST /api/mod/login` | `api/mod/login.js` | Body { token }. Returns 401 (invalid format/no row), 403 (suspended/pending), 200 with publicMod() (token-stripped). Touches last_active. |
+| `GET /api/mod/me` | `api/mod/me.js` | Bearer mod token. Returns the authenticated mod's public profile. Used by the dashboard to refresh stale localStorage profile data. |
+| `GET /api/mod/dashboard` | `api/mod/dashboard.js` | Bundled payload: per-creator live state + 7-day-avg viewers + viewers_vs_avg_pct + same-server peers + recent clips, scene context (total_live, total_viewers, hype band), contribution summary (recent 50 mod_contributions + by_type counts + level progress + xp_for map). |
+| `GET /api/mod/contributions?limit=&since=` | `api/mod/contributions.js` | Bearer mod token. Mod's own contribution history with by-type counts, lifetime + window XP totals, level progress. |
+| `PUT /api/mod/update-socials` | `api/mod/update-socials.js` | Perm `edit_socials` (Trusted+, 300 XP). Body { creator_handle, socials }. Sanitises tiktok/youtube/x/instagram/discord (URL/at-prefix strip + regex). Twitch + Kick handles locked (admin-only). Calls invalidateCuratedCache(). +15 XP. |
+| `PUT /api/mod/update-bio` | `api/mod/update-bio.js` | Perm `edit_bio` (Senior+, 700 XP). Body { creator_handle, bio }. 1200-char cap. +10 XP. |
+| `POST /api/mod/character` | `api/mod/character.js` | Perm `add_character` (Regular+, 100 XP). Body { played_by_handle, character_name, server, faction, description, status }. Auto-approved when submitted by a verified mod. +25 XP. |
+| `PUT /api/mod/character` | same | Edits an existing character row. character_name + played_by_handle locked once created. |
+| `POST /api/mod/clip-tag` | `api/mod/clip-tag.js` | Perm `tag_clip` (Rookie+). Tag regex `[a-z0-9 \-_]{2,40}` lowercased. Verifies clip ownership via /api/clips?range=30d cache. UNIQUE on (clip_id, tag, mod_id) so a mod can't double-tag. +10 XP. |
+| `GET\|POST /api/mod/stream-notes` | `api/mod/stream-notes.js` | UPSERT keyed on (mod_id, creator_handle, session_date). +20 XP awarded once per (mod, creator, day) and only when notes ≥20 chars (gates trivial saves). Auto-saves on a 30s debounce client-side. |
+| `POST /api/mod/flag-moment` | `api/mod/flag-moment.js` | Perm `flag_moment` (Rookie+). Appends {ts, label} to the day's flagged_moments JSON array. +5 XP per flag. Hard cap 30 flags per (mod, creator, day). |
+| `POST /api/mod/push-subscribe` | `api/mod/push-subscribe.js` | Bearer mod token. Variant of /api/push/subscribe that links the row to mod_accounts.id. Filter handles auto-set to creators_modded. Scheduler routes mod-specific copy via this linkage. |
+| `GET /api/mod/leaderboard?limit=&order=xp\|recent` | `api/mod/leaderboard.js` | Public, 5-min Cache API. order='xp' = lifetime sort; order='recent' = sum XP earned in last 30 days (used for Mod-of-the-Month preview). |
+| `GET /api/mod/of-the-month` | `api/mod/of-the-month.js` | Public, 1h Cache API. Returns current month's leader (preview), last_winner (locked), full history. |
+| `GET /api/mod/report?id={id}` | `api/mod/report.js` | Public, 5-min Cache API. Lifetime + this-month stats + by-type contributions + highlights (recent clip tags + flagged moments). Powers `/moderators/report/?id={id}`. |
+| `GET /api/characters?creator=&search=` | `api/characters.js` | Public, 5-min Cache API per query. Lists approved characters. |
+| `GET\|PUT /api/admin/moderators` | `api/admin/moderators.js` | Bearer ADMIN_TOKEN. List with pending/verified/suspended counts (returns full token for admin relay). PUT actions: approve / suspend / reactivate / rotate_token. |
+| `POST /api/admin/finalise-mod-of-month` | `api/admin/finalise-mod-of-month.js` | Bearer ADMIN_TOKEN. Body { month?: 'YYYY-MM' } defaults to previous month. Locks in winner. Idempotent unless ?force=1. Called by scheduler on the 1st of each month. |
 | _helper_ | `_lib.js` | `jsonResponse`, `getTwitchToken`, `getKickToken`, `fetchKickChannel`, etc. |
-| _helper_ | `_curated.js` | `getCuratedList(env)` / `getHandlesSet(env)` / `getCuratedEntry(env, handle)` / `invalidateCuratedCache()`. 5-min per-isolate cache; module-level `let _cache` keyed off Date.now(). Single source of truth for the curated allowlist. |
+| _helper_ | `_curated.js` | `getCuratedList(env)` / `getHandlesSet(env)` / `getCuratedEntry(env, handle)` / `invalidateCuratedCache()`. 5-min per-isolate cache; module-level `let _cache` keyed off Date.now(). Single source of truth for the curated allowlist. SELECT now includes `bio` column (added in migration 020). |
+| _helper_ | `_mod-auth.js` | `LEVELS`, `levelForXp`, `LEVEL_COLOURS`, `PERM_BY_LEVEL`, `hasPerm`, `XP_FOR`, `generateToken`, `tokenFromRequest`, `requireMod`, `modModsCreator`, `awardXp`. Permission matrix: Rookie tag+flag+notes; Regular adds add_character; Trusted adds edit_socials; Senior adds edit_bio; Head Mod = Senior. |
 
 **26-creator allowlist** (source of truth: `functions/api/uk-rp-live.js`; mirrored in `contentlore-scheduler/src/discovery.js` as `ALLOWLIST_HANDLES`)
 - 20 Twitch primary: tyrone, lbmm, reeclare, stoker, samham, deggyuk, megsmary, tazzthegeeza, wheelydev, rexality, steeel, justj0hnnyhd, cherish_remedy, lorddorro, jck0__, absthename, essellz, lewthescot, angels365, fantasiasfantasy
@@ -141,8 +165,15 @@ Each ALLOWLIST entry now carries a `socials: { twitch, kick, tiktok, youtube, x,
 - `clip_of_day` (date PK, clip_id, clip_data JSON, caption, picked_by, model, candidates, generated_at — migration `016_clip_of_day.sql`. Stores one Claude-picked clip per UTC day. Generated by the scheduler at 06:00 UTC. Surfaced as a hero card on `/gta-rp/clips/` and the homepage.)
 - `clip_submissions` (id auto, url, platform, clip_id, creator_handle, description, submitted_by_ip, user_agent, status, decided_at, decided_note, submitted_at — migration `017_clip_submissions.sql`. Public clip submissions. Approved rows surface in `/api/clips` with `community_pick:true` so the wall renders a yellow Community Pick badge.)
 - `clip_reactions` (clip_id TEXT, emoji TEXT, count INTEGER, updated_at — PK on (clip_id, emoji). Migration `019_clip_reactions.sql`. Per-device de-dupe is enforced in localStorage (`cl:react:v1`); the server only enforces the emoji allowlist + per-IP rate limit. Read via `/api/clip-reactions?ids=...`, written via `POST /api/clip-react`.)
+- `mod_accounts` (id, twitch_handle, kick_handle, display_name, creators_modded JSON, message, token UNIQUE, xp, level, status pending|verified|suspended, mod_of_month YYYY-MM nullable, created_at, last_active — migration `020_moderators.sql`. Indexes on token + status. Tokens are 32-char hex generated server-side at signup, surfaced to the mod once at admin approval.)
+- `characters` (id, character_name, played_by_handle, server, faction, description, status active|retired|dead, submitted_by_mod, approved, created_at, updated_at — migration 020. Indexes on creator + name + approved. Auto-approved when a verified mod submits.)
+- `mod_stream_notes` (id, mod_id, creator_handle, session_date YYYY-MM-DD, notes TEXT, flagged_moments JSON — migration 020. UNIQUE index on (mod_id, creator_handle, session_date) so the auto-save UPSERT writes one row per day. flagged_moments is a JSON array of `{ ts, label }`. Notes are trimmed to 600 chars per row when fed into the daily AI recap prompt.)
+- `mod_contributions` (id, mod_id, type, target_id, xp_earned, created_at — migration 020. Source of truth for awarded XP. Type is one of: clip_tag, character_add, social_update, stream_notes, moment_flag, bio_edit. The (type, target_id) combo enforces "once per day" gates server-side.)
+- `clip_tags` (id, clip_id, tag, context_description, submitted_by_mod, created_at — migration 020. UNIQUE-implied via the endpoint's manual dedupe on (clip_id, tag, mod_id).)
+- `curated_creators.bio` column — added by migration 020. Editable by Senior+ mods via `/api/mod/update-bio`. Read by /api/curated-list, /api/uk-rp-live (via _curated.js), and any future surface that wants creator copy.
+- `push_subscriptions.mod_id` column — nullable, added by migration `021_push_mod_id.sql`. Set by `/api/mod/push-subscribe` so the scheduler can fan out mod-specific copy on go-live + server-switch transitions.
 
-Legacy tables dropped by migration `018_drop_legacy_tables.sql` on 2026-04-29: `category_editorial_notes`, `claims`, `lore_entries`, `rising_posts`, `transition_changelog`, `transition_creators`, `transition_servers`, `transition_timeline`. Total = 19 user tables in prod after migration `019_clip_reactions.sql` (verified 2026-04-29).
+Legacy tables dropped by migration `018_drop_legacy_tables.sql` on 2026-04-29: `category_editorial_notes`, `claims`, `lore_entries`, `rising_posts`, `transition_changelog`, `transition_creators`, `transition_servers`, `transition_timeline`. Total = 24 user tables in prod after the moderator-section migrations 020/021 (verified 2026-04-29).
 
 **Data pipeline:** Scheduler worker (every 15 min) runs five steps in order:
 1. `pollCurated` — batched Twitch + Kick fetch for **all 30 curated streamers**, writes one snapshot per streamer (~3.5s). After writes, diffs current liveness against `curated:livestate:v1` in KV; for each offline → online transition, calls `notifyGoLive` (`src/discord.js`) which posts a rich embed to `env.DISCORD_WEBHOOK_URL` and fans out web-push. After snapshots, calls `detectInteractions` (`src/interactions.js`) which scans the live stream titles for raid/host/shoutout patterns and writes targets to `pending_creators` (with `source='raid'|'host'`, `raid_sources` JSON array of who pointed at them) — these surface in the `/mod/` Discovery "Recommended" tab ranked by distinct-source count.
@@ -334,6 +365,23 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - [x] **Sound Alerts** — new `/sound-alerts.js` (defer-loaded). Drop a `<button data-cl-sound>` and the script auto-styles a 🔔/🔕 toggle. State + last-seen-live-set persist in localStorage (`cl:sound:on`, `cl:sound:lastset:v1`). Polls `/api/uk-rp-live` every 60s and plays a synthesised two-note Web Audio chime (A5→D6, ~300ms total) on each new go-live transition while toggled on. First poll on a fresh device records the live set without alerting. Mounted on `/gta-rp/` and the homepage.
 - [x] **Discord Bot Commands — richer daily embed** — `D:/contentlore-scheduler/src/discord-cards.js` (version `bfe917b6`). Daily Scene Summary embed at 00:00 UTC now includes: AI recap (truncated to 1400 chars), stat chips (hours/streamers/sessions/peak moment/top server), 🏆 Power Rankings top 3 with movement arrows, ⭐ Clip of the Day with caption + link, 🎯 Top 3 servers this week with letter-grade emoji. All five sub-fetches run in parallel, each section is best-effort. Quick Links also updated — dropped Digest, added Rankings.
 
+### PHASE 11 — STREAM MODERATOR SECTION (DONE 2026-04-29)
+A complete tool suite for the people who mod for tracked creators. 13 commits, 17 new endpoints, 4 new pages, 2 migrations. Scheduler version `2aa54abb`.
+
+- [x] **DB + auth foundation** — Migration 020 adds 5 tables (mod_accounts, characters, mod_stream_notes, mod_contributions, clip_tags) + ALTER curated_creators ADD COLUMN bio. New `_mod-auth.js` helper with five levels (Rookie 0-99 / Regular 100-299 / Trusted 300-699 / Senior 700-1499 / Head Mod 1500+), level→permission matrix, `requireMod()` middleware, `awardXp()` batched insert + bump + recompute, `generateToken()` (16 bytes → 32-char hex).
+- [x] **Signup + login + admin approval** — POST /api/mod/signup (KV-rate-limited 3/IP/UTC day), POST /api/mod/login, GET/PUT /api/admin/moderators (Bearer ADMIN_TOKEN). New /moderators/ landing page + /moderators/login/. New "Moderators" tab in /mod/ with pending-count badge, approve/suspend/rotate-token actions; approval reveals the token inline for the admin to relay.
+- [x] **Mod Command Centre dashboard** — /moderators/dashboard/ + GET /api/mod/dashboard. Embedded stream player when live, viewers vs 7-day avg with delta, same-server peers, scene context, recent clips, contribution summary with progress bar to next level. 60s auto-refresh.
+- [x] **Content contribution tools** — PUT /api/mod/update-socials (Trusted+, +15 XP), PUT /api/mod/update-bio (Senior+, +10 XP), POST/PUT /api/mod/character (Regular+, +25 XP), POST /api/mod/clip-tag (Rookie+, +10 XP). All gated by hasPerm(). Inline UI on dashboard via accordion sections per creator.
+- [x] **Stream notes + flagged moments** — UPSERT-keyed-on-(mod, creator, day) auto-save panel on the dashboard. POST /api/mod/stream-notes (+20 XP once per day at ≥20 chars), POST /api/mod/flag-moment (+5 XP per flag, capped at 30/day). Notes feed into the AI scene recap prompt the next morning ("=== Mod stream notes ===" section in user prompt). Flagged moments surface as a "Notable Moments" timeline on creator profiles.
+- [x] **Mod alerts (scheduler-side)** — Migration 021 adds push_subscriptions.mod_id. POST /api/mod/push-subscribe links a browser push subscription to the authenticated mod_id. Scheduler fanoutPush splits by mod-flagged vs public subscriptions and sends mod-specific copy ("🛡 {creator} is live · {server}", urgency=high) to mod subscribers. New detectServerSwitches() runs after fanoutPush — compares the detected server to KV `mod:lastserver:{handle}` and fires high-urgency mod-only push on changes.
+- [x] **XP + leaderboard** — GET /api/mod/leaderboard (lifetime or recent-30-day order, 5-min Cache API), GET /api/mod/contributions (own history with by-type counts). Leaderboard widget on /moderators/.
+- [x] **Verification badges** — "Moderated by" section on every /creator-profile/{handle} showing verified mods with coloured level badges (rookie grey / regular green / trusted blue / senior purple / head mod gold) + 👑 on past-month MOTM winners. Streaks/party-chat badges deferred (no anon-user → mod-account linkage).
+- [x] **Mod of the Month** — POST /api/admin/finalise-mod-of-month (Bearer ADMIN_TOKEN), GET /api/mod/of-the-month (public). Scheduler `maybeFinaliseMOTM()` fires on the 1st of each month at 00:00 UTC, posts a gold 👑 Discord embed naming the winner. Featured card on /moderators/.
+- [x] **Monthly mod report cards** — /moderators/report/?id={mod_id} (public, shareable) + GET /api/mod/report. Spotify-Wrapped-style colour-gradient cards with this-month XP, hours backed by their creators, level progression, recent clip tags, recent flagged moments. Copy-link share button.
+- [x] **API endpoints round-up** — 17 new endpoints total. GET /api/mod/me added as a profile-refresh helper.
+- [x] **Characters section on creator profiles** — queryCharacters() pulls approved characters from D1, renders a card grid with status pill (active/retired/dead), server + faction, description. CTA pushes non-mods toward /moderators/.
+- [x] **CLAUDE.md sync** — this section + endpoint table + D1 tables + KV/Cache keys + session log.
+
 ---
 
 ## 7. Architecture
@@ -439,6 +487,9 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - `curated:livestate:v1` — per-creator liveness blob from the previous tick (`{ "twitch:tyrone": 1, "kick:bags": 0, ... }`). Driven by `pollCurated`, used to detect offline → online transitions for both the Discord webhook **and** the Web Push fan-out. 7-day TTL — if it expires, the next tick treats every live creator as "newly went live" but the first-tick-as-offline rule prevents spam since there's no live data on a totally cold deploy.
 - `submit:rl:{ip}:{yyyy-mm-dd}` — submission form rate limit, 25h TTL. Counter increments on each `/api/submit` POST; rejects with 429 once it hits 3 in a UTC day.
 - `react:rl:{ip}:{yyyy-mm-dd}` — clip-reactions rate limit, 25h TTL. Counter increments on each `/api/clip-react` POST; rejects with 429 once it hits 30 in a UTC day. Best-effort — if KV is unavailable the request still succeeds.
+- `mod:signup:rl:{ip}:{yyyy-mm-dd}` — mod-signup rate limit, 25h TTL. 3 sign-ups per IP per UTC day.
+- `mod:lastserver:{handle}` — last-known detected RP server per curated streamer. Read + written by the scheduler's `detectServerSwitches()`. 7-day TTL. When the value changes between ticks, the scheduler fires a high-urgency mod-only push: "🛡 {handle} switched server — Moved from {prev} → {cur}".
+- `discord:last-motm:{ymd}` — scheduler-side idempotency key for the 1st-of-month Mod-of-the-Month finalisation + Discord embed. 35d TTL.
 - `party:rl:{ip}:{yyyy-mm-dd}` — Watch Party creation rate limit, 25h TTL. Capped at 10 parties / IP / UTC day.
 - `party:msg:rl:{id}:{ip}` — Watch Party chat rate limit, 60s TTL. Capped at 15 messages / IP / minute per party.
 - `discord:last-quicklinks:{ymd}-h{0|6|12|18}` — scheduler-side idempotency key for the 6-hourly Quick Links Discord embed, 7h TTL.
@@ -458,6 +509,10 @@ Some creators upload VODs and edited content. YouTube Data API v3 gives channel 
 - `https://contentlore.com/cache/server-switches/v1` — `/api/server-switches` (5 min)
 - `https://contentlore.com/cache/peak-prediction/v1` — `/api/peak-prediction` (1h)
 - `https://contentlore.com/cache/clip-reactions/{sha1}` — `/api/clip-reactions` per-id-set hash (60s)
+- `https://contentlore.com/cache/characters/{tag}` — `/api/characters` per-creator/per-search query (5 min)
+- `https://contentlore.com/cache/mod-leaderboard/{order}-{limit}` — `/api/mod/leaderboard` (5 min)
+- `https://contentlore.com/cache/mod-of-month/v1` — `/api/mod/of-the-month` (1h)
+- `https://contentlore.com/cache/mod-report/{id}` — `/api/mod/report` per-mod (5 min)
 - `https://contentlore.com/cache/spotlight/{yyyy-mm-dd}` — `/api/spotlight` daily pick, 24h Cache API keyed on UTC date
 - `https://contentlore.com/cache/hype/v1` — `/api/hype` scene-energy gauge (60s)
 - `https://contentlore.com/cache/streaks-leaderboard/{order}/{limit}` — Watch Streaks leaderboard (5 min)
@@ -528,7 +583,7 @@ Updates take effect immediately. Cron continues on its existing schedule. The sc
 # Production
 npx wrangler d1 execute contentlore-db --file=migrations/00X_name.sql --remote
 ```
-Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. Migration numbering has historical gaps and a duplicate (002, 004, two 005, 006, 008, 009, 010, 011, 012, 013, …, 019 — no 003 or 007). Pick the next free number for new ones (next: 020).
+Migrations are idempotent (`CREATE TABLE IF NOT EXISTS`). Re-running is safe. Migration numbering has historical gaps and a duplicate (002, 004, two 005, 006, 008, 009, 010, 011, 012, 013, …, 021 — no 003 or 007). Pick the next free number for new ones (next: 022). Note: migrations 020 and 021 use ALTER TABLE which has no IF NOT EXISTS in SQLite — re-running on a DB that already has those columns will fail. Run them only once.
 
 ### Smoke tests after deploy
 ```bash
@@ -826,3 +881,33 @@ Twelve-item push that fills in connective tissue across the existing surfaces. E
 **Item 11 — Discord daily embed enriched** (scheduler-only, version `bfe917b6`). Edited `D:/contentlore-scheduler/src/discord-cards.js` and `npx wrangler deploy`. Daily Scene Summary at 00:00 UTC now renders five sections instead of just the AI recap. Description = recap (1400 chars). Fields after that: stat chips (hours/streamers/sessions/peak moment/top server), 🏆 Power Rankings top 3 with movement arrows, ⭐ Clip of the Day (title + creator + caption + link), 🎯 Top 3 servers this week with letter-grade emoji 🟢/🟡/🟠/🔴. Five sub-fetches run in parallel; each section is best-effort, recap is the only gating requirement. Quick Links also updated — dropped Digest (page deleted in item 1), added Rankings. Footer/url on the daily summary now point to homepage instead of `/gta-rp/digest/`.
 
 **Item 12 — CLAUDE.md sync** (this commit). Refreshed Active Pages Functions count (47 → 50), Active hub surfaces list (added compare/, removed digest/), Dynamic pages (added /wrapped/), D1 tables (added clip_reactions + dropped one digest reference), KV keys (added react:rl), Cache API keys (added server-switches, peak-prediction, clip-reactions), migration numbering note (next: 020), added a Phase 10 roadmap block, this Session Log entry. The hub-mirror in the Architecture diagram + the smoke-test commands list weren't updated this round — flagged as a TODO for the next sync.
+
+### 2026-04-29 (continued) — Stream Moderator section (Phase 11)
+
+13-commit build of an entirely new section of the site for the people who mod for tracked creators on Twitch and Kick. End-to-end: signup → admin approval → token-based sign-in → dashboard → contribution tools → stream notes that feed the AI recap → push alerts before the public feed → XP + leaderboard → Mod-of-the-Month auto-flow → monthly report cards. Scheduler version after this batch: `2aa54abb`.
+
+**Mod #1 — DB + auth foundation** (`b865c8e`). Migration 020 (5 new tables + ALTER curated_creators ADD COLUMN bio). `_mod-auth.js` helper exposes LEVELS array, hasPerm(), generateToken(), requireMod() (Bearer middleware), modModsCreator(), awardXp() (batched insert + bump + level-recompute). Five levels (Rookie/Regular/Trusted/Senior/Head Mod) with thresholds 0/100/300/700/1500.
+
+**Mod #2 — Signup + login + admin approval** (`90869e7`). POST /api/mod/signup (KV-rate-limited 3/IP/UTC day). POST /api/mod/login. GET/PUT /api/admin/moderators with approve/suspend/reactivate/rotate_token actions. /moderators/ landing page (hero + tools list + level matrix + leaderboard + signup form). /moderators/login/ (token entry, redirects to dashboard if already signed in). New "Moderators" tab in /mod/ panel — pending-count badge in the tab title, per-card status pill + level + signup message. Approve/Rotate reveal the token inline for relay.
+
+**Mod #3 — Mod Command Centre dashboard** (`378bc19`). /moderators/dashboard/ + GET /api/mod/dashboard. One bundled response: per-creator live state, viewers_vs_avg_pct (delta vs 7-day mean), same-server peers, recent 24h clips, scene context, contribution summary with XP progress bar. Auto-redirects to /login/ on 401/403. 60s auto-refresh.
+
+**Mod #4 — Content contribution tools** (`84c34c8`). Four endpoints: PUT update-socials (Trusted+), PUT update-bio (Senior+), POST/PUT character (Regular+), POST clip-tag (Rookie+). Each awards XP via awardXp(). Public GET /api/characters?creator=&search=. UI: accordion-style "Mod Tools" panel inside every creator card on the dashboard, with locked-section messaging when the mod isn't high-enough level. Inline tag form below clips on the dashboard.
+
+**Mod #5 — Stream notes + flagged moments** (`1f406b1`). GET/POST /api/mod/stream-notes (UPSERT keyed on (mod, creator, day), +20 XP once per day at ≥20 chars). POST /api/mod/flag-moment (+5 XP, capped at 30/day). Auto-saves on a 30s debounce + force-save on textarea blur. Notes are now fed into the daily AI recap prompt as a clearly-labelled section. New queryFlaggedMoments() + Notable Moments timeline on /creator-profile/{handle}.
+
+**Mod #6 — Mod alerts** (`2498ff9`, scheduler version `0b8002cc`). Migration 021 adds push_subscriptions.mod_id. POST /api/mod/push-subscribe links subscription to authenticated mod_id, sets filter_handles to creators_modded. Scheduler fanoutPush splits by mod_id, sends two payloads per transition: regular (urgency=normal) and mod (🛡 prefix, detected RP server in body, urgency=high, ttl=1800). New detectServerSwitches() runs after fanoutPush — compares detected server to KV `mod:lastserver:{handle}` and fires mod-only push on changes. Dashboard nav has a "🔕 Alerts / 🔔 Alerts on" toggle.
+
+**Mod #7 — XP + leaderboard** (`0ae941d`). GET /api/mod/leaderboard?order=xp|recent. GET /api/mod/contributions (own history). XP plumbing was already in place — this adds the read-side surfaces.
+
+**Mod #8 — Verification badges** (`0bdf545`). queryModerators() joins mod_accounts where creators_modded JSON contains the creator handle, returns up to 12 verified mods sorted by XP. New "Moderated By" section on /creator-profile/{handle} with coloured level chips + 👑 on past MOTM winners. Streaks-leaderboard / party-chat badges deferred (no anon→mod linkage).
+
+**Mod #9 — Mod of the Month** (`4517599`, scheduler version `2aa54abb`). GET /api/mod/of-the-month (public). POST /api/admin/finalise-mod-of-month (admin-auth, idempotent). Scheduler `maybeFinaliseMOTM()` fires on date=1 hour=0 minute<15 of each month, posts a gold 👑 Discord embed. Featured card on /moderators/ landing.
+
+**Mod #10 — Monthly mod report cards** (`55245e7`). /moderators/report/?id={id} + GET /api/mod/report. Spotify-Wrapped-style colour-gradient cards with this-month + lifetime stats, recent clip tags, recent flagged moments. URL contains the public mod_id, never the secret token.
+
+**Mod #11 — Endpoints round-up** (`fe0df4b`). Audit pass + GET /api/mod/me. Final endpoint count: 15 mod endpoints + 2 mod-related admin endpoints.
+
+**Mod #12 — Characters section on creator profiles** (`4e2f03d`). queryCharacters() pulls approved characters, renders card grid (name + status pill + server/faction + description) between Server Affinity and Often Plays With.
+
+**Mod #13 — CLAUDE.md sync** (this commit). Active Functions 50 → 68 + 3 helpers (was 2). Hub surfaces 22 → 26 (added /moderators/ + /login/ + /dashboard/ + /report/). D1 tables list expanded with mod_accounts, characters, mod_stream_notes, mod_contributions, clip_tags, plus the bio column on curated_creators and mod_id on push_subscriptions. KV keys: mod:signup:rl, mod:lastserver, discord:last-motm. Cache API keys: characters, mod-leaderboard, mod-of-month, mod-report. Migration numbering: next is 022 (020 + 021 use ALTER, can't be re-run safely).
