@@ -94,6 +94,22 @@ body>*{position:relative;z-index:3}
 .cmp .num{color:var(--signal-cyan);font-weight:600}
 .cmp .delta-up{color:var(--green)}
 .cmp .delta-down{color:var(--red)}
+
+/* server switches */
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:28px}
+.sw-card{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:14px 16px;text-decoration:none;color:inherit;transition:all .15s;display:flex;flex-direction:column;gap:10px}
+.sw-card:hover{border-color:var(--signal);transform:translateY(-2px)}
+.sw-head{display:flex;align-items:center;gap:10px}
+.sw-av{width:42px;height:42px;border-radius:50%;background:var(--card2);object-fit:cover;flex-shrink:0;border:1px solid var(--border)}
+.sw-av-ph{width:42px;height:42px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:18px;color:var(--ink-faint);flex-shrink:0;border:1px solid var(--border)}
+.sw-name{font-family:var(--font-d);font-size:18px;letter-spacing:1px;color:var(--fg);line-height:1}
+.sw-when{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;color:var(--ink-faint);text-transform:uppercase;margin-top:3px}
+.sw-flow{display:flex;align-items:center;gap:8px;font-family:var(--font-m);font-size:13px;color:var(--ink-dim);flex-wrap:wrap}
+.sw-flow .from{color:var(--ink-faint);text-decoration:line-through}
+.sw-flow .arrow{color:var(--signal);font-weight:700}
+.sw-flow .to{color:var(--signal);font-weight:600}
+.sw-mins{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;color:var(--ink-faint);text-transform:uppercase;display:flex;justify-content:space-between;border-top:1px dashed var(--border);padding-top:8px}
+.sw-mins .h{color:var(--signal-cyan);font-weight:600}
 .cmp .delta-flat{color:var(--ink-faint)}
 
 /* NEW CREATORS */
@@ -155,6 +171,9 @@ body>*{position:relative;z-index:3}
 
   <div class="sh">Week-over-week <span class="sh-meta">This week vs last week</span></div>
   <div class="cmp"><table><thead><tr><th>Metric</th><th>This week</th><th>Last week</th><th>Δ</th></tr></thead><tbody id="cmp-body"><tr><td colspan="4" style="color:var(--ink-faint);text-align:center;padding:18px">Loading…</td></tr></tbody></table></div>
+
+  <div class="sh">Recent server switches <span class="sh-meta">Most-played server flipped this week vs last</span></div>
+  <div id="switches-wrap"><div class="empty">Loading…</div></div>
 
   <div class="sh">New streamers discovered <span class="sh-meta">Last 7 days</span></div>
   <div id="new-wrap"><div class="empty">Loading…</div></div>
@@ -274,6 +293,57 @@ function renderNew(list) {
   `).join('') + '</div>';
 }
 
+function timeAgo(ts) {
+  if (!ts) return '';
+  const diff = Math.floor(Date.now() / 1000) - ts;
+  if (diff < 3600) return Math.max(1, Math.floor(diff / 60)) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+function renderSwitches(list) {
+  const wrap = document.getElementById('switches-wrap');
+  if (!list || !list.length) {
+    wrap.innerHTML = '<div class="empty">No server switches detected this week — streamers stuck to their usual servers.</div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="sw-grid">' + list.map(s => {
+    const av = s.avatar_url
+      ? `<img class="sw-av" src="${escapeHtml(s.avatar_url)}" alt="${escapeHtml(s.display_name)}" loading="lazy">`
+      : `<div class="sw-av-ph">${escapeHtml((s.display_name || s.handle || '?').charAt(0).toUpperCase())}</div>`;
+    return `<a class="sw-card" href="/creator-profile/${escapeHtml(s.handle)}">
+      <div class="sw-head">
+        ${av}
+        <div>
+          <div class="sw-name">${escapeHtml(s.display_name || s.handle)}</div>
+          <div class="sw-when">Last on ${timeAgo(s.last_seen_at)}</div>
+        </div>
+      </div>
+      <div class="sw-flow">
+        <span class="from">${escapeHtml(s.from?.name || '—')}</span>
+        <span class="arrow">→</span>
+        <span class="to">${escapeHtml(s.to?.name || '—')}</span>
+      </div>
+      <div class="sw-mins">
+        <span>Last week <span class="h">${Math.round((s.from?.mins || 0) / 60 * 10) / 10}h</span></span>
+        <span>This week <span class="h">${Math.round((s.to?.mins || 0) / 60 * 10) / 10}h</span></span>
+      </div>
+    </a>`;
+  }).join('') + '</div>';
+}
+
+async function loadSwitches() {
+  try {
+    const r = await fetch('/api/server-switches');
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'switches failed');
+    renderSwitches(d.switches);
+  } catch {
+    const wrap = document.getElementById('switches-wrap');
+    if (wrap) wrap.innerHTML = '<div class="empty">Switch data unavailable.</div>';
+  }
+}
+
 async function load() {
   try {
     const r = await fetch('/api/scene-health');
@@ -289,7 +359,9 @@ async function load() {
   }
 }
 load();
+loadSwitches();
 setInterval(load, 5 * 60 * 1000);
+setInterval(loadSwitches, 5 * 60 * 1000);
 </script>
 <script src="/streak-checkin.js" defer></script>
 </body>
