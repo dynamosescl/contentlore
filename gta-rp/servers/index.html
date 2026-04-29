@@ -131,6 +131,38 @@ body>*{position:relative;z-index:3}
   .board-row.head .cell.players-head{display:none}
 }
 
+/* WEEKLY REPORT CARDS */
+.reports{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-bottom:32px}
+.report{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:18px;display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:start;position:relative;overflow:hidden;transition:all .2s}
+.report:hover{border-color:var(--signal);transform:translateY(-2px);box-shadow:0 0 18px oklch(0.82 0.20 195/.2)}
+.report::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at top right,var(--cl-grade-glow,oklch(0.82 0.20 195/.10)),transparent 60%);pointer-events:none}
+.report.grade-a{--cl-grade-glow:oklch(0.82 0.22 145/.18)}
+.report.grade-b{--cl-grade-glow:oklch(0.85 0.18 200/.16)}
+.report.grade-c{--cl-grade-glow:oklch(0.78 0.20 60/.14)}
+.report.grade-d{--cl-grade-glow:oklch(0.65 0.18 30/.12)}
+.report.grade-f{--cl-grade-glow:oklch(0.55 0.06 190/.10)}
+.report-grade{font-family:var(--font-d);font-size:54px;line-height:.9;text-align:center;padding:6px 0 2px;border:2px solid;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+.report.grade-a .report-grade{color:oklch(0.82 0.22 145);border-color:oklch(0.82 0.22 145);background:oklch(0.82 0.22 145/.08)}
+.report.grade-b .report-grade{color:oklch(0.85 0.18 200);border-color:oklch(0.85 0.18 200);background:oklch(0.85 0.18 200/.08)}
+.report.grade-c .report-grade{color:oklch(0.78 0.20 60);border-color:oklch(0.78 0.20 60);background:oklch(0.78 0.20 60/.08)}
+.report.grade-d .report-grade{color:oklch(0.65 0.18 30);border-color:oklch(0.65 0.18 30);background:oklch(0.65 0.18 30/.08)}
+.report.grade-f .report-grade{color:oklch(0.55 0.06 190);border-color:oklch(0.55 0.06 190);background:oklch(0.55 0.06 190/.08)}
+.report-grade-lbl{font-family:var(--font-m);font-size:9px;text-align:center;letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;color:var(--ink-faint)}
+.report-info{min-width:0;position:relative;z-index:1}
+.report-name{font-family:var(--font-d);font-size:22px;letter-spacing:1px;line-height:1;margin-bottom:4px}
+.report-origin{font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px}
+.report-summary{font-size:13px;line-height:1.5;color:var(--ink-dim);margin-bottom:12px}
+.report-stats{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.report-stats strong{color:var(--fg);font-weight:600;font-size:14px;display:block}
+.report-trend{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;display:inline-block;margin-left:8px}
+.report-trend.up{background:oklch(0.82 0.22 145/.15);color:oklch(0.82 0.22 145);border:1px solid oklch(0.82 0.22 145/.4)}
+.report-trend.down{background:oklch(0.65 0.18 30/.15);color:oklch(0.65 0.18 30);border:1px solid oklch(0.65 0.18 30/.4)}
+.report-trend.flat{background:var(--card2);color:var(--ink-faint);border:1px solid var(--border)}
+.report-top{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-faint);padding-top:10px;border-top:1px dashed var(--border)}
+.report-top span{color:var(--signal-cyan);font-weight:600}
+.report-skel{height:170px;background:linear-gradient(90deg,var(--card2) 0%,var(--card) 50%,var(--card2) 100%);background-size:200% 100%;animation:shimmer 1.6s infinite;clip-path:var(--cut)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
 /* SERVER CARDS (below board) */
 .section-h{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:18px}
 .section-h h2{font-family:var(--font-d);font-size:32px;letter-spacing:1px}
@@ -214,6 +246,15 @@ body>*{position:relative;z-index:3}
       </div>
       <!-- rows injected -->
     </div>
+  </div>
+
+  <!-- WEEKLY REPORT CARDS -->
+  <div class="section-h">
+    <h2>Weekly Server Report Cards</h2>
+    <span class="sub">Auto-graded · refreshed each hour</span>
+  </div>
+  <div class="reports" id="reports">
+    <div class="report-skel"></div><div class="report-skel"></div><div class="report-skel"></div>
   </div>
 
   <!-- SERVER CARDS -->
@@ -380,6 +421,47 @@ async function load() {
 
 load();
 setInterval(load, 60000);
+
+// Weekly server report cards (auto-refresh hourly via Cache API).
+async function loadReports() {
+  const host = document.getElementById('reports');
+  if (!host) return;
+  try {
+    const r = await fetch('/api/server-reviews');
+    const d = await r.json();
+    if (!d.ok || !d.reviews) {
+      host.innerHTML = '<div class="empty" style="padding:24px;color:var(--ink-faint);font-family:var(--font-m);font-size:13px;letter-spacing:2px;text-transform:uppercase">Reports unavailable.</div>';
+      return;
+    }
+    host.innerHTML = d.reviews.map(rev => {
+      const top = rev.top_streamers?.[0];
+      const gp = rev.growth_pct;
+      const trendCls = gp == null ? 'flat' : (gp >= 5 ? 'up' : gp <= -5 ? 'down' : 'flat');
+      const trendText = gp == null ? '— · no last week' : (gp >= 0 ? '▲ +' + gp + '%' : '▼ ' + gp + '%');
+      return `<div class="report grade-${rev.grade.toLowerCase()}">
+        <div>
+          <div class="report-grade">${rev.grade}</div>
+          <div class="report-grade-lbl">${esc(rev.grade_label)}</div>
+        </div>
+        <div class="report-info">
+          <div class="report-name">${esc(rev.name)} <span class="report-trend ${trendCls}">${trendText}</span></div>
+          <div class="report-origin">${esc(rev.origin)} server · last 7 days</div>
+          <div class="report-summary">${esc(rev.summary)}</div>
+          <div class="report-stats">
+            <div><strong>${rev.hours}h</strong> streamed</div>
+            <div><strong>${rev.streamers}</strong> streamer${rev.streamers === 1 ? '' : 's'}</div>
+            <div><strong>${fmtBig(rev.viewer_hours)}</strong> viewer-hrs</div>
+          </div>
+          ${top ? `<div class="report-top">Top: <span>${esc(top.display_name)}</span> · ${top.hours}h</div>` : '<div class="report-top">No streams this week</div>'}
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    host.innerHTML = '<div class="empty" style="padding:24px;color:var(--ink-faint);font-family:var(--font-m);font-size:13px">Reports unavailable.</div>';
+  }
+}
+loadReports();
+setInterval(loadReports, 30 * 60 * 1000);
 </script>
 <script src="/streak-checkin.js" defer></script>
 </body>
