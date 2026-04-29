@@ -3,7 +3,8 @@
   "description": "Route /api/* and /creator-profile/* through Pages Functions; everything else served as static.",
   "include": [
     "/api/*",
-    "/creator-profile/*"
+    "/creator-profile/*",
+    "/wrapped/*"
   ],
   "exclude": []
 }

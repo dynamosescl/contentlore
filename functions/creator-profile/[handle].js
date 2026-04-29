@@ -970,7 +970,8 @@ function renderReportCard(handle, name, rc) {
     <div class="section" id="report-card">
       <div class="sec-h">
         <h2>Monthly Report Card</h2>
-        <span style="display:flex;gap:8px">
+        <span style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="rc-share" href="/wrapped/${esc(handle)}" style="text-decoration:none">✨ View Wrapped</a>
           <a class="rc-share" href="/api/shoutout-card/${esc(handle)}" target="_blank" rel="noopener" style="text-decoration:none">📸 Shoutout card ↗</a>
           <button class="rc-share" type="button" id="rc-share-btn">Share this report</button>
         </span>
