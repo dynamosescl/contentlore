@@ -165,7 +165,7 @@
       width:34px;height:34px;cursor:pointer;font:inherit;font-size:16px}
     .cl-mn-drawer header .x:hover{border-color:oklch(0.82 0.20 195);color:oklch(0.85 0.18 200)}
     .cl-mn-drawer nav{flex:1;overflow-y:auto;padding:8px 0 16px}
-    .cl-mn-group{padding:14px 18px 6px;font-size:10px;letter-spacing:3px;text-transform:uppercase;
+    .cl-mn-group{padding:14px 18px 6px;font-size:11px;letter-spacing:3px;text-transform:uppercase;
       color:oklch(0.55 0.06 195);font-weight:600}
     .cl-mn-drawer nav a{display:flex;align-items:center;gap:10px;padding:12px 18px;font-size:13px;
       letter-spacing:2px;text-transform:uppercase;color:oklch(0.78 0.05 320);text-decoration:none;

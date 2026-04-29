@@ -51,7 +51,7 @@ function pctDelta(now, then) {
 }
 
 function trendFor(viewerHoursDelta) {
-  if (viewerHoursDelta == null) return { id: 'building', label: 'Building data', emoji: '📡', tint: 'oklch(0.55 0.06 190)' };
+  if (viewerHoursDelta == null) return { id: 'building', label: 'Just starting out', emoji: '📡', tint: 'oklch(0.55 0.06 190)' };
   if (viewerHoursDelta >= 10)  return { id: 'growing',   label: 'Scene growing', emoji: '📈', tint: 'oklch(0.82 0.22 145)' };
   if (viewerHoursDelta <= -10) return { id: 'declining', label: 'Scene cooling', emoji: '📉', tint: 'oklch(0.68 0.27 25)' };
   return                          { id: 'stable',    label: 'Scene stable',  emoji: '⚖️', tint: 'oklch(0.82 0.20 195)' };

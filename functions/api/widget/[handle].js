@@ -108,16 +108,16 @@ a{text-decoration:none;color:inherit}
   display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:22px;color:oklch(0.82 0.20 195)}
 .name{min-width:0}
 .name .nm{font-family:'Bebas Neue',Impact,sans-serif;font-size:20px;letter-spacing:1.2px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.name .sub{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:oklch(0.55 0.06 195);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.live-pill{background:oklch(0.65 0.27 25);color:#fff;font-size:10px;letter-spacing:1.5px;padding:3px 6px;font-weight:600;display:flex;align-items:center;gap:5px;text-transform:uppercase;flex-shrink:0}
+.name .sub{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:oklch(0.55 0.06 195);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.live-pill{background:oklch(0.65 0.27 25);color:#fff;font-size:11px;letter-spacing:1.5px;padding:3px 6px;font-weight:600;display:flex;align-items:center;gap:5px;text-transform:uppercase;flex-shrink:0}
 .live-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 4px #fff;animation:pulse 1.4s infinite}
-.off-pill{background:oklch(0.18 0.06 195);color:oklch(0.55 0.06 195);font-size:10px;letter-spacing:1.5px;padding:3px 6px;text-transform:uppercase;border:1px solid oklch(0.28 0.06 195);flex-shrink:0}
+.off-pill{background:oklch(0.18 0.06 195);color:oklch(0.55 0.06 195);font-size:11px;letter-spacing:1.5px;padding:3px 6px;text-transform:uppercase;border:1px solid oklch(0.28 0.06 195);flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .viewers{font-family:'Bebas Neue',Impact,sans-serif;font-size:18px;color:oklch(0.85 0.18 200);text-shadow:0 0 8px oklch(0.85 0.18 200/.4);line-height:1}
-.viewers .vlbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:oklch(0.55 0.06 195);text-transform:uppercase;display:block;margin-top:1px;text-align:right}
-.foot{display:flex;justify-content:space-between;align-items:center;padding:5px 12px 7px;border-top:1px solid oklch(0.28 0.06 195/.5);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:oklch(0.55 0.06 195);position:relative;z-index:1}
+.viewers .vlbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;color:oklch(0.55 0.06 195);text-transform:uppercase;display:block;margin-top:1px;text-align:right}
+.foot{display:flex;justify-content:space-between;align-items:center;padding:5px 12px 7px;border-top:1px solid oklch(0.28 0.06 195/.5);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:oklch(0.55 0.06 195);position:relative;z-index:1}
 .plats{display:flex;gap:4px}
-.p{padding:2px 5px;font-size:9px;font-weight:600;letter-spacing:1px;border:1px solid;border-radius:2px}
+.p{padding:2px 5px;font-size:11px;font-weight:600;letter-spacing:1px;border:1px solid;border-radius:2px}
 .p-twitch{color:oklch(0.78 0.20 295);border-color:oklch(0.65 0.25 295/.6)}
 .p-kick{color:oklch(0.82 0.22 145);border-color:oklch(0.82 0.22 145/.6)}
 .p-youtube{color:oklch(0.68 0.22 25);border-color:oklch(0.68 0.22 25/.6)}

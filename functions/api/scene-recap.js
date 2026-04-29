@@ -59,8 +59,8 @@ async function callAnthropic(env, data) {
 
   const dataLines = [];
   dataLines.push(`Window: last 7 days (rolling, UTC)`);
-  dataLines.push(`Total hours streamed across the 26 tracked streamers: ${data.totalHours}`);
-  dataLines.push(`Streamers who went live: ${data.creatorsLive} of 26`);
+  dataLines.push(`Total hours streamed across the tracked streamers: ${data.totalHours}`);
+  dataLines.push(`Streamers who went live this week: ${data.creatorsLive}`);
   dataLines.push(`Total stream sessions: ${data.sessionsCount}`);
   if (data.peak) {
     dataLines.push(`Peak viewership moment: ${data.peak.who} on ${data.peak.platform} with ${data.peak.viewers} viewers, stream titled "${data.peak.title || '(no title)'}"`);
