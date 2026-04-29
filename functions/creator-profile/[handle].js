@@ -57,7 +57,7 @@ export async function onRequestGet({ params, env, request }) {
   if (!entry) return notFoundPage(rawHandle);
 
   // Pull the live state, clips cache, and D1 history in parallel.
-  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks, weekRanks, connections, flaggedMoments, moderators] = await Promise.all([
+  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks, weekRanks, connections, flaggedMoments, moderators, characters] = await Promise.all([
     getLiveCache(env, request),
     getClipsCache(env, request),
     lookupDbCreator(env, entry.handle),
@@ -67,6 +67,7 @@ export async function onRequestGet({ params, env, request }) {
     queryConnections(env, entry.handle).catch(() => []),
     queryFlaggedMoments(env, entry.handle).catch(() => []),
     queryModerators(env, entry.handle).catch(() => []),
+    queryCharacters(env, entry.handle).catch(() => []),
   ]);
 
   const liveEntry = (liveCache?.live || []).find(c => c.handle === entry.handle) || null;
@@ -85,7 +86,7 @@ export async function onRequestGet({ params, env, request }) {
 
   return new Response(renderProfile({
     handle: entry.handle, name: display, platform: entry.platform,
-    avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments, moderators,
+    avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments, moderators, characters,
   }), {
     headers: {
       'content-type': 'text/html; charset=utf-8',
@@ -208,6 +209,30 @@ async function queryWeekRanks(env) {
     handle: String(r.handle).toLowerCase(),
     mins: Number(r.mins || 0),
   })).sort((a, b) => b.mins - a.mins);
+}
+
+// Characters played by this creator — approved rows from the
+// `characters` table, sorted active-first then by created_at desc.
+async function queryCharacters(env, handle) {
+  try {
+    const res = await env.DB.prepare(`
+      SELECT id, character_name, server, faction, description, status, created_at
+        FROM characters
+       WHERE played_by_handle = ? AND approved = 1
+       ORDER BY status = 'active' DESC, created_at DESC
+       LIMIT 30
+    `).bind(handle).all();
+    return (res.results || []).map(r => ({
+      id: r.id,
+      character_name: r.character_name,
+      server: r.server || null,
+      faction: r.faction || null,
+      description: r.description || null,
+      status: r.status,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 // "Moderated by" — verified mods whose creators_modded JSON contains
@@ -607,7 +632,7 @@ function buildPlatformLinks(socials) {
   return out;
 }
 
-function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments, moderators }) {
+function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments, moderators, characters }) {
   const platUrl = platform === 'kick' ? `https://kick.com/${handle}` : `https://twitch.tv/${handle}`;
   const platLabel = platform === 'kick' ? 'Kick' : 'Twitch';
   const isLive = !!liveEntry?.is_live;
@@ -746,6 +771,21 @@ body>*{position:relative;z-index:3}
 .chip{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:1px;padding:9px 14px;background:var(--card);border:1px solid var(--border);color:var(--ink-dim);display:inline-flex;align-items:center;gap:8px;transition:all .15s}
 .chip:hover{border-color:var(--signal);color:var(--fg)}
 .chip .n{font-family:var(--font-d);font-size:15px;color:var(--signal);letter-spacing:0}
+
+/* CHARACTERS — RP characters played by this creator */
+.chars{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.char{padding:14px 16px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);transition:all .15s}
+.char:hover{border-color:var(--signal)}
+.char-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+.char-name{font-family:var(--font-d);font-size:22px;letter-spacing:1px;color:var(--fg);line-height:1}
+.char-status{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;border:1px solid var(--border);flex-shrink:0}
+.char-status.active{color:var(--signal);border-color:var(--signal)}
+.char-status.retired{color:var(--ink-faint)}
+.char-status.dead{color:oklch(0.65 0.25 25);border-color:oklch(0.65 0.25 25)}
+.char-meta{font-family:var(--font-m);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+.char-desc{font-size:13px;line-height:1.5;color:var(--ink-dim)}
+.char-empty-cta{font-family:var(--font-m);font-size:12px;letter-spacing:1px;color:var(--ink-faint);margin-top:12px;text-align:center;padding:14px;background:var(--card2);border:1px dashed var(--border)}
+.char-empty-cta a{color:var(--signal-cyan);text-decoration:none}
 
 /* MODERATED BY — verified mods for this creator */
 .modby{display:flex;flex-wrap:wrap;gap:8px}
@@ -972,6 +1012,27 @@ body>*{position:relative;z-index:3}
       ${affinity.map(a => `<span class="chip">${esc(a.name)} <span class="n">${a.n}</span></span>`).join('')}
     </div>
   </div>` : ''}
+
+  <div class="section">
+    <div class="sec-h"><h2>Characters</h2><span class="sub">RP characters ${esc(name)} plays</span></div>
+    ${(characters && characters.length) ? `
+      <div class="chars">
+        ${characters.map(c => `
+          <div class="char">
+            <div class="char-h">
+              <span class="char-name">${esc(c.character_name)}</span>
+              <span class="char-status ${esc(c.status)}">${esc(c.status)}</span>
+            </div>
+            <div class="char-meta">${[c.server, c.faction].filter(Boolean).map(esc).join(' · ') || 'No server / faction recorded'}</div>
+            ${c.description ? `<div class="char-desc">${esc(c.description)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    ` : `<div class="empty-block">No characters in the database yet.</div>`}
+    <div class="char-empty-cta">
+      Know a character ${esc(name)} plays? <a href="/moderators/">Apply to mod →</a> and add it.
+    </div>
+  </div>
 
   ${(connections && connections.length) ? `
   <div class="section">
