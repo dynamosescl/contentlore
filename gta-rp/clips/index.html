@@ -75,6 +75,29 @@ body>*{position:relative;z-index:3}
 .filter-stats{margin-left:auto;font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
 .filter-stats strong{color:var(--signal);font-weight:600}
 
+/* CLIP OF THE DAY hero */
+.cod{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:24px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:22px;position:relative;overflow:hidden}
+.cod::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,oklch(0.82 0.20 195/.10),transparent 60%);pointer-events:none}
+.cod-thumb{position:relative;aspect-ratio:16/9;background:var(--card2);overflow:hidden;cursor:pointer;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.cod-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s}
+.cod-thumb:hover img{transform:scale(1.04)}
+.cod-thumb .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:oklch(0.10 0.04 190/.35);opacity:0;transition:opacity .2s}
+.cod-thumb:hover .play{opacity:1}
+.cod-thumb .play-icon{width:64px;height:64px;background:var(--signal);clip-path:polygon(0 0,100% 50%,0 100%);transform:translateX(4px)}
+.cod-views{position:absolute;bottom:10px;right:10px;font-family:var(--font-m);font-size:12px;font-weight:600;padding:4px 10px;background:oklch(0.10 0.04 190/.85);color:var(--signal);border:1px solid oklch(0.82 0.20 195/.5)}
+.cod-info{display:flex;flex-direction:column;justify-content:center;min-width:0;position:relative;z-index:1}
+.cod-kicker{font-family:var(--font-m);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--signal);margin-bottom:8px;display:inline-flex;align-items:center;gap:8px}
+.cod-kicker .ai-tag{padding:2px 8px;background:oklch(0.85 0.18 200/.15);border:1px solid oklch(0.85 0.18 200/.4);color:var(--signal-cyan);font-size:10px;letter-spacing:2px}
+.cod-title{font-family:var(--font-d);font-size:32px;letter-spacing:1px;line-height:1;margin-bottom:10px;color:var(--fg)}
+.cod-creator{font-family:var(--font-m);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--signal-cyan);margin-bottom:14px}
+.cod-caption{font-size:15px;line-height:1.55;color:var(--ink-dim);margin-bottom:14px}
+.cod-meta{display:flex;gap:14px;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:auto;padding-top:12px;border-top:1px dashed var(--border)}
+.cod-meta strong{color:var(--fg);font-weight:600}
+.cod.skel .cod-thumb,.cod.skel .cod-info{background:linear-gradient(90deg,var(--card2) 0%,var(--card) 50%,var(--card2) 100%);background-size:200% 100%;animation:shimmer 1.6s infinite;border-radius:2px}
+.cod.skel .cod-info{min-height:200px}
+.cod-empty{padding:24px;text-align:center;color:var(--ink-faint);font-family:var(--font-m);font-size:13px;letter-spacing:2px;text-transform:uppercase;grid-column:1/-1}
+@media(max-width:780px){.cod{grid-template-columns:1fr}.cod-title{font-size:26px}}
+
 /* HIGHLIGHTS REEL */
 .reel-wrap{margin-bottom:28px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:18px}
 .reel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
@@ -209,6 +232,11 @@ body>*{position:relative;z-index:3}
 </div>
 
 <div class="mx">
+  <div class="cod card skel" id="cod-card">
+    <div class="cod-thumb"></div>
+    <div class="cod-info"></div>
+  </div>
+
   <div class="reel-wrap" id="reel-wrap">
     <div class="reel-head">
       <div class="left">
@@ -662,6 +690,60 @@ document.getElementById('reel-hud-stop').addEventListener('click', () => {
 // ---------- Init ----------
 loadClips();
 loadReel();
+
+// ----- Clip of the Day hero card -----
+async function loadClipOfDay() {
+  const host = document.getElementById('cod-card');
+  if (!host) return;
+  try {
+    const r = await fetch('/api/clip-of-day');
+    const d = await r.json();
+    if (!d.ok || !d.pick || !d.pick.clip) {
+      host.classList.remove('skel');
+      host.innerHTML = '<div class="cod-empty">No Clip of the Day yet — picked fresh each morning.</div>';
+      return;
+    }
+    const p = d.pick;
+    const c = p.clip;
+    const thumb = (c.thumbnail_url || '').replace('%{width}', '640').replace('%{height}', '360');
+    const dateLabel = p.date ? new Date(p.date + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+    host.classList.remove('skel');
+    host.innerHTML = `
+      <div class="cod-thumb" data-clip-id="${escapeAttr(c.id || '')}" data-clip-url="${escapeAttr(c.url || '')}" data-clip-embed="${escapeAttr(c.embed_url || '')}" data-clip-title="${escapeAttr(c.title || '')}">
+        ${thumb ? `<img src="${escapeAttr(thumb)}" alt="${escapeAttr(c.title || 'clip')}" loading="lazy">` : ''}
+        <div class="play"><div class="play-icon"></div></div>
+        ${c.view_count != null ? `<span class="cod-views">${formatCount(c.view_count)} views</span>` : ''}
+      </div>
+      <div class="cod-info">
+        <div class="cod-kicker">⭐ Clip of the Day <span class="ai-tag">AI Pick</span></div>
+        <div class="cod-title">${escapeHtml(c.title || '(untitled)')}</div>
+        <div class="cod-creator">${escapeHtml(c.creator_name || c.creator_handle || '')}</div>
+        <div class="cod-caption">${escapeHtml(p.caption || '')}</div>
+        <div class="cod-meta">
+          <span>${dateLabel}</span>
+          <span>${p.picked_by === 'fallback' ? 'Auto-picked' : 'Picked by Claude'}</span>
+        </div>
+      </div>`;
+    host.querySelector('.cod-thumb').addEventListener('click', () => {
+      openModal({
+        id: c.id,
+        url: c.url,
+        embed_url: c.embed_url,
+        title: c.title,
+        creator_handle: c.creator_handle,
+        creator_name: c.creator_name,
+        view_count: c.view_count,
+        duration: c.duration,
+        thumbnail_url: c.thumbnail_url,
+        platform: 'twitch',
+      });
+    });
+  } catch (e) {
+    host.classList.remove('skel');
+    host.innerHTML = '<div class="cod-empty">Couldn\'t load Clip of the Day.</div>';
+  }
+}
+loadClipOfDay();
 </script>
 <div style="border-top:1px solid var(--border);padding:24px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:24px">
   ContentLore · UK GTA RP · Clip Wall · <a href="/submit/" style="color:inherit;text-decoration:underline">Submit your channel →</a>
