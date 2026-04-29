@@ -2,95 +2,182 @@
    cl-theme.css — site-wide visual layer.
 
    Loaded from every hub page <head>. Provides:
-     §1  Animated gradient-mesh background (drifting blobs)
-     §2  Film-grain noise overlay (SVG feTurbulence, base64)
+     §1  Perspective city-grid background (CSS lines, slow scroll)
+     §2  Floating particle "city lights" drifting upward
      §3  Vignette (dark corners, glow center)
      §4  Card depth + glassmorphism + lift-on-hover
-     §5  Subtle scoped helpers reused by the site
+     §5  Shared helpers + nav/pulse/footer glass
 
-   Stacking order in body's stacking context:
-     html background-color           — flat bedrock (paints first)
-     html background-image (mesh)    — animated radial blobs, fixed
-     body::before (scanline)         z-index:1  (existing per-page CSS)
-     #cl-bg-noise / #cl-bg-vignette  z-index:2  (injected by pwa.js)
+   Stacking inside body's stacking context:
+     html background-color           — flat dark bedrock (paints first)
+     body::before (scanline)         z-index:1   (existing per-page CSS)
+     #cl-bg-fx (grid + particles + vignette)  z-index:2  (injected by pwa.js)
      body > * (page content)         z-index:3+
 ================================================================ */
 
 :root {
-  --cl-bg-deep: oklch(0.05 0.025 200);
-  --cl-mesh-1: oklch(0.55 0.18 195 / .42);
-  --cl-mesh-2: oklch(0.48 0.20 245 / .36);
-  --cl-mesh-3: oklch(0.50 0.18 310 / .26);
-  --cl-edge: oklch(0.95 0.02 195 / .06);
-  --cl-glass-bg: oklch(0.13 0.045 195 / .62);
+  --cl-bg-deep:    oklch(0.05 0.025 200);
+  --cl-grid-line:  oklch(0.82 0.20 195 / .10);
+  --cl-grid-line2: oklch(0.82 0.20 195 / .07);
+  --cl-particle:   oklch(0.95 0.10 200);
+  --cl-edge:       oklch(0.95 0.02 195 / .06);
+  --cl-glass-bg:   oklch(0.13 0.045 195 / .62);
   --cl-glass-bg-hov: oklch(0.16 0.05 195 / .72);
   --cl-glass-shadow: 0 4px 24px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.02) inset;
   --cl-glass-shadow-hov: 0 10px 36px rgba(0,0,0,0.42), 0 0 24px oklch(0.82 0.20 195 / .18), 0 1px 0 rgba(255,255,255,0.04) inset;
 }
 
-/* ----------------------------------------------------------------
-   §1 + §2  Animated gradient mesh on <html>.
-   Three radial blobs that drift via background-position. Static at
-   reduced motion. ~26s cycle so it never feels jittery.
----------------------------------------------------------------- */
 html {
   background-color: var(--cl-bg-deep);
-  background-image:
-    radial-gradient(circle at center, var(--cl-mesh-1) 0%, transparent 55%),
-    radial-gradient(circle at center, var(--cl-mesh-2) 0%, transparent 55%),
-    radial-gradient(circle at center, var(--cl-mesh-3) 0%, transparent 60%);
-  background-size: 90vw 90vh, 80vw 80vh, 70vw 70vh;
-  background-position: 12% 18%, 82% 78%, 60% 8%;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  animation: cl-mesh-drift 26s ease-in-out infinite alternate;
-  will-change: background-position;
 }
-
-@keyframes cl-mesh-drift {
-  0%   { background-position: 12% 18%, 82% 78%, 60% 8%; }
-  50%  { background-position: 38% 52%, 58% 62%, 28% 32%; }
-  100% { background-position:  6% 72%, 92% 28%, 72% 56%; }
-}
-
-/* Page-level body background gets overridden so html can show through.
-   Each per-page <style> sets body{background:var(--bg)}; we override
-   to transparent so the mesh + bedrock paint first. */
 body {
   background: transparent !important;
 }
 
 /* ----------------------------------------------------------------
-   §3  Noise + vignette injected as a single fixed wrapper by pwa.js.
-   Lives at z-index:2 so it sits ABOVE the per-page scanline (z:1)
-   but BELOW page content (z:3+). pointer-events:none throughout.
+   FX wrapper. Injected once by pwa.js. Three children: .cl-grid,
+   .cl-particles, .cl-vignette. Sits above the per-page scanline
+   (z:1) and below page content (z:3+).
 ---------------------------------------------------------------- */
 #cl-bg-fx {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 2;
-}
-#cl-bg-fx .cl-noise {
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85  0 0 0 0 0.95  0 0 0 0 0.95  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  background-size: 180px 180px;
-  background-repeat: repeat;
-  opacity: 0.045;
-  mix-blend-mode: overlay;
-}
-#cl-bg-fx .cl-vignette {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at center, transparent 38%, rgba(0,0,0,.42) 92%, rgba(0,0,0,.62) 100%);
+  overflow: hidden;
+  perspective: 700px;          /* sets up depth for .cl-grid */
+  perspective-origin: 50% 35%; /* horizon a third down the screen */
 }
 
-/* Reduced-motion: kill the drift, keep the mesh static. */
+/* ----------------------------------------------------------------
+   §1  Perspective city-grid.
+   Two repeating-linear-gradients drawn on an oversized layer that's
+   tilted backwards via rotateX so it looks like a street grid
+   receding to the horizon. Animated by scrolling the background
+   position downward (toward the viewer) over 30s. Pure CSS, no
+   transforms on the animated property — only background-position
+   moves, which the browser composites cheaply.
+---------------------------------------------------------------- */
+.cl-grid {
+  position: absolute;
+  /* Oversize the layer so the rotateX tilt doesn't reveal edges. */
+  left: -50%;
+  right: -50%;
+  top: -10%;
+  bottom: -60%;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 79px,
+      var(--cl-grid-line) 79px 80px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 79px,
+      var(--cl-grid-line2) 79px 80px
+    );
+  background-size: 80px 80px, 80px 80px;
+  background-position: 0 0, 0 0;
+  transform: rotateX(62deg);
+  transform-origin: 50% 50%;
+  animation: cl-grid-scroll 30s linear infinite;
+  will-change: background-position;
+
+  /* Fade out the far end (horizon) so the lines recede into the
+     dark bedrock instead of cutting off abruptly. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.15) 12%,
+    rgba(0,0,0,0.65) 35%,
+    rgba(0,0,0,1) 65%,
+    rgba(0,0,0,1) 100%
+  );
+          mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.15) 12%,
+    rgba(0,0,0,0.65) 35%,
+    rgba(0,0,0,1) 65%,
+    rgba(0,0,0,1) 100%
+  );
+}
+
+@keyframes cl-grid-scroll {
+  0%   { background-position: 0 0,    0 0; }
+  100% { background-position: 0 80px, 0 0; }
+}
+
+/* ----------------------------------------------------------------
+   §2  Floating particles — 18 small dots that drift upward at
+   varying speeds and opacities. Pure CSS via nth-child rules.
+   Each dot starts below the viewport and animates to ~110vh up.
+---------------------------------------------------------------- */
+.cl-particles {
+  position: absolute;
+  inset: 0;
+}
+.cl-p {
+  position: absolute;
+  bottom: -10px;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--cl-particle);
+  box-shadow: 0 0 4px var(--cl-particle);
+  animation-name: cl-float;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+@keyframes cl-float {
+  0%   { transform: translateY(0);     opacity: 0; }
+  10%  {                                opacity: var(--cl-p-op, .25); }
+  90%  {                                opacity: var(--cl-p-op, .25); }
+  100% { transform: translateY(-110vh); opacity: 0; }
+}
+
+/* Per-particle: position, size, speed, opacity. Negative delays so
+   the field looks populated immediately rather than empty for the
+   first few seconds. */
+.cl-p:nth-child(1)  { left:  4%; width:2px; height:2px; --cl-p-op:.22; animation-duration:28s; animation-delay: -2s;  }
+.cl-p:nth-child(2)  { left:  9%; width:3px; height:3px; --cl-p-op:.30; animation-duration:22s; animation-delay: -9s;  }
+.cl-p:nth-child(3)  { left: 14%; width:2px; height:2px; --cl-p-op:.16; animation-duration:35s; animation-delay: -14s; }
+.cl-p:nth-child(4)  { left: 19%; width:4px; height:4px; --cl-p-op:.18; animation-duration:40s; animation-delay: -1s;  }
+.cl-p:nth-child(5)  { left: 24%; width:2px; height:2px; --cl-p-op:.28; animation-duration:18s; animation-delay: -11s; }
+.cl-p:nth-child(6)  { left: 29%; width:3px; height:3px; --cl-p-op:.20; animation-duration:32s; animation-delay: -6s;  }
+.cl-p:nth-child(7)  { left: 35%; width:2px; height:2px; --cl-p-op:.14; animation-duration:26s; animation-delay: -19s; }
+.cl-p:nth-child(8)  { left: 40%; width:3px; height:3px; --cl-p-op:.24; animation-duration:30s; animation-delay: -4s;  }
+.cl-p:nth-child(9)  { left: 46%; width:2px; height:2px; --cl-p-op:.18; animation-duration:21s; animation-delay: -15s; }
+.cl-p:nth-child(10) { left: 51%; width:4px; height:4px; --cl-p-op:.22; animation-duration:38s; animation-delay: -7s;  }
+.cl-p:nth-child(11) { left: 57%; width:2px; height:2px; --cl-p-op:.30; animation-duration:24s; animation-delay: -3s;  }
+.cl-p:nth-child(12) { left: 62%; width:3px; height:3px; --cl-p-op:.16; animation-duration:34s; animation-delay: -18s; }
+.cl-p:nth-child(13) { left: 67%; width:2px; height:2px; --cl-p-op:.20; animation-duration:20s; animation-delay: -10s; }
+.cl-p:nth-child(14) { left: 73%; width:3px; height:3px; --cl-p-op:.26; animation-duration:29s; animation-delay: -5s;  }
+.cl-p:nth-child(15) { left: 78%; width:2px; height:2px; --cl-p-op:.14; animation-duration:33s; animation-delay: -16s; }
+.cl-p:nth-child(16) { left: 83%; width:4px; height:4px; --cl-p-op:.18; animation-duration:36s; animation-delay: -2s;  }
+.cl-p:nth-child(17) { left: 89%; width:2px; height:2px; --cl-p-op:.24; animation-duration:23s; animation-delay: -12s; }
+.cl-p:nth-child(18) { left: 95%; width:3px; height:3px; --cl-p-op:.20; animation-duration:31s; animation-delay: -8s;  }
+
+/* ----------------------------------------------------------------
+   §3  Vignette — dark corners, glow center. Held over from before.
+---------------------------------------------------------------- */
+.cl-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 38%,
+    rgba(0,0,0,.45) 92%,
+    rgba(0,0,0,.66) 100%
+  );
+}
+
+/* Reduced-motion: kill grid drift and particles entirely. The
+   static perspective grid + vignette stay. */
 @media (prefers-reduced-motion: reduce) {
-  html { animation: none !important; }
-  #cl-bg-fx .cl-noise { opacity: 0.03; }
+  .cl-grid       { animation: none !important; }
+  .cl-p          { animation: none !important; opacity: var(--cl-p-op, .2); }
 }
 
 /* ----------------------------------------------------------------
@@ -173,12 +260,8 @@ body {
   box-shadow: var(--cl-glass-shadow);
 }
 
-/* Stream tile chrome on multi-view: glass shell, no lift (already
-   has its own active-state ring). The tile content (iframe) stays
-   opaque on top. */
-.tile {
-  border-radius: 2px;
-}
+/* Stream tile chrome on multi-view: glass shell, no lift. */
+.tile { border-radius: 2px; }
 
 /* Modal surfaces: stronger blur, deeper background. */
 .modal,
@@ -188,13 +271,12 @@ body {
 }
 
 /* Shoutout-card-style stat rows that should still feel like sub-panels. */
-.stats {
-  --cl-glass-bg: oklch(0.13 0.045 195 / .42);
-}
+.stats { --cl-glass-bg: oklch(0.13 0.045 195 / .42); }
 
-/* Sticky nav and pulse strip: keep them readable, give them their
-   own glass treatment. The per-page rules use background:var(--card)
-   which is now visually flat once we made body transparent. */
+/* ----------------------------------------------------------------
+   §5  Nav, pulse strip, hero, footer get a subtle glass treatment
+   so they sit cleanly over the new background.
+---------------------------------------------------------------- */
 .nav,
 .pulse {
   background: oklch(0.10 0.04 195 / .78) !important;
@@ -203,8 +285,6 @@ body {
   border-bottom: 1px solid var(--cl-edge) !important;
 }
 
-/* Hero blocks: punch through the glass — let the mesh be more visible
-   behind the headline. Each page's hero uses .hero or .hero-inner. */
 .hero {
   background: linear-gradient(
     180deg,
@@ -216,7 +296,6 @@ body {
   border-bottom: 1px solid var(--cl-edge) !important;
 }
 
-/* Footer: subtle glass too. */
 .footer {
   background: oklch(0.08 0.03 195 / .55) !important;
   backdrop-filter: blur(10px);
@@ -224,12 +303,9 @@ body {
   border-top: 1px solid var(--cl-edge) !important;
 }
 
-/* ----------------------------------------------------------------
-   §5  Drop the project-wide infinite glow-pulse hover animation
+/* Drop the project-wide infinite glow-pulse hover animation
    (declared inline on /, /gta-rp/, etc.) — the lift-on-hover is
-   the new interaction. Without this override, hover would still
-   trigger a 1.5s infinite box-shadow pulse on top of our transition.
----------------------------------------------------------------- */
+   the new interaction. */
 .card:hover, .sc:hover, .scard:hover, .rcard:hover, .featured:hover {
   animation: none !important;
 }

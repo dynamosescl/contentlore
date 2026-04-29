@@ -15,20 +15,26 @@
 // ================================================================
 
 // ----------------------------------------------------------------
-// Background FX layer — noise + vignette, injected as a fixed
-// wrapper at z-index:2 so it sits above the per-page scanline
-// (z:1) and below page content (z:3+). Mesh gradient itself is
-// CSS-only on <html> in cl-theme.css. Inserted ASAP (head-script
-// timing if available, else first DOMContentLoaded).
+// Background FX layer — perspective city grid + floating particles
+// + vignette. Injected once as a fixed wrapper at z-index:2 so it
+// sits above the per-page scanline (z:1) and below page content
+// (z:3+). All three layers are pure CSS in cl-theme.css; this
+// function only inserts the DOM scaffolding.
 // ----------------------------------------------------------------
 (function injectBgFx() {
+  const PARTICLE_COUNT = 18;
   function mount() {
     if (document.getElementById('cl-bg-fx')) return;
     if (!document.body) return;
     const fx = document.createElement('div');
     fx.id = 'cl-bg-fx';
     fx.setAttribute('aria-hidden', 'true');
-    fx.innerHTML = '<div class="cl-noise"></div><div class="cl-vignette"></div>';
+    let particles = '';
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles += '<span class="cl-p"></span>';
+    fx.innerHTML =
+      '<div class="cl-grid"></div>' +
+      '<div class="cl-particles">' + particles + '</div>' +
+      '<div class="cl-vignette"></div>';
     document.body.insertBefore(fx, document.body.firstChild);
   }
   if (document.body) mount();
