@@ -57,13 +57,14 @@ export async function onRequestGet({ params, env, request }) {
   if (!entry) return notFoundPage(rawHandle);
 
   // Pull the live state, clips cache, and D1 history in parallel.
-  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks, weekRanks] = await Promise.all([
+  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks, weekRanks, connections] = await Promise.all([
     getLiveCache(env, request),
     getClipsCache(env, request),
     lookupDbCreator(env, entry.handle),
     querySessions(env, entry.handle).catch(() => null),
     queryMonthRanks(env).catch(() => []),
     queryWeekRanks(env).catch(() => []),
+    queryConnections(env, entry.handle).catch(() => []),
   ]);
 
   const liveEntry = (liveCache?.live || []).find(c => c.handle === entry.handle) || null;
@@ -82,7 +83,7 @@ export async function onRequestGet({ params, env, request }) {
 
   return new Response(renderProfile({
     handle: entry.handle, name: display, platform: entry.platform,
-    avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard,
+    avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections,
   }), {
     headers: {
       'content-type': 'text/html; charset=utf-8',
@@ -205,6 +206,61 @@ async function queryWeekRanks(env) {
     handle: String(r.handle).toLowerCase(),
     mins: Number(r.mins || 0),
   })).sort((a, b) => b.mins - a.mins);
+}
+
+// "Often plays with" — pairs of curated creators whose stream sessions overlap
+// in time over the last 90 days. Strongest signal we have without parsing
+// stream titles for shared characters / servers (server detection is JS-side).
+//
+// SQL strategy: self-join stream_sessions against itself, constrained to A's
+// sessions on one side and any other curated creator on the other. Time
+// overlap = MIN(end_a, end_b) - MAX(start_a, start_b), clamped at zero.
+// is_primary=1 on the other side disambiguates dual-platform creators
+// (dynamoses, bags) so each peer reports once with their canonical handle.
+async function queryConnections(env, handle) {
+  const now = Math.floor(Date.now() / 1000);
+  const since = now - 90 * 86400;
+  try {
+    const res = await env.DB.prepare(`
+      SELECT cp_other.handle AS handle,
+             c.display_name AS display_name,
+             c.avatar_url AS avatar_url,
+             SUM(MAX(0,
+               MIN(IFNULL(ss_a.ended_at, ?), IFNULL(ss_other.ended_at, ?))
+               - MAX(ss_a.started_at, ss_other.started_at)
+             )) AS overlap_secs,
+             COUNT(*) AS overlap_sessions,
+             MAX(MIN(IFNULL(ss_a.ended_at, ?), IFNULL(ss_other.ended_at, ?))) AS last_overlap_at
+        FROM stream_sessions ss_a
+        INNER JOIN creator_platforms cp_a
+                ON cp_a.creator_id = ss_a.creator_id AND cp_a.handle = ?
+        INNER JOIN stream_sessions ss_other
+                ON ss_other.creator_id != ss_a.creator_id
+               AND ss_other.started_at < IFNULL(ss_a.ended_at, ?)
+               AND IFNULL(ss_other.ended_at, ?) > ss_a.started_at
+        INNER JOIN creator_platforms cp_other
+                ON cp_other.creator_id = ss_other.creator_id AND cp_other.is_primary = 1
+        INNER JOIN curated_creators cc
+                ON cc.handle = cp_other.handle AND cc.active = 1
+        LEFT JOIN creators c
+                ON c.id = ss_other.creator_id
+       WHERE ss_a.started_at >= ?
+       GROUP BY cp_other.handle, c.display_name, c.avatar_url
+       HAVING overlap_secs > 0
+       ORDER BY overlap_secs DESC
+       LIMIT 6
+    `).bind(now, now, now, now, handle, now, now, since).all();
+    return (res.results || []).map(r => ({
+      handle: String(r.handle).toLowerCase(),
+      display_name: r.display_name || r.handle,
+      avatar_url: r.avatar_url || null,
+      overlap_secs: Number(r.overlap_secs || 0),
+      overlap_sessions: Number(r.overlap_sessions || 0),
+      last_overlap_at: Number(r.last_overlap_at || 0),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 // Build the weekly dashboard payload. Pulls last-7d metrics from the
@@ -426,7 +482,7 @@ function buildPlatformLinks(socials) {
   return out;
 }
 
-function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard }) {
+function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections }) {
   const platUrl = platform === 'kick' ? `https://kick.com/${handle}` : `https://twitch.tv/${handle}`;
   const platLabel = platform === 'kick' ? 'Kick' : 'Twitch';
   const isLive = !!liveEntry?.is_live;
@@ -565,6 +621,17 @@ body>*{position:relative;z-index:3}
 .chip{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:1px;padding:9px 14px;background:var(--card);border:1px solid var(--border);color:var(--ink-dim);display:inline-flex;align-items:center;gap:8px;transition:all .15s}
 .chip:hover{border-color:var(--signal);color:var(--fg)}
 .chip .n{font-family:var(--font-d);font-size:15px;color:var(--signal);letter-spacing:0}
+
+/* OFTEN PLAYS WITH */
+.peers{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.peer{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);text-decoration:none;color:inherit;transition:all .15s}
+.peer:hover{border-color:var(--signal);transform:translateY(-2px);box-shadow:0 6px 18px oklch(0.82 0.20 195/.15)}
+.peer-av{width:44px;height:44px;border-radius:50%;background:var(--card2);object-fit:cover;flex-shrink:0;border:1px solid var(--border)}
+.peer-av-ph{width:44px;height:44px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:18px;color:var(--ink-faint);flex-shrink:0;border:1px solid var(--border)}
+.peer-info{display:flex;flex-direction:column;min-width:0;flex:1}
+.peer-name{font-family:var(--font-d);font-size:18px;letter-spacing:1px;line-height:1;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.peer-meta{font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:var(--ink-faint);text-transform:uppercase;margin-top:4px;display:flex;gap:6px;align-items:baseline}
+.peer-meta .h{color:var(--signal-cyan);font-weight:600}
 
 /* CLIPS GRID */
 .clips-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -745,6 +812,14 @@ body>*{position:relative;z-index:3}
     <div class="sec-h"><h2>Server Affinity</h2><span class="sub">Most recent 30 sessions</span></div>
     <div class="chips">
       ${affinity.map(a => `<span class="chip">${esc(a.name)} <span class="n">${a.n}</span></span>`).join('')}
+    </div>
+  </div>` : ''}
+
+  ${(connections && connections.length) ? `
+  <div class="section">
+    <div class="sec-h"><h2>Often Plays With</h2><span class="sub">Sessions overlapping in the last 90 days</span></div>
+    <div class="peers">
+      ${connections.map(p => renderPeerCard(p)).join('')}
     </div>
   </div>` : ''}
 
@@ -1105,6 +1180,23 @@ function renderClipCard(c) {
       </div>
     </a>
   `;
+}
+
+function renderPeerCard(p) {
+  const av = p.avatar_url
+    ? `<img class="peer-av" src="${esc(p.avatar_url)}" alt="${esc(p.display_name)}" loading="lazy">`
+    : `<div class="peer-av-ph">${esc((p.display_name || p.handle || '?').charAt(0).toUpperCase())}</div>`;
+  const hours = p.overlap_secs >= 3600
+    ? Math.round(p.overlap_secs / 3600) + 'h shared'
+    : Math.max(1, Math.round(p.overlap_secs / 60)) + 'm shared';
+  const sessionsLabel = p.overlap_sessions === 1 ? '1 session' : `${p.overlap_sessions} sessions`;
+  return `<a class="peer" href="/creator-profile/${esc(p.handle)}">
+    ${av}
+    <div class="peer-info">
+      <div class="peer-name">${esc(p.display_name)}</div>
+      <div class="peer-meta"><span class="h">${hours}</span><span>·</span><span>${sessionsLabel}</span></div>
+    </div>
+  </a>`;
 }
 
 function notFoundPage(handle) {
