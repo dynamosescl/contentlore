@@ -97,6 +97,7 @@
     ]},
     { label: 'Community', items: [
       { href: '/gta-rp/streaks/', label: 'Streaks' },
+      { href: '/moderators/',     label: 'Mod Tools' },
       { href: '/submit/',         label: 'Submit' },
     ]},
   ];

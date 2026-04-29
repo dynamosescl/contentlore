@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/cl-theme.css">
+<meta name="theme-color" content="#0d1f1f">
+<script src="/pwa.js" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mod Sign In · ContentLore</title>
+<meta name="description" content="Sign in to the ContentLore moderator dashboard with your token.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);
+  --card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);
+  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 190);
+  --signal:oklch(0.82 0.20 195);--signal-cyan:oklch(0.85 0.18 200);
+  --border:oklch(0.28 0.06 190);
+  --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
+  --cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
+}
+html{background:var(--bg);color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-b);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;position:relative}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body>*{position:relative;z-index:3}
+
+.nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px}
+.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;text-decoration:none;color:var(--fg);display:flex;align-items:center}
+.nav-brand img{height:40px;filter:brightness(1.1)}
+.back-link{margin-left:auto;font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-faint);text-decoration:none}
+.back-link:hover{color:var(--signal)}
+
+.wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 24px}
+.card{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:36px 32px;max-width:480px;width:100%;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,oklch(0.82 0.20 195/.10),transparent 60%);pointer-events:none}
+.card-tag{font-family:var(--font-m);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--signal);margin-bottom:8px;position:relative}
+.card h1{font-family:var(--font-d);font-size:42px;letter-spacing:2px;line-height:1;position:relative;margin-bottom:14px}
+.card p{font-size:14px;color:var(--ink-dim);line-height:1.6;margin-bottom:20px;position:relative}
+
+.form-row{margin-bottom:14px;position:relative}
+.form-row label{display:block;font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.form-row input{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:14px;padding:12px 14px;clip-path:var(--cut);letter-spacing:1px}
+.form-row input:focus{border-color:var(--signal);outline:none}
+
+.cta{font-family:var(--font-d);font-size:16px;letter-spacing:2px;padding:13px 30px;background:var(--signal);color:var(--bg);clip-path:var(--cut);border:0;cursor:pointer;width:100%;transition:all .2s}
+.cta:hover{box-shadow:0 0 28px oklch(0.82 0.20 195/.5)}
+.cta:disabled{opacity:.6;cursor:default}
+
+.err{margin-top:12px;font-family:var(--font-m);font-size:12px;color:oklch(0.85 0.20 25);letter-spacing:1px;text-transform:uppercase;display:none}
+.err.show{display:block}
+.help{margin-top:14px;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;line-height:1.6;text-align:center;position:relative}
+.help a{color:var(--signal-cyan);text-decoration:none}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-brand"><img src="/logo.png" alt="ContentLore"></a>
+  <a href="/moderators/" class="back-link">← Mod info</a>
+</nav>
+
+<div class="wrap">
+  <div class="card">
+    <div class="card-tag">Mod sign in</div>
+    <h1>Enter your token</h1>
+    <p>Paste the token an admin gave you. We'll save it on this device so you don't have to re-enter it.</p>
+
+    <form id="login-form">
+      <div class="form-row">
+        <label for="token">Mod token</label>
+        <input type="text" id="token" name="token" autocomplete="off" maxlength="64" required pattern="[a-fA-F0-9]{16,64}" placeholder="0000000000000000000000000000abcd">
+      </div>
+
+      <button class="cta" type="submit" id="login-btn">Sign in →</button>
+
+      <div class="err" id="err"></div>
+    </form>
+
+    <p class="help">
+      Don't have a token? <a href="/moderators/#signup">Apply to mod →</a>
+    </p>
+  </div>
+</div>
+
+<script>
+// Already signed in? Send straight to dashboard.
+try {
+  if (localStorage.getItem('cl:mod:token')) {
+    location.replace('/moderators/dashboard/');
+  }
+} catch {}
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const token = document.getElementById('token').value.trim().toLowerCase();
+  const errEl = document.getElementById('err');
+  const btn = document.getElementById('login-btn');
+  errEl.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  try {
+    const res = await fetch('/api/mod/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const json = await res.json();
+    if (!json.ok) {
+      errEl.textContent = json.error || 'Sign-in failed';
+      errEl.classList.add('show');
+    } else {
+      localStorage.setItem('cl:mod:token', token);
+      try { localStorage.setItem('cl:mod:profile', JSON.stringify(json.mod)); } catch {}
+      location.assign('/moderators/dashboard/');
+      return;
+    }
+  } catch {
+    errEl.textContent = 'Network error';
+    errEl.classList.add('show');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Sign in →';
+});
+</script>
+</body>
+</html>

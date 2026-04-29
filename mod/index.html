@@ -104,6 +104,7 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
       <div class="tab" onclick="switchTab('controls')">Controls</div>
       <div class="tab" onclick="switchTab('discovery')">Discovery</div>
       <div class="tab" onclick="switchTab('submissions')">Submissions <span id="sub-badge" style="margin-left:6px;font-size:11px;color:var(--signal);display:none">0</span></div>
+      <div class="tab" onclick="switchTab('moderators')">Moderators <span id="mod-badge" style="margin-left:6px;font-size:11px;color:var(--signal);display:none">0</span></div>
     </div>
 
     <div class="tab-content active" id="tab-dashboard">
@@ -218,6 +219,18 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
       </div>
       <div class="panel" id="clip-subs-panel"><div class="log">Loading...</div></div>
     </div>
+
+    <div class="tab-content" id="tab-moderators">
+      <div class="sh">Moderator applications</div>
+      <div class="panel" style="padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-family:var(--font-m);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint)">Filter</span>
+        <button class="btn" id="mod-filter-pending"   onclick="loadMods('pending')">Pending</button>
+        <button class="btn" id="mod-filter-verified"  onclick="loadMods('verified')">Verified</button>
+        <button class="btn" id="mod-filter-suspended" onclick="loadMods('suspended')">Suspended</button>
+        <button class="btn" onclick="loadMods('')" style="margin-left:auto">All</button>
+      </div>
+      <div class="panel" id="mods-panel"><div class="log">Loading...</div></div>
+    </div>
   </div>
 </div>
 
@@ -277,7 +290,124 @@ function switchTab(name) {
   if (name === 'curated') loadCurated();
   if (name === 'discovery') loadDiscovery();
   if (name === 'submissions') { loadSubmissions('pending'); loadClipSubs('pending'); }
+  if (name === 'moderators') loadMods('pending');
 }
+
+// ---------- Moderators ----------
+async function loadMods(status) {
+  const panel = document.getElementById('mods-panel');
+  panel.innerHTML = '<div class="log">Loading…</div>';
+  ['pending','verified','suspended'].forEach(s => {
+    const el = document.getElementById('mod-filter-'+s);
+    if (el) el.classList.toggle('active', status === s);
+  });
+  try {
+    const url = status ? `/api/admin/moderators?status=${encodeURIComponent(status)}` : '/api/admin/moderators';
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + TOKEN } });
+    const d = await res.json();
+    if (!d.ok) throw new Error(d.error || 'load failed');
+
+    const badge = document.getElementById('mod-badge');
+    if ((d.counts?.pending || 0) > 0) {
+      badge.textContent = d.counts.pending;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    if (!d.mods.length) {
+      panel.innerHTML = '<div class="log">No mods in this state.</div>';
+      return;
+    }
+
+    panel.innerHTML = d.mods.map(m => modCardHtml(m)).join('');
+  } catch (e) {
+    panel.innerHTML = '<div class="log" style="color:#ff6">Failed: ' + (e.message || e) + '</div>';
+  }
+}
+
+function modCardHtml(m) {
+  const handles = [
+    m.twitch_handle ? `Twitch: ${m.twitch_handle}` : '',
+    m.kick_handle ? `Kick: ${m.kick_handle}` : '',
+  ].filter(Boolean).join(' · ');
+  const created = m.created_at ? new Date(m.created_at * 1000).toLocaleString('en-GB', { timeZone: 'Europe/London' }) : '—';
+  const last = m.last_active ? new Date(m.last_active * 1000).toLocaleString('en-GB', { timeZone: 'Europe/London' }) : '—';
+  const creators = (m.creators_modded || []).join(', ') || '—';
+  const msgRow = m.message ? `<div style="margin-top:8px;padding:8px 10px;background:var(--card2);border-left:2px solid var(--signal);font-size:12px;line-height:1.5;color:var(--ink-dim);white-space:pre-wrap">${escapeHtml(m.message)}</div>` : '';
+
+  let actions = '';
+  if (m.status === 'pending') {
+    actions = `
+      <button class="btn" onclick="modAction(${m.id}, 'approve')">Approve & show token</button>
+      <button class="btn btn-danger" onclick="modAction(${m.id}, 'suspend')">Reject</button>
+    `;
+  } else if (m.status === 'verified') {
+    actions = `
+      <button class="btn" onclick="modShowToken(${m.id})">Show token</button>
+      <button class="btn" onclick="modAction(${m.id}, 'rotate_token')">Rotate token</button>
+      <button class="btn btn-danger" onclick="modAction(${m.id}, 'suspend')">Suspend</button>
+    `;
+  } else if (m.status === 'suspended') {
+    actions = `<button class="btn" onclick="modAction(${m.id}, 'reactivate')">Reactivate</button>`;
+  }
+
+  return `
+    <div class="card-item" data-mod-id="${m.id}" style="padding:12px 14px;border:1px solid var(--border);margin-bottom:8px;background:var(--card)">
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+        <strong style="font-size:15px">${escapeHtml(m.display_name)}</strong>
+        <span style="font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;background:var(--card2);border:1px solid var(--border);color:var(--ink-faint)">${escapeHtml(m.status)}</span>
+        <span style="font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;background:var(--card2);border:1px solid var(--border);color:var(--ink-faint)">${escapeHtml(m.level)} · ${m.xp || 0} XP</span>
+      </div>
+      <div style="font-size:12px;color:var(--ink-dim);margin-top:6px">${escapeHtml(handles || '—')}</div>
+      <div style="font-size:12px;color:var(--ink-dim);margin-top:4px">Mods for: <strong>${escapeHtml(creators)}</strong></div>
+      <div style="font-family:var(--font-m);font-size:11px;color:var(--ink-faint);margin-top:4px">Joined ${escapeHtml(created)} · Last active ${escapeHtml(last)}</div>
+      ${msgRow}
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${actions}</div>
+      <div id="mod-token-${m.id}" style="display:none;margin-top:10px;padding:10px;background:#000;border:1px dashed var(--signal);font-family:var(--font-m);font-size:13px;letter-spacing:1px;color:var(--signal);word-break:break-all"></div>
+    </div>
+  `;
+}
+
+async function modAction(id, action) {
+  try {
+    const res = await fetch('/api/admin/moderators', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + TOKEN, 'content-type': 'application/json' },
+      body: JSON.stringify({ id, action }),
+    });
+    const d = await res.json();
+    if (!d.ok) throw new Error(d.error || 'action failed');
+    if (action === 'approve' || action === 'rotate_token') {
+      // Surface token inline so the admin can copy + relay it.
+      modShowTokenWithValue(id, d.token);
+    }
+    loadMods(document.querySelector('#tab-moderators .btn.active')?.id?.replace('mod-filter-','') || 'pending');
+  } catch (e) {
+    alert('Failed: ' + (e.message || e));
+  }
+}
+
+function modShowTokenWithValue(id, token) {
+  const box = document.getElementById('mod-token-'+id);
+  if (!box) return;
+  box.style.display = 'block';
+  box.textContent = `TOKEN: ${token}  (relay this to the mod — they enter it at /moderators/login/)`;
+}
+
+async function modShowToken(id) {
+  try {
+    const res = await fetch('/api/admin/moderators', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    const d = await res.json();
+    const m = (d.mods || []).find(x => x.id === id);
+    if (!m) return;
+    modShowTokenWithValue(id, m.token);
+  } catch {}
+}
+
+// escapeHtml is already defined earlier in the file; we keep this stub
+// commented to make the intent obvious — the modCardHtml() block above
+// uses the existing global.
 
 function fmtBig(n) {
   if (n==null) return '—';
