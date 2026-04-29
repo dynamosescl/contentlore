@@ -655,6 +655,26 @@ body>*{position:relative;z-index:3}
 .dh-heat-cell.l4{background:var(--signal);box-shadow:0 0 4px oklch(0.82 0.20 195/.5)}
 .dh-heat-legend{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:10px;font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px;text-transform:uppercase}
 .dh-heat-legend .dh-heat-cell{width:14px;height:14px;aspect-ratio:auto}
+.dh-link-btn{font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:7px 12px;background:transparent;border:1px solid var(--signal-cyan);color:var(--signal-cyan);cursor:pointer;transition:all .15s}
+.dh-link-btn:hover{background:var(--signal-cyan);color:var(--bg)}
+
+/* WIDGET-CODE MODAL */
+.wm-back{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1500;display:none;align-items:center;justify-content:center;padding:20px}
+.wm-back.open{display:flex}
+.wm{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);width:min(540px,100%);padding:24px;color:var(--fg)}
+.wm-h{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.wm-h h3{font-family:var(--font-d);font-size:26px;letter-spacing:1px}
+.wm-close{background:transparent;border:1px solid var(--border);color:var(--ink-faint);width:32px;height:32px;font-size:20px;cursor:pointer;line-height:1}
+.wm-close:hover{border-color:var(--signal);color:var(--fg)}
+.wm-desc{font-size:13px;color:var(--ink-dim);line-height:1.5;margin-bottom:16px}
+.wm-preview{background:var(--card2);border:1px solid var(--border);padding:16px;display:flex;justify-content:center;margin-bottom:16px}
+.wm-label{font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);display:block;margin-bottom:6px}
+.wm-code{background:var(--card2);border:1px solid var(--border);padding:10px 12px;font-family:var(--font-m);font-size:12px;color:var(--signal-cyan);overflow-x:auto;white-space:pre-wrap;word-break:break-all;line-height:1.5}
+.wm-row{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+.wm-btn{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;padding:10px 18px;border:1px solid var(--border);background:var(--card2);color:var(--ink-dim);cursor:pointer;text-decoration:none;transition:all .15s}
+.wm-btn:hover{border-color:var(--signal);color:var(--fg)}
+.wm-btn.wm-primary{background:var(--signal);border-color:var(--signal);color:var(--bg);font-weight:600}
+.wm-btn.wm-primary:hover{box-shadow:0 0 16px oklch(0.82 0.20 195/.5)}
 
 ::selection{background:var(--signal);color:var(--bg)}
 </style>
@@ -738,9 +758,60 @@ body>*{position:relative;z-index:3}
   </div>
 </div>
 
+<!-- Widget code modal -->
+<div id="widget-modal" class="wm-back" role="dialog" aria-modal="true" aria-label="Embed code">
+  <div class="wm">
+    <div class="wm-h">
+      <h3>Your ContentLore widget</h3>
+      <button class="wm-close" id="wm-close" type="button" aria-label="Close">×</button>
+    </div>
+    <p class="wm-desc">Drop this iframe on your linktree, website or Discord. It updates itself every 60 seconds with live status, viewers, and platform links.</p>
+    <div class="wm-preview"><iframe src="/api/widget/${esc(handle)}" width="300" height="100" frameborder="0" scrolling="no" style="border:0;display:block;margin:0 auto"></iframe></div>
+    <label class="wm-label">Embed code</label>
+    <pre class="wm-code" id="wm-code"></pre>
+    <div class="wm-row">
+      <button class="wm-btn wm-primary" id="wm-copy" type="button">Copy embed code</button>
+      <a class="wm-btn" href="/api/widget/${esc(handle)}" target="_blank" rel="noopener">Open widget ↗</a>
+    </div>
+  </div>
+</div>
+
 <div class="footer">ContentLore · UK GTA RP · Creator Profile</div>
 
 <script>
+// Widget modal: build + copy the embed code.
+(function () {
+  var origin = location.origin;
+  var widgetUrl = origin + '/api/widget/${esc(handle)}';
+  var snippet = '<iframe src="' + widgetUrl + '" width="300" height="100" frameborder="0" scrolling="no"></iframe>';
+  var btn = document.getElementById('widget-btn');
+  var modal = document.getElementById('widget-modal');
+  var code = document.getElementById('wm-code');
+  if (code) code.textContent = snippet;
+  function open() { modal.classList.add('open'); }
+  function close() { modal.classList.remove('open'); }
+  if (btn) btn.addEventListener('click', open);
+  document.getElementById('wm-close')?.addEventListener('click', close);
+  modal?.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.classList.contains('open')) close();
+  });
+  document.getElementById('wm-copy')?.addEventListener('click', async function () {
+    try {
+      await navigator.clipboard.writeText(snippet);
+      this.textContent = 'Copied ✓';
+      setTimeout(() => { this.textContent = 'Copy embed code'; }, 1600);
+    } catch {
+      var ta = document.createElement('textarea');
+      ta.value = snippet; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (_) {}
+      ta.remove();
+      this.textContent = 'Copied ✓';
+      setTimeout(() => { this.textContent = 'Copy embed code'; }, 1600);
+    }
+  });
+})();
+
 // Lightweight live-status refresh every 60s — only updates the banner, not the whole page.
 async function refreshLive() {
   try {
@@ -930,7 +1001,10 @@ function renderDashboard(handle, name, dash) {
     <div class="section dashboard" id="weekly-dashboard">
       <div class="sec-h">
         <h2>This Week</h2>
-        <a class="sub" href="/api/shoutout-card/${esc(handle)}" target="_blank" style="color:var(--signal);text-decoration:none">Share your stats →</a>
+        <div style="display:flex;gap:14px;align-items:center">
+          <button id="widget-btn" class="dh-link-btn" type="button">Get widget code</button>
+          <a class="sub" href="/api/shoutout-card/${esc(handle)}" target="_blank" style="color:var(--signal);text-decoration:none">Share your stats →</a>
+        </div>
       </div>
 
       <div class="dh-grid">
