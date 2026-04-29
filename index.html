@@ -171,15 +171,28 @@ body>*{position:relative;z-index:3}
 .ai-fb{margin-top:8px;font-family:var(--font-m);font-size:10px;color:oklch(0.78 0.20 60);letter-spacing:1px;text-transform:uppercase}
 
 /* NEW TO UK GTA RP */
-.newto{padding:48px 24px 36px;max-width:1100px;margin:24px auto 0}
-.newto-card{padding:28px 32px;clip-path:var(--cut)}
+.newto{padding:48px 24px 36px;max-width:1200px;margin:24px auto 0}
+.newto-head{text-align:center;margin-bottom:24px}
 .newto-kicker{font-family:var(--font-m);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--signal);margin-bottom:8px}
-.newto h2{font-family:var(--font-d);font-size:32px;letter-spacing:2px;margin-bottom:12px}
-.newto p{font-size:15px;line-height:1.6;color:var(--ink-dim);margin-bottom:14px}
-.newto ol{padding-left:22px;color:var(--ink-dim);font-size:14px;line-height:1.8}
-.newto ol li{margin-bottom:6px}
-.newto a{color:var(--signal-cyan);text-decoration:none}
-.newto a:hover{text-decoration:underline;color:var(--signal)}
+.newto-head h2{font-family:var(--font-d);font-size:38px;letter-spacing:2px;line-height:1}
+.newto-head .subtitle{font-size:15px;color:var(--ink-dim);max-width:680px;margin:14px auto 0;line-height:1.6}
+.newto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+@media(max-width:880px){.newto-grid{grid-template-columns:1fr}}
+.newto-col{padding:22px 24px;clip-path:var(--cut);position:relative;overflow:hidden}
+.newto-col h3{font-family:var(--font-d);font-size:22px;letter-spacing:1.5px;margin-bottom:12px;color:var(--signal-cyan);display:flex;align-items:center;gap:10px}
+.newto-col h3 .num{font-family:var(--font-m);font-size:11px;letter-spacing:2px;color:var(--ink-faint);background:var(--card2);padding:3px 8px;border:1px solid var(--border)}
+.newto-col p{font-size:14px;line-height:1.65;color:var(--ink-dim);margin-bottom:10px}
+.newto-col ul{padding:0;margin:8px 0 0;list-style:none}
+.newto-col ul li{font-size:13px;line-height:1.6;color:var(--ink-dim);padding:5px 0;border-top:1px dashed var(--border);display:flex;justify-content:space-between;gap:10px}
+.newto-col ul li:first-child{border-top:0}
+.newto-col ul li strong{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;color:var(--signal);text-transform:uppercase;flex-shrink:0}
+.newto-col a{color:var(--signal-cyan);text-decoration:none;font-weight:500}
+.newto-col a:hover{text-decoration:underline;color:var(--signal)}
+.newto-glossary{padding:18px 24px;clip-path:var(--cut)}
+.newto-glossary-h{font-family:var(--font-m);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--signal);margin-bottom:12px}
+.newto-terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 22px}
+.newto-term{font-size:13px;line-height:1.5;color:var(--ink-dim)}
+.newto-term b{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--fg);display:block;margin-bottom:2px}
 
 /* FOOTER */
 .footer{padding:36px 24px;text-align:center;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:48px}
@@ -307,18 +320,52 @@ body>*{position:relative;z-index:3}
 </section>
 
 <section class="newto">
-  <div class="newto-card card">
+  <div class="newto-head">
     <div class="newto-kicker">First time here?</div>
     <h2>New to UK GTA RP?</h2>
-    <p>UK GTA RP is roleplaying inside Grand Theft Auto V's modded "FiveM" servers — British creators play characters living, working, and getting into trouble across cities like Los Santos. Stories run for weeks. Drama spans creators. Servers feel like neighbourhoods.</p>
-    <p>ContentLore is the only platform that tracks the British scene specifically. We check Twitch and Kick every 15 minutes, surface who's live, what server they're on, and the storylines worth following.</p>
-    <ol>
-      <li>Pick a stream from <a href="/gta-rp/">Live</a> — see who's broadcasting now</li>
-      <li>Browse the <a href="/gta-rp/clips/">Clip Wall</a> for the best moments of the week</li>
-      <li>Watch up to six streams at once on <a href="/gta-rp/multi/">Multi-View</a></li>
-      <li>Check the weekly <a href="/gta-rp/rankings/">Power Rankings</a> for who's heating up</li>
-      <li>Compare creators on the <a href="/gta-rp/health/">Scene Health</a> dashboard</li>
-    </ol>
+    <p class="subtitle">UK GTA RP is improvised drama — British creators play characters living, working and getting into trouble inside modded GTA V servers. Story arcs run for weeks. Plotlines cross creators. Servers behave like neighbourhoods.</p>
+  </div>
+
+  <div class="newto-grid">
+    <div class="newto-col card">
+      <h3><span class="num">01</span> What it is</h3>
+      <p>"FiveM" is a mod for Grand Theft Auto V that lets people host private servers with custom rules. Roleplay servers run scripts that simulate jobs, police, courts, gangs and economies. Streamers stay in-character (IC) for hours at a time — they're not playing themselves, they're playing someone living in Los Santos.</p>
+      <p>Stream titles like "<em>Day 47 — court hearing for the Anchor Bay heist</em>" aren't a joke. That's a continuing storyline.</p>
+    </div>
+
+    <div class="newto-col card">
+      <h3><span class="num">02</span> Where it happens</h3>
+      <p>UK creators play across thirteen tracked servers. Some are British-founded, some are American servers with strong UK presence:</p>
+      <ul>
+        <li><strong>UK-built</strong>Unique, TNG, Orbit, Drill UK, British Life, The Ends</li>
+        <li><strong>US w/ UK scene</strong>New Era, Prodigy, D10, Chase, Unmatched</li>
+        <li><strong>Mixed</strong>VeraRP, Let's RP</li>
+      </ul>
+      <p>See live stats and grades on <a href="/gta-rp/servers/">Servers</a>.</p>
+    </div>
+
+    <div class="newto-col card">
+      <h3><span class="num">03</span> Where to start</h3>
+      <ul>
+        <li><strong>Step 1</strong>Open <a href="/gta-rp/">Live</a> and pick a stream that's on now</li>
+        <li><strong>Step 2</strong>Watch up to six at once on <a href="/gta-rp/multi/">Multi-View</a> — chat in a side panel</li>
+        <li><strong>Step 3</strong>Catch up on the week with the <a href="/gta-rp/clips/">Clip Wall</a></li>
+        <li><strong>Step 4</strong>Find rising creators on <a href="/gta-rp/rankings/">Power Rankings</a></li>
+        <li><strong>Step 5</strong>Read the AI scene report up top ↑ for last week's headline</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="newto-glossary card">
+    <div class="newto-glossary-h">Quick glossary</div>
+    <div class="newto-terms">
+      <div class="newto-term"><b>IC / OOC</b>"In character" vs. "out of character". Streamers stay IC unless they're answering chat directly.</div>
+      <div class="newto-term"><b>Character</b>The persona a streamer plays. Dynamoses on Kick plays multiple characters across servers; their character names rarely match their handle.</div>
+      <div class="newto-term"><b>Server</b>A single FiveM world with its own rules, jobs, factions and economy. Characters can't cross servers.</div>
+      <div class="newto-term"><b>Whitelist</b>Most quality RP servers require an application. That's why you can't just join the server you're watching.</div>
+      <div class="newto-term"><b>Raid / Host</b>One streamer redirecting their viewers to another. Often deliberate — friends pointing at friends.</div>
+      <div class="newto-term"><b>Story arc</b>A multi-stream plot, sometimes spanning weeks. Heists, court cases, gang wars, romance lines.</div>
+    </div>
   </div>
 </section>
 
