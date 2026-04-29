@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/cl-theme.css">
+<meta name="theme-color" content="#0d1f1f">
+<script src="/pwa.js" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Server Comparison · ContentLore</title>
+<meta name="description" content="Compare any two GTA RP servers side by side: hours streamed, streamers, viewer-hours, week-over-week growth, top broadcasters, AI summaries.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ContentLore">
+<meta property="og:title" content="Server Comparison · ContentLore">
+<meta property="og:description" content="Pick any two GTA RP servers and compare them head-to-head. Live data from the curated UK GTA RP scene.">
+<meta property="og:image" content="https://contentlore.com/logo.png">
+<meta property="og:url" content="https://contentlore.com/gta-rp/compare/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Server Comparison · ContentLore">
+<meta name="twitter:description" content="Pick any two GTA RP servers and compare them head-to-head.">
+<meta name="twitter:image" content="https://contentlore.com/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:oklch(0.10 0.04 190);--fg:oklch(0.97 0.02 320);
+  --card:oklch(0.14 0.05 190);--card2:oklch(0.19 0.06 190);
+  --ink-dim:oklch(0.78 0.05 320);--ink-faint:oklch(0.55 0.06 190);
+  --signal:oklch(0.82 0.20 195);--signal-dim:oklch(0.65 0.18 195);--signal-cyan:oklch(0.85 0.18 200);
+  --border:oklch(0.28 0.06 190);
+  --win:oklch(0.82 0.22 145);--lose:oklch(0.55 0.06 190);
+  --grade-a:oklch(0.82 0.22 145);--grade-b:oklch(0.85 0.18 200);
+  --grade-c:oklch(0.78 0.20 60);--grade-d:oklch(0.65 0.20 30);--grade-f:oklch(0.55 0.06 190);
+  --font-d:'Bebas Neue',Impact,sans-serif;--font-m:'JetBrains Mono',monospace;--font-b:'Inter',system-ui,sans-serif;
+  --cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
+}
+html{background:var(--bg);color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-b);-webkit-font-smoothing:antialiased;position:relative;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background-image:repeating-linear-gradient(0deg,oklch(0.82 0.20 195/.04) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body>*{position:relative;z-index:3}
+
+.nav{height:48px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-right:24px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:6px}
+.nav-links{display:flex;flex-wrap:wrap;overflow-x:auto}
+.nav-link{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);text-decoration:none;padding:14px;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-link:hover{color:var(--ink-dim)}
+.nav-link.active{color:var(--signal);border-bottom-color:var(--signal)}
+
+.hero{border-bottom:1px solid var(--border);padding:32px 24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:repeating-linear-gradient(135deg,var(--signal) 0 1px,transparent 1px 60px)}
+.hero-inner{max-width:1100px;margin:0 auto}
+.hero-kicker{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:3px;color:var(--signal);margin-bottom:8px}
+.hero h1{font-family:var(--font-d);font-size:clamp(40px,7vw,72px);line-height:.95;letter-spacing:1px}
+.hero h1 .neon{color:var(--signal);text-shadow:0 0 6px oklch(0.82 0.20 195/.4),0 0 18px oklch(0.82 0.20 195/.25)}
+.hero-sub{font-size:15px;color:var(--ink-dim);margin-top:8px;max-width:680px;line-height:1.6}
+
+.mx{max-width:1100px;margin:0 auto;padding:28px 24px}
+
+.pickers{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:end;margin-bottom:24px}
+@media(max-width:660px){.pickers{grid-template-columns:1fr;gap:10px}.vs{display:none}}
+.picker label{display:block;font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.picker select{width:100%;background:var(--card);border:1px solid var(--border);color:var(--fg);font-family:var(--font-b);font-size:15px;padding:12px 14px;clip-path:var(--cut);cursor:pointer;transition:border-color .15s}
+.picker select:hover,.picker select:focus{border-color:var(--signal);outline:none}
+.vs{font-family:var(--font-d);font-size:32px;letter-spacing:2px;color:var(--signal);text-align:center;padding-bottom:8px}
+
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:10px}
+.col-head{padding:18px 22px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);position:relative;overflow:hidden}
+.col-head::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,oklch(0.82 0.20 195/.10),transparent 60%);pointer-events:none}
+.col-head .name{font-family:var(--font-d);font-size:30px;letter-spacing:1.5px;line-height:1;color:var(--fg);position:relative}
+.col-head .origin{font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-top:4px;position:relative}
+.grade{display:inline-block;font-family:var(--font-d);font-size:42px;letter-spacing:2px;line-height:1;padding:6px 18px;margin-top:12px;border:2px solid;position:relative}
+.grade-row{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-top:8px;position:relative}
+.grade-label{font-family:var(--font-m);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-dim);padding-bottom:6px}
+.grade.A{color:var(--grade-a);border-color:var(--grade-a)}
+.grade.B{color:var(--grade-b);border-color:var(--grade-b)}
+.grade.C{color:var(--grade-c);border-color:var(--grade-c)}
+.grade.D{color:var(--grade-d);border-color:var(--grade-d)}
+.grade.F{color:var(--grade-f);border-color:var(--grade-f)}
+
+.metric{padding:14px 20px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);display:flex;align-items:baseline;justify-content:space-between;gap:16px;transition:border-color .2s}
+.metric.win{border-color:var(--win);background:linear-gradient(90deg,oklch(0.82 0.22 145/.10),var(--card))}
+.metric.lose{border-color:oklch(0.55 0.06 190/.4);opacity:.85}
+.metric .lbl{font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint)}
+.metric .val{font-family:var(--font-d);font-size:30px;letter-spacing:1px;line-height:1;display:flex;align-items:baseline;gap:4px}
+.metric .val .unit{font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;text-transform:lowercase}
+.metric .delta{font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:var(--ink-faint)}
+.metric .delta.up{color:var(--win)}
+.metric .delta.down{color:oklch(0.65 0.20 25)}
+.metric .crown{margin-left:8px;font-size:14px;color:var(--win)}
+
+.summary-card{padding:14px 20px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut)}
+.summary-card .lbl{font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+.summary-card .text{font-size:14px;line-height:1.6;color:var(--ink-dim)}
+.summary-card .text.skel{color:transparent;background:linear-gradient(90deg,var(--card2) 0%,var(--card) 50%,var(--card2) 100%);background-size:200% 100%;animation:shim 1.6s infinite;height:42px;border-radius:2px}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.streamers-card{padding:14px 20px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut)}
+.streamers-card .lbl{font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px}
+.streamers-card ol{list-style:none;display:flex;flex-direction:column;gap:6px}
+.streamers-card li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px dashed var(--border);font-family:var(--font-m);font-size:13px}
+.streamers-card li:first-child{border-top:0}
+.streamers-card li .who{color:var(--fg);font-weight:500;text-decoration:none}
+.streamers-card li .who:hover{color:var(--signal)}
+.streamers-card li .h{color:var(--signal-cyan);font-size:12px}
+
+.empty{padding:36px 24px;text-align:center;font-family:var(--font-m);font-size:13px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:2px}
+
+.footer{padding:36px 24px;text-align:center;font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:48px}
+.footer a{color:var(--ink-faint);text-decoration:none;margin:0 6px}
+.footer a:hover{color:var(--signal-cyan)}
+::selection{background:var(--signal);color:var(--bg)}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/gta-rp/" class="nav-brand"><img src="/logo.png" alt="ContentLore" style="height:40px;filter:brightness(1.1)" loading="eager"></a>
+  <div class="nav-links">
+    <a href="/gta-rp/" class="nav-link">Live</a>
+    <a href="/gta-rp/multi/" class="nav-link">Multi-View</a>
+    <a href="/gta-rp/clips/" class="nav-link">Clips</a>
+    <a href="/gta-rp/timeline/" class="nav-link">Timeline</a>
+    <a href="/gta-rp/analytics/" class="nav-link">Analytics</a>
+    <a href="/gta-rp/network/" class="nav-link">Network</a>
+    <a href="/gta-rp/health/" class="nav-link">Health</a>
+    <a href="/gta-rp/streaks/" class="nav-link">Streaks</a>
+    <a href="/gta-rp/servers/" class="nav-link">Servers</a>
+    <a href="/gta-rp/compare/" class="nav-link active">Compare</a>
+  </div>
+</nav>
+
+<div class="hero"><div class="hero-inner">
+  <div class="hero-kicker">Head-to-head · Last 7 Days</div>
+  <h1>Server <span class="neon">Comparison</span></h1>
+  <p class="hero-sub">Pick two RP servers from the dropdowns to compare. Each metric highlights the winner; the AI one-liner under each card explains what's driving the week.</p>
+</div></div>
+
+<div class="mx">
+  <div class="pickers">
+    <div class="picker">
+      <label for="pick-a">Server A</label>
+      <select id="pick-a"></select>
+    </div>
+    <div class="vs">VS</div>
+    <div class="picker">
+      <label for="pick-b">Server B</label>
+      <select id="pick-b"></select>
+    </div>
+  </div>
+
+  <div id="cmp-host" class="cmp">
+    <div class="empty">Loading server data…</div>
+  </div>
+</div>
+
+<div class="footer">
+  ContentLore · Server Comparison ·
+  <a href="/gta-rp/servers/">Status board</a> ·
+  <a href="/gta-rp/health/">Scene Health</a>
+</div>
+
+<script>
+const esc = s => (s ?? '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtN = n => n == null ? '—' : (n >= 1000 ? (n/1000).toFixed(n>=10000?0:1)+'k' : String(Math.round(n)));
+
+let REVIEWS = [];
+
+async function loadReviews() {
+  try {
+    const r = await fetch('/api/server-reviews');
+    const d = await r.json();
+    if (!d.ok) throw new Error('reviews failed');
+    REVIEWS = d.reviews || [];
+    populatePickers();
+    renderFromUrl();
+  } catch (e) {
+    document.getElementById('cmp-host').innerHTML =
+      '<div class="empty">Could not load server data — try again in a minute.</div>';
+  }
+}
+
+function populatePickers() {
+  const a = document.getElementById('pick-a');
+  const b = document.getElementById('pick-b');
+  const opts = REVIEWS.map(r => `<option value="${esc(r.id)}">${esc(r.name)}${r.origin ? ' · ' + esc(r.origin) : ''}</option>`).join('');
+  a.innerHTML = opts;
+  b.innerHTML = opts;
+  // Sensible default — top two by viewer-hours.
+  const ranked = [...REVIEWS].sort((x, y) => (y.viewer_hours || 0) - (x.viewer_hours || 0));
+  if (ranked[0]) a.value = ranked[0].id;
+  if (ranked[1]) b.value = ranked[1].id;
+  a.addEventListener('change', () => { syncUrl(); render(); });
+  b.addEventListener('change', () => { syncUrl(); render(); });
+}
+
+function syncUrl() {
+  const a = document.getElementById('pick-a').value;
+  const b = document.getElementById('pick-b').value;
+  const url = new URL(location.href);
+  url.searchParams.set('a', a);
+  url.searchParams.set('b', b);
+  history.replaceState(null, '', url);
+}
+
+function renderFromUrl() {
+  const url = new URL(location.href);
+  const aP = url.searchParams.get('a');
+  const bP = url.searchParams.get('b');
+  const aSel = document.getElementById('pick-a');
+  const bSel = document.getElementById('pick-b');
+  if (aP && REVIEWS.find(r => r.id === aP)) aSel.value = aP;
+  if (bP && REVIEWS.find(r => r.id === bP)) bSel.value = bP;
+  syncUrl();
+  render();
+}
+
+function render() {
+  const aId = document.getElementById('pick-a').value;
+  const bId = document.getElementById('pick-b').value;
+  const a = REVIEWS.find(r => r.id === aId);
+  const b = REVIEWS.find(r => r.id === bId);
+  const host = document.getElementById('cmp-host');
+  if (!a || !b) {
+    host.innerHTML = '<div class="empty">Pick two servers to compare.</div>';
+    return;
+  }
+  if (a.id === b.id) {
+    host.innerHTML = '<div class="empty">Pick two different servers.</div>';
+    return;
+  }
+  host.innerHTML = renderColumn(a, b, true) + renderColumn(b, a, false);
+}
+
+function metric(label, valA, valB, owner, opts = {}) {
+  // owner === 'me' if `valA > valB` (this column wins on this metric).
+  const val = opts.format ? opts.format(opts.useThis === 'b' ? valB : valA) : fmtN(opts.useThis === 'b' ? valB : valA);
+  const cls = owner === 'me' ? 'win' : (owner === 'them' ? 'lose' : '');
+  const crown = owner === 'me' ? '<span class="crown">▲</span>' : '';
+  const delta = opts.delta || '';
+  return `<div class="metric ${cls}">
+    <div>
+      <div class="lbl">${esc(label)}</div>
+      ${delta ? `<div class="delta ${opts.deltaCls || ''}">${esc(delta)}</div>` : ''}
+    </div>
+    <div class="val">${val}${opts.unit ? `<span class="unit">${esc(opts.unit)}</span>` : ''}${crown}</div>
+  </div>`;
+}
+
+function renderColumn(me, them, isLeft) {
+  const ownerOf = (mine, theirs, higherIsBetter = true) => {
+    if (mine == null && theirs == null) return null;
+    if (mine == null) return 'them';
+    if (theirs == null) return 'me';
+    if (mine === theirs) return null;
+    return higherIsBetter ? (mine > theirs ? 'me' : 'them') : (mine < theirs ? 'me' : 'them');
+  };
+
+  const top = (me.top_streamers || [])[0];
+  const growthClass = me.growth_pct == null ? '' : (me.growth_pct >= 0 ? 'up' : 'down');
+  const growthTxt = me.growth_pct == null ? 'No prior week' :
+    `${me.growth_pct >= 0 ? '+' : ''}${me.growth_pct}% vs last week`;
+  const summaryHtml = me.summary
+    ? `<div class="text">${esc(me.summary)}</div>`
+    : `<div class="text skel"></div>`;
+
+  const topStreamersHtml = (me.top_streamers || []).slice(0, 3).map(t => `
+    <li>
+      <a class="who" href="/creator-profile/${esc(t.handle)}">${esc(t.display_name || t.handle)}</a>
+      <span class="h">${t.hours}h</span>
+    </li>
+  `).join('') || '<li><span class="who" style="color:var(--ink-faint)">No tracked streamers this week</span></li>';
+
+  return `
+    <div class="col">
+      <div class="col-head">
+        <div class="name">${esc(me.name)}</div>
+        <div class="origin">${esc(me.origin || 'Unknown origin')} · ${me.streamers || 0} streamer${me.streamers === 1 ? '' : 's'} this week</div>
+        <div class="grade-row">
+          <div class="grade ${esc(me.grade || 'F')}">${esc(me.grade || 'F')}</div>
+          <div class="grade-label">${esc(me.grade_label || '—')}</div>
+        </div>
+      </div>
+      ${metric('Hours streamed', me.hours, them.hours, ownerOf(me.hours, them.hours), { unit: 'h', format: v => fmtN(v) })}
+      ${metric('Unique streamers', me.streamers, them.streamers, ownerOf(me.streamers, them.streamers))}
+      ${metric('Viewer-hours', Math.round(me.viewer_hours || 0), Math.round(them.viewer_hours || 0), ownerOf(me.viewer_hours, them.viewer_hours), { format: v => fmtN(v) })}
+      ${metric('Growth (WoW)', me.growth_pct, them.growth_pct, ownerOf(me.growth_pct, them.growth_pct), {
+        format: v => v == null ? '—' : (v >= 0 ? '+' : '') + v + '%',
+        delta: growthTxt, deltaCls: growthClass,
+      })}
+      <div class="streamers-card">
+        <div class="lbl">Top streamers</div>
+        <ol>${topStreamersHtml}</ol>
+      </div>
+      <div class="summary-card">
+        <div class="lbl">AI summary</div>
+        ${summaryHtml}
+      </div>
+    </div>
+  `;
+}
+
+loadReviews();
+</script>
+</body>
+</html>
