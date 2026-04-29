@@ -160,6 +160,25 @@ body>*{position:relative;z-index:3}
 .tag-form .btns button{flex:1;font-family:var(--font-m);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:8px;background:var(--card);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer}
 .tag-form .btns .submit{background:var(--signal-cyan);color:var(--bg);border-color:var(--signal-cyan)}
 
+/* Stream notes panel */
+.notes-panel{margin-top:18px;padding:14px 16px;background:var(--card2);border:1px solid var(--signal-cyan);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+.notes-panel .head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.notes-panel .h{font-family:var(--font-d);font-size:18px;letter-spacing:1.5px;color:var(--signal-cyan);display:flex;align-items:center;gap:8px}
+.notes-panel .meta{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-faint)}
+.notes-panel .meta .saving{color:var(--amber)}
+.notes-panel .meta .saved{color:var(--green)}
+.notes-panel textarea{width:100%;min-height:140px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:'JetBrains Mono',monospace;font-size:13px;padding:11px 13px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);line-height:1.6;resize:vertical}
+.notes-panel textarea:focus{border-color:var(--signal);outline:none}
+.notes-panel .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.notes-panel .flag-btn{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:8px 14px;background:var(--signal);color:var(--bg);border:0;cursor:pointer;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);transition:all .15s}
+.notes-panel .flag-btn:hover{box-shadow:0 0 12px oklch(0.82 0.20 195/.4)}
+.notes-panel .flag-btn:disabled{opacity:.5;cursor:default}
+.notes-panel .flag-list{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.notes-panel .flag-item{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;background:var(--bg);border-left:2px solid var(--signal);font-family:var(--font-m);font-size:11px;letter-spacing:.5px}
+.notes-panel .flag-item .ts{color:var(--signal-cyan)}
+.notes-panel .flag-item .lbl{color:var(--ink-dim);flex:1;text-align:left}
+.notes-panel .info{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px;line-height:1.5;margin-top:6px}
+
 /* Contributions */
 .contrib-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:760px){.contrib-row{grid-template-columns:1fr}}
@@ -279,6 +298,126 @@ function render(d) {
 
   attachToolHandlers(d.mod);
   attachClipTagHandlers(d.mod);
+  attachNotesHandlers(d.mod);
+}
+
+// ---------- Stream notes (item 5) ----------
+const notesState = new Map(); // creator -> { text, lastSaved, dirty, timer }
+function ukToday() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+function fmtTimeOnly(ts) {
+  if (!ts) return '';
+  return new Date(ts * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
+}
+
+function attachNotesHandlers(mod) {
+  document.querySelectorAll('[data-notes]').forEach(panel => {
+    const handle = panel.dataset.creator;
+    const ta = panel.querySelector('[data-notes-text]');
+    const status = panel.querySelector('[data-status]');
+    const flagBtn = panel.querySelector('[data-flag]');
+    const flagLabel = panel.querySelector('[data-flag-label]');
+    const flagList = panel.querySelector('[data-flag-list]');
+
+    // Initial fetch.
+    fetchNotes(handle).then(data => {
+      ta.value = data.notes || '';
+      renderFlagList(flagList, data.flagged_moments || []);
+      status.innerHTML = data.exists
+        ? `<span class="saved">Loaded · last saved ${fmtTimeOnly(data.updated_at)}</span>`
+        : '<span>New session</span>';
+    }).catch(() => {
+      status.innerHTML = '<span style="color:oklch(0.85 0.20 25)">Failed to load</span>';
+    });
+
+    // Auto-save: 30s debounce after the last keystroke.
+    let saveTimer = null;
+    let lastSaved = '';
+    const scheduleSave = () => {
+      if (saveTimer) clearTimeout(saveTimer);
+      status.innerHTML = '<span class="saving">Unsaved…</span>';
+      saveTimer = setTimeout(async () => {
+        if (ta.value === lastSaved) {
+          status.innerHTML = '<span class="saved">All changes saved</span>';
+          return;
+        }
+        status.innerHTML = '<span class="saving">Saving…</span>';
+        try {
+          const res = await modFetch('/api/mod/stream-notes', {
+            method: 'POST',
+            body: JSON.stringify({ creator_handle: handle, notes: ta.value }),
+          });
+          const j = await res.json();
+          if (!j.ok) throw new Error(j.error || 'save failed');
+          lastSaved = ta.value;
+          status.innerHTML = `<span class="saved">Saved · ${fmtTimeOnly(j.saved_at)}</span>`;
+          if (j.xp_awarded > 0) showToast(`+${j.xp_awarded} XP · stream notes started`);
+        } catch (e) {
+          status.innerHTML = `<span style="color:oklch(0.85 0.20 25)">Save failed: ${esc(e.message || e)}</span>`;
+        }
+      }, 30_000);
+    };
+    ta.addEventListener('input', scheduleSave);
+    // Force-save on blur — useful if the mod tabs away before the timer fires.
+    ta.addEventListener('blur', () => {
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {}, 0); // no-op, force scheduled timer to fire immediately
+      }
+      // Trigger an immediate save run.
+      if (ta.value !== lastSaved) {
+        modFetch('/api/mod/stream-notes', {
+          method: 'POST',
+          body: JSON.stringify({ creator_handle: handle, notes: ta.value }),
+        }).then(r => r.json()).then(j => {
+          if (j?.ok) {
+            lastSaved = ta.value;
+            status.innerHTML = `<span class="saved">Saved · ${fmtTimeOnly(j.saved_at)}</span>`;
+          }
+        }).catch(() => {});
+      }
+    });
+
+    // Flag button.
+    flagBtn.addEventListener('click', async () => {
+      flagBtn.disabled = true;
+      const label = flagLabel.value.trim() || null;
+      try {
+        const res = await modFetch('/api/mod/flag-moment', {
+          method: 'POST',
+          body: JSON.stringify({ creator_handle: handle, label }),
+        });
+        const j = await res.json();
+        if (!j.ok) showToast(j.error || 'Flag failed', true);
+        else {
+          showToast(`+${j.xp_awarded} XP · moment flagged`);
+          renderFlagList(flagList, j.flagged_moments || []);
+          flagLabel.value = '';
+        }
+      } catch { showToast('Network error', true); }
+      flagBtn.disabled = false;
+    });
+  });
+}
+
+async function fetchNotes(handle) {
+  const res = await modFetch('/api/mod/stream-notes?creator=' + encodeURIComponent(handle) + '&date=' + ukToday());
+  if (res.status === 401 || res.status === 403) throw new Error('not authorised');
+  return res.json();
+}
+
+function renderFlagList(host, flags) {
+  if (!flags || !flags.length) {
+    host.innerHTML = '';
+    return;
+  }
+  host.innerHTML = flags.slice(-12).reverse().map(f => `
+    <div class="flag-item">
+      <span class="ts">${esc(fmtTimeOnly(f.ts))}</span>
+      <span class="lbl">${esc(f.label || 'Notable moment')}</span>
+    </div>
+  `).join('');
 }
 
 // ---------- Tool handlers (item 4) ----------
@@ -591,9 +730,28 @@ function renderCreator(c) {
           ${uptimeTile}
         </div>
         ${peersHtml}
+        ${renderNotesPanel(c)}
         ${clipsHtml}
         ${renderTools(c)}
       </div>
+    </div>
+  `;
+}
+
+function renderNotesPanel(c) {
+  return `
+    <div class="notes-panel" data-notes data-creator="${esc(c.handle)}">
+      <div class="head">
+        <div class="h">📝 Stream Notes <span style="font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;color:var(--ink-faint);text-transform:uppercase">${esc(c.display_name)}</span></div>
+        <div class="meta" data-status>Loading…</div>
+      </div>
+      <textarea data-notes-text placeholder="Jot what's happening — character names, plotlines, viewer reactions, anything you want fed into tomorrow's AI scene recap. Auto-saves every 30 seconds. +20 XP for the first save of the day with at least 20 chars."></textarea>
+      <div class="row">
+        <button type="button" class="flag-btn" data-flag>📌 Flag this moment</button>
+        <input type="text" data-flag-label placeholder="Optional label (e.g. 'shootout starts')" maxlength="120" style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-m);font-size:12px;padding:7px 10px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%)">
+      </div>
+      <div class="flag-list" data-flag-list></div>
+      <div class="info">Notes save every 30 seconds while you type. They're private to you, but the previous day's notes feed into the next AI scene recap.</div>
     </div>
   `;
 }

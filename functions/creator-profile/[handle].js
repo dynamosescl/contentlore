@@ -57,7 +57,7 @@ export async function onRequestGet({ params, env, request }) {
   if (!entry) return notFoundPage(rawHandle);
 
   // Pull the live state, clips cache, and D1 history in parallel.
-  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks, weekRanks, connections] = await Promise.all([
+  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks, weekRanks, connections, flaggedMoments] = await Promise.all([
     getLiveCache(env, request),
     getClipsCache(env, request),
     lookupDbCreator(env, entry.handle),
@@ -65,6 +65,7 @@ export async function onRequestGet({ params, env, request }) {
     queryMonthRanks(env).catch(() => []),
     queryWeekRanks(env).catch(() => []),
     queryConnections(env, entry.handle).catch(() => []),
+    queryFlaggedMoments(env, entry.handle).catch(() => []),
   ]);
 
   const liveEntry = (liveCache?.live || []).find(c => c.handle === entry.handle) || null;
@@ -83,7 +84,7 @@ export async function onRequestGet({ params, env, request }) {
 
   return new Response(renderProfile({
     handle: entry.handle, name: display, platform: entry.platform,
-    avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections,
+    avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments,
   }), {
     headers: {
       'content-type': 'text/html; charset=utf-8',
@@ -206,6 +207,43 @@ async function queryWeekRanks(env) {
     handle: String(r.handle).toLowerCase(),
     mins: Number(r.mins || 0),
   })).sort((a, b) => b.mins - a.mins);
+}
+
+// Notable moments — flagged_moments aggregated from mod_stream_notes
+// for the last 14 days. Returns the most recent 12 across all mods.
+async function queryFlaggedMoments(env, handle) {
+  const since = new Date(Date.now() - 14 * 86400_000).toISOString().slice(0, 10);
+  try {
+    const res = await env.DB.prepare(`
+      SELECT n.session_date, n.flagged_moments, m.display_name AS mod_name
+        FROM mod_stream_notes n
+        INNER JOIN mod_accounts m ON m.id = n.mod_id
+       WHERE n.creator_handle = ?
+         AND n.session_date >= ?
+         AND m.status = 'verified'
+         AND LENGTH(COALESCE(n.flagged_moments, '[]')) > 2
+       ORDER BY n.session_date DESC
+       LIMIT 25
+    `).bind(handle, since).all();
+
+    const out = [];
+    for (const r of (res.results || [])) {
+      let arr = [];
+      try { arr = JSON.parse(r.flagged_moments || '[]'); } catch {}
+      for (const f of arr) {
+        out.push({
+          ts: Number(f.ts || 0),
+          label: String(f.label || 'Notable moment').slice(0, 120),
+          session_date: r.session_date,
+          mod_name: r.mod_name,
+        });
+      }
+    }
+    out.sort((a, b) => b.ts - a.ts);
+    return out.slice(0, 12);
+  } catch {
+    return [];
+  }
 }
 
 // "Often plays with" — pairs of curated creators whose stream sessions overlap
@@ -541,7 +579,7 @@ function buildPlatformLinks(socials) {
   return out;
 }
 
-function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections }) {
+function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard, connections, flaggedMoments }) {
   const platUrl = platform === 'kick' ? `https://kick.com/${handle}` : `https://twitch.tv/${handle}`;
   const platLabel = platform === 'kick' ? 'Kick' : 'Twitch';
   const isLive = !!liveEntry?.is_live;
@@ -680,6 +718,15 @@ body>*{position:relative;z-index:3}
 .chip{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:1px;padding:9px 14px;background:var(--card);border:1px solid var(--border);color:var(--ink-dim);display:inline-flex;align-items:center;gap:8px;transition:all .15s}
 .chip:hover{border-color:var(--signal);color:var(--fg)}
 .chip .n{font-family:var(--font-d);font-size:15px;color:var(--signal);letter-spacing:0}
+
+/* NOTABLE MOMENTS — flagged by mods */
+.moments{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.moment{padding:12px 14px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);border-left:2px solid var(--signal-cyan);transition:all .15s}
+.moment:hover{border-color:var(--signal);transform:translateY(-1px)}
+.moment-when{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.moment-label{font-family:var(--font-b);font-size:14px;line-height:1.4;color:var(--fg)}
+.moment-mod{font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint);margin-top:6px}
+.moment-mod strong{color:var(--signal-cyan)}
 
 /* OFTEN PLAYS WITH */
 .peers{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
@@ -890,6 +937,20 @@ body>*{position:relative;z-index:3}
     <div class="sec-h"><h2>Often Plays With</h2><span class="sub">Sessions overlapping in the last 90 days</span></div>
     <div class="peers">
       ${connections.map(p => renderPeerCard(p)).join('')}
+    </div>
+  </div>` : ''}
+
+  ${(flaggedMoments && flaggedMoments.length) ? `
+  <div class="section">
+    <div class="sec-h"><h2>Notable Moments</h2><span class="sub">Flagged by verified mods · last 14 days</span></div>
+    <div class="moments">
+      ${flaggedMoments.map(m => `
+        <div class="moment">
+          <div class="moment-when">${esc(m.session_date)} · ${esc(timeAgoIso(new Date(m.ts * 1000).toISOString()))}</div>
+          <div class="moment-label">${esc(m.label)}</div>
+          <div class="moment-mod">flagged by <strong>${esc(m.mod_name || 'a mod')}</strong></div>
+        </div>
+      `).join('')}
     </div>
   </div>` : ''}
 

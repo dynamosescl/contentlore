@@ -180,6 +180,33 @@ async function computeDayMetrics(env, dayYmd) {
     .map(([sid, agg]) => ({ id: sid, name: SERVER_NAME_BY_ID[sid] || sid, viewer_hours: Math.round(agg.viewer_hours) }))
     .sort((a, b) => b.viewer_hours - a.viewer_hours);
 
+  // Mod notes for this day. Per-creator concatenation of every mod's
+  // notes for the day (non-empty only). Capped per-creator so a single
+  // verbose mod can't blow up the prompt.
+  let modNotes = [];
+  try {
+    const notesRes = await env.DB.prepare(`
+      SELECT n.creator_handle, n.notes, n.flagged_moments, m.display_name AS mod_name
+        FROM mod_stream_notes n
+        INNER JOIN mod_accounts m ON m.id = n.mod_id
+       WHERE n.session_date = ? AND m.status = 'verified'
+         AND (LENGTH(n.notes) > 0 OR LENGTH(COALESCE(n.flagged_moments, '[]')) > 2)
+       ORDER BY n.updated_at DESC
+       LIMIT 30
+    `).bind(dayYmd).all();
+    for (const r of (notesRes.results || [])) {
+      const trimmed = String(r.notes || '').slice(0, 600);
+      let flags = [];
+      try { flags = JSON.parse(r.flagged_moments || '[]'); } catch {}
+      modNotes.push({
+        creator_handle: String(r.creator_handle).toLowerCase(),
+        mod_name: r.mod_name,
+        notes: trimmed,
+        flagged_moments: flags.slice(0, 8),
+      });
+    }
+  } catch { /* mod_stream_notes may not exist on legacy DBs — ignore */ }
+
   return {
     date: dayYmd,
     totalHours: Math.round(totalMins / 60),
@@ -189,6 +216,7 @@ async function computeDayMetrics(env, dayYmd) {
     topServer,
     allServers,
     topCreators,
+    modNotes,
   };
 }
 
@@ -214,6 +242,21 @@ async function callAnthropicDaily(env, data) {
   }
   if (data.topCreators?.length) {
     lines.push(`Hours leaderboard: ${data.topCreators.slice(0, 5).map(c => `${c.display_name} ${c.hours}h`).join('; ')}`);
+  }
+
+  // Mod notes (item 5) — verified mods can write per-stream notes that
+  // get fed into the recap prompt as additional colour. Each mod's
+  // notes get a clearly-labelled section so the model can attribute
+  // narrative beats they couldn't otherwise see in the metrics.
+  if (Array.isArray(data.modNotes) && data.modNotes.length) {
+    lines.push('');
+    lines.push('=== Mod stream notes (private, from verified moderators of these streamers) ===');
+    for (const m of data.modNotes) {
+      const flagsStr = (m.flagged_moments || []).map(f => `${f.label || 'moment'}`).join(' / ');
+      lines.push(`- For ${m.creator_handle} (mod: ${m.mod_name})${flagsStr ? ` [flagged: ${flagsStr}]` : ''}: ${m.notes || '(no notes, only flags)'}`);
+    }
+    lines.push('=== End mod notes ===');
+    lines.push('Use these mod notes to add specifics the metrics can\'t show — character names, plot beats, "why" something happened. Don\'t quote the notes verbatim or attribute to the mod; just integrate the colour into the narrative naturally.');
   }
 
   const userPrompt = `Here is yesterday's UK GTA RP scene data:\n\n${lines.join('\n')}\n\nWrite the daily recap now.`;
