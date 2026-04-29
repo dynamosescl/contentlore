@@ -16,9 +16,9 @@
     { "src": "/logo.png",             "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
-    { "name": "Live Hub",       "short_name": "Live",     "url": "/gta-rp/" },
-    { "name": "Multi-View",     "short_name": "Multi",    "url": "/gta-rp/multi/" },
-    { "name": "Scene Timeline", "short_name": "Timeline", "url": "/gta-rp/timeline/" },
-    { "name": "Weekly Digest",  "short_name": "Digest",   "url": "/gta-rp/digest/" }
+    { "name": "Live Hub",        "short_name": "Live",     "url": "/gta-rp/" },
+    { "name": "Multi-View",      "short_name": "Multi",    "url": "/gta-rp/multi/" },
+    { "name": "Power Rankings",  "short_name": "Ranks",    "url": "/gta-rp/rankings/" },
+    { "name": "Clips",           "short_name": "Clips",    "url": "/gta-rp/clips/" }
   ]
 }

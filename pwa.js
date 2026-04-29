@@ -70,7 +70,6 @@
     { href: '/gta-rp/timeline/',  label: 'Timeline' },
     { href: '/gta-rp/analytics/', label: 'Analytics' },
     { href: '/gta-rp/network/',   label: 'Network' },
-    { href: '/gta-rp/digest/',    label: 'Digest' },
     { href: '/gta-rp/health/',    label: 'Health' },
     { href: '/gta-rp/streaks/',   label: 'Streaks' },
     { href: '/gta-rp/party/',     label: 'Party' },
@@ -92,7 +91,6 @@
       { href: '/gta-rp/rankings/',  label: 'Rankings' },
       { href: '/gta-rp/analytics/', label: 'Analytics' },
       { href: '/gta-rp/health/',    label: 'Health' },
-      { href: '/gta-rp/digest/',    label: 'Digest' },
       { href: '/gta-rp/network/',   label: 'Network' },
     ]},
     { label: 'Community', items: [

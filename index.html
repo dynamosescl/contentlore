@@ -156,8 +156,22 @@ body>*{position:relative;z-index:3}
 .hub-name{font-family:var(--font-d);font-size:18px;letter-spacing:1.5px;line-height:1}
 .hub-desc{font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:var(--ink-faint);text-transform:uppercase}
 
+/* AI RECAP cards (homepage) */
+.airecap{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:1200px;margin:0 auto;padding:0 24px}
+@media(max-width:760px){.airecap{grid-template-columns:1fr}}
+.ai-card{padding:22px 24px;clip-path:var(--cut);position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:200px}
+.ai-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,oklch(0.85 0.18 200/.08),transparent 60%);pointer-events:none}
+.ai-h{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;position:relative}
+.ai-t{font-family:var(--font-d);font-size:22px;letter-spacing:1px;color:var(--fg);display:flex;align-items:center;gap:10px}
+.ai-tag{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;padding:2px 7px;background:oklch(0.85 0.18 200/.15);color:var(--signal-cyan);border:1px solid oklch(0.85 0.18 200/.4)}
+.ai-meta{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1.5px;text-transform:uppercase}
+.ai-prose{font-size:14px;line-height:1.65;color:var(--fg);position:relative;white-space:pre-wrap}
+.ai-prose.skel{color:transparent;background:linear-gradient(90deg,var(--card2) 0%,var(--card) 50%,var(--card2) 100%);background-size:200% 100%;animation:airshim 1.6s infinite;height:90px;border-radius:2px}
+@keyframes airshim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.ai-fb{margin-top:8px;font-family:var(--font-m);font-size:10px;color:oklch(0.78 0.20 60);letter-spacing:1px;text-transform:uppercase}
+
 /* NEW TO UK GTA RP */
-.newto{padding:48px 24px 36px;max-width:900px;margin:24px auto 0}
+.newto{padding:48px 24px 36px;max-width:1100px;margin:24px auto 0}
 .newto-card{padding:28px 32px;clip-path:var(--cut)}
 .newto-kicker{font-family:var(--font-m);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--signal);margin-bottom:8px}
 .newto h2{font-family:var(--font-d);font-size:32px;letter-spacing:2px;margin-bottom:12px}
@@ -254,12 +268,36 @@ body>*{position:relative;z-index:3}
 </section>
 
 <section class="feed">
+  <div class="feed-head">
+    <div class="feed-title">Scene Report</div>
+    <a href="/gta-rp/health/" class="feed-more">Scene health →</a>
+  </div>
+  <div class="airecap">
+    <div class="ai-card card" id="daily-recap">
+      <div class="ai-h">
+        <div class="ai-t">📅 Yesterday <span class="ai-tag">Daily AI</span></div>
+        <div class="ai-meta" id="daily-meta">Loading…</div>
+      </div>
+      <div class="ai-prose skel" id="daily-prose"></div>
+      <div class="ai-fb" id="daily-fb" style="display:none"></div>
+    </div>
+    <div class="ai-card card" id="weekly-recap">
+      <div class="ai-h">
+        <div class="ai-t">📡 This Week <span class="ai-tag">Weekly AI</span></div>
+        <div class="ai-meta" id="weekly-meta">Loading…</div>
+      </div>
+      <div class="ai-prose skel" id="weekly-prose"></div>
+      <div class="ai-fb" id="weekly-fb" style="display:none"></div>
+    </div>
+  </div>
+</section>
+
+<section class="feed">
   <div class="feed-head"><div class="feed-title">Explore</div></div>
   <div class="hub-grid">
     <a href="/gta-rp/rankings/"  class="hub-item card"><span class="hub-ico">🏆</span><div class="hub-text"><span class="hub-name">Power Rankings</span><span class="hub-desc">Weekly leaderboard with movement</span></div></a>
     <a href="/gta-rp/timeline/"  class="hub-item card"><span class="hub-ico">📊</span><div class="hub-text"><span class="hub-name">Timeline</span><span class="hub-desc">What happened today</span></div></a>
     <a href="/gta-rp/analytics/" class="hub-item card"><span class="hub-ico">📈</span><div class="hub-text"><span class="hub-name">Analytics</span><span class="hub-desc">Viewer trends + heatmap</span></div></a>
-    <a href="/gta-rp/digest/"    class="hub-item card"><span class="hub-ico">📰</span><div class="hub-text"><span class="hub-name">Digest</span><span class="hub-desc">AI scene recap + weekly report</span></div></a>
     <a href="/gta-rp/health/"    class="hub-item card"><span class="hub-ico">💓</span><div class="hub-text"><span class="hub-name">Health</span><span class="hub-desc">Scene trend, week-over-week</span></div></a>
     <a href="/gta-rp/network/"   class="hub-item card"><span class="hub-ico">🕸</span><div class="hub-text"><span class="hub-name">Network</span><span class="hub-desc">Force-directed creator graph</span></div></a>
     <a href="/gta-rp/party/"     class="hub-item card"><span class="hub-ico">🎉</span><div class="hub-text"><span class="hub-name">Watch Party</span><span class="hub-desc">Synced viewing + shared chat</span></div></a>
@@ -277,8 +315,9 @@ body>*{position:relative;z-index:3}
     <ol>
       <li>Pick a stream from <a href="/gta-rp/">Live</a> — see who's broadcasting now</li>
       <li>Browse the <a href="/gta-rp/clips/">Clip Wall</a> for the best moments of the week</li>
-      <li>Read the <a href="/gta-rp/digest/">Daily Digest</a> for AI-written scene context</li>
-      <li>Compare creators on the weekly <a href="/gta-rp/health/">Scene Health</a> dashboard</li>
+      <li>Watch up to six streams at once on <a href="/gta-rp/multi/">Multi-View</a></li>
+      <li>Check the weekly <a href="/gta-rp/rankings/">Power Rankings</a> for who's heating up</li>
+      <li>Compare creators on the <a href="/gta-rp/health/">Scene Health</a> dashboard</li>
     </ol>
   </div>
 </section>
@@ -504,6 +543,57 @@ async function loadRankings() {
   } catch { /* not deployed yet — leave fallback */ }
 }
 
+async function loadDailyRecap() {
+  try {
+    const r = await fetch('/api/daily-recap');
+    const d = await r.json();
+    const prose = document.getElementById('daily-prose');
+    const meta = document.getElementById('daily-meta');
+    if (!d.ok || !d.recap) {
+      prose.classList.remove('skel');
+      prose.textContent = "No daily recap available yet — we write a fresh one each morning.";
+      meta.textContent = 'pending';
+      return;
+    }
+    const rec = d.recap;
+    prose.classList.remove('skel');
+    prose.textContent = rec.content;
+    const when = new Date(rec.generated_at * 1000).toLocaleString('en-GB', { month: 'short', day: 'numeric', timeZone: 'Europe/London' });
+    meta.textContent = `${rec.source === 'fallback' ? 'Template' : (rec.model || 'Claude')} · ${rec.date}`;
+    if (rec.source === 'fallback') {
+      const fb = document.getElementById('daily-fb');
+      fb.textContent = '⚠ AI service unavailable — template fallback';
+      fb.style.display = 'block';
+    }
+  } catch { /* silent */ }
+}
+
+async function loadWeeklyRecap() {
+  try {
+    const r = await fetch('/api/scene-recap');
+    const d = await r.json();
+    const prose = document.getElementById('weekly-prose');
+    const meta = document.getElementById('weekly-meta');
+    if (!d.ok) throw new Error('weekly recap failed');
+    prose.classList.remove('skel');
+    prose.textContent = d.recap;
+    const when = new Date(d.generated_at).toLocaleString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
+    meta.textContent = `${d.source === 'fallback' ? 'Template' : (d.model || 'Claude')} · ${when}`;
+    if (d.source === 'fallback') {
+      const fb = document.getElementById('weekly-fb');
+      fb.textContent = '⚠ AI service unavailable — template fallback';
+      fb.style.display = 'block';
+    }
+  } catch (e) {
+    const prose = document.getElementById('weekly-prose');
+    if (prose) {
+      prose.classList.remove('skel');
+      prose.textContent = "Weekly recap unavailable.";
+      document.getElementById('weekly-meta').textContent = '—';
+    }
+  }
+}
+
 loadLive();
 loadClips();
 loadHype();
@@ -511,6 +601,8 @@ loadHealth();
 loadClipOfDay();
 loadSpotlight();
 loadRankings();
+loadDailyRecap();
+loadWeeklyRecap();
 setInterval(loadLive, 60_000);
 setInterval(loadHype, 90_000);
 </script>
