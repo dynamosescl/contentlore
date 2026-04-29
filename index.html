@@ -156,6 +156,22 @@ body>*{position:relative;z-index:3}
 .hub-name{font-family:var(--font-d);font-size:18px;letter-spacing:1.5px;line-height:1}
 .hub-desc{font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:var(--ink-faint);text-transform:uppercase}
 
+/* PEAK PREDICTOR */
+.peakpred{max-width:1200px;margin:0 auto;padding:0 24px}
+.pp-card{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 22px;clip-path:var(--cut);position:relative;overflow:hidden}
+.pp-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 0%,oklch(0.85 0.18 200/.10),transparent 60%);pointer-events:none}
+.pp-icon{font-size:32px;line-height:1;flex-shrink:0;position:relative}
+.pp-info{position:relative;min-width:0}
+.pp-tag{font-family:var(--font-m);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--signal);margin-bottom:4px}
+.pp-line{font-family:var(--font-d);font-size:24px;letter-spacing:1px;line-height:1.1}
+.pp-line .v{color:var(--signal);text-shadow:0 0 8px oklch(0.82 0.20 195/.4)}
+.pp-sub{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;color:var(--ink-faint);text-transform:uppercase;margin-top:6px}
+.pp-conf{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 10px;border:1px solid var(--border);color:var(--ink-faint);background:var(--card2);position:relative;flex-shrink:0}
+.pp-conf.high{color:var(--signal-cyan);border-color:var(--signal-cyan)}
+.pp-conf.moderate{color:var(--signal);border-color:oklch(0.82 0.20 195/.5)}
+.pp-conf.thin,.pp-conf.building{color:var(--ink-faint)}
+@media(max-width:560px){.pp-card{grid-template-columns:1fr;text-align:left}.pp-icon{display:none}.pp-conf{justify-self:start}}
+
 /* AI RECAP cards (homepage) */
 .airecap{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:1200px;margin:0 auto;padding:0 24px}
 @media(max-width:760px){.airecap{grid-template-columns:1fr}}
@@ -235,6 +251,18 @@ body>*{position:relative;z-index:3}
   <div class="ss-item card"><div class="ss-label">Live</div><div class="ss-val" id="ss-live">—</div><div class="ss-sub" id="ss-live-sub">Streamers on</div></div>
   <div class="ss-item card"><div class="ss-label">Top Ranked</div><div class="ss-val" id="ss-top">—</div><div class="ss-sub" id="ss-top-sub">This week</div></div>
 </div>
+
+<section class="peakpred" id="peakpred-section" style="display:none">
+  <div class="pp-card card">
+    <div class="pp-icon">📈</div>
+    <div class="pp-info">
+      <div class="pp-tag">Tonight's prediction</div>
+      <div class="pp-line" id="pp-line">—</div>
+      <div class="pp-sub" id="pp-sub">Based on the last 30 days</div>
+    </div>
+    <div class="pp-conf" id="pp-conf">—</div>
+  </div>
+</section>
 
 <section class="feed">
   <div class="feed-head">
@@ -591,6 +619,25 @@ async function loadRankings() {
   } catch { /* not deployed yet — leave fallback */ }
 }
 
+async function loadPeakPrediction() {
+  try {
+    const r = await fetch('/api/peak-prediction');
+    const d = await r.json();
+    if (!d.ok || !d.peak || d.peak.viewers <= 0) return;
+    const section = document.getElementById('peakpred-section');
+    const line = document.getElementById('pp-line');
+    const sub = document.getElementById('pp-sub');
+    const conf = document.getElementById('pp-conf');
+    const past = d.peak.hour < d.now_uk_hour;
+    const verb = past ? 'peaked around' : 'predicted to peak around';
+    line.innerHTML = `${verb} <span class="v">${esc(d.peak.hour_label)}</span> with <span class="v">${fmtN(d.peak.viewers)}</span> viewers`;
+    sub.textContent = `${d.today_dow_label} pattern · ${d.window_days}-day window · ${d.peak.samples} samples this hour`;
+    conf.textContent = d.confidence;
+    conf.className = 'pp-conf ' + d.confidence;
+    section.style.display = '';
+  } catch { /* silent */ }
+}
+
 async function loadDailyRecap() {
   try {
     const r = await fetch('/api/daily-recap');
@@ -651,6 +698,7 @@ loadSpotlight();
 loadRankings();
 loadDailyRecap();
 loadWeeklyRecap();
+loadPeakPrediction();
 setInterval(loadLive, 60_000);
 setInterval(loadHype, 90_000);
 </script>
