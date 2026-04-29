@@ -422,18 +422,25 @@ async function loadDiscovery() {
     if (recommended.length === 0) {
       recPanel.innerHTML = '<div style="padding:16px;color:var(--ink-dim);font-size:14px;line-height:1.6">No raid or host targets detected yet. The next time a tracked streamer ends a stream by raiding someone, that target will appear here automatically.</div>';
     } else {
-      recPanel.innerHTML = '<table><thead><tr><th>Name</th><th>Platform</th><th>Type</th><th>Raided / Hosted by</th><th>Hits</th><th>Last seen</th><th>Action</th></tr></thead><tbody>'
+      recPanel.innerHTML = '<table><thead><tr><th>Name</th><th>Platform</th><th>Referred by</th><th>Hits</th><th>Last seen</th><th>Action</th></tr></thead><tbody>'
         + recommended.map(c => {
-          const sources = (c.raid_sources || []).join(', ') || '—';
-          const sourcesBadge = (c.raid_source_count || 0) >= 2
-            ? `<span style="font-family:var(--font-d);font-size:14px;color:var(--green);margin-right:6px">${c.raid_source_count}×</span>`
-            : '';
+          const sources = c.raid_sources || [];
+          const verb = c.source === 'host' ? 'Hosted' : 'Raided';
+          let badgeHtml = '';
+          if (sources.length === 0) {
+            badgeHtml = '—';
+          } else if (sources.length === 1) {
+            badgeHtml = `<span style="display:inline-block;padding:3px 8px;background:oklch(0.85 0.18 200/.15);border:1px solid oklch(0.85 0.18 200/.5);color:var(--signal-cyan);font-family:var(--font-m);font-size:11px;letter-spacing:1px;font-weight:600">★ ${verb} by ${escapeHtml(sources[0])}</span>`;
+          } else {
+            const first = sources[0];
+            const rest = sources.length - 1;
+            badgeHtml = `<span style="display:inline-block;padding:3px 8px;background:oklch(0.82 0.22 145/.15);border:1px solid oklch(0.82 0.22 145/.5);color:oklch(0.82 0.22 145);font-family:var(--font-m);font-size:11px;letter-spacing:1px;font-weight:600" title="${escapeHtml(sources.join(', '))}">★★ ${verb} by ${escapeHtml(first)} +${rest}</span>`;
+          }
           const link = (c.platform === 'kick' ? 'https://kick.com/' : 'https://twitch.tv/') + c.name;
           return `<tr>
             <td><a href="${escapeHtml(link)}" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:none">${escapeHtml(c.name)} ↗</a></td>
             <td><span class="badge ${(c.platform || 'twitch').toLowerCase()}">${c.platform || 'twitch'}</span></td>
-            <td><span style="font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--signal)">${escapeHtml(c.source || '?')}</span></td>
-            <td style="font-family:var(--font-m);font-size:12px;color:var(--ink-dim)">${sourcesBadge}<span title="${escapeHtml(sources)}">${escapeHtml(sources.length > 50 ? sources.slice(0, 47) + '…' : sources)}</span></td>
+            <td>${badgeHtml}</td>
             <td>${c.discovery_count || 1}</td>
             <td style="color:var(--ink-faint);font-size:12px">${escapeHtml(fmtDate(c.last_seen))}</td>
             <td><button class="btn" onclick="approveCreator(${c.id})">Approve</button></td>
