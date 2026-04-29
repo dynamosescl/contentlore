@@ -125,13 +125,40 @@ body>*{position:relative;z-index:3}
 .clip-mini .tag-btn{flex:1;font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:5px 6px;background:var(--card);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;text-align:center;transition:all .1s}
 .clip-mini .tag-btn:hover{border-color:var(--signal);color:var(--signal)}
 
-/* Tools accordion (placeholder for item 4) */
-.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:14px}
-.tool-tile{padding:14px 18px;background:var(--card2);border:1px solid var(--border);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);transition:all .15s}
-.tool-tile.disabled{opacity:.5}
-.tool-tile h4{font-family:var(--font-d);font-size:18px;letter-spacing:1px;margin-bottom:4px;color:var(--fg)}
-.tool-tile h4 .perm{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;color:var(--amber);margin-left:6px}
-.tool-tile p{font-size:12px;color:var(--ink-dim);line-height:1.5}
+/* Mod tools — accordion-style sections per creator */
+.tools{margin-top:18px;padding-top:14px;border-top:1px dashed var(--border)}
+.tools-h{font-family:var(--font-d);font-size:18px;letter-spacing:1.5px;color:var(--signal-cyan);margin-bottom:10px}
+.tool{margin-bottom:10px;background:var(--card2);border:1px solid var(--border);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);overflow:hidden}
+.tool > summary{cursor:pointer;padding:12px 16px;font-family:var(--font-d);font-size:16px;letter-spacing:1px;color:var(--fg);display:flex;justify-content:space-between;align-items:center;list-style:none}
+.tool > summary::-webkit-details-marker{display:none}
+.tool > summary::after{content:'▾';font-family:var(--font-b);font-size:12px;color:var(--ink-faint);transition:transform .15s}
+.tool[open] > summary::after{transform:rotate(180deg)}
+.tool > summary .perm{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;color:var(--amber);margin-left:6px;text-transform:uppercase}
+.tool > summary .perm.locked{color:var(--red)}
+.tool .body{padding:12px 16px 16px;border-top:1px solid var(--border)}
+.tool input[type=text],.tool input[type=url],.tool textarea,.tool select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-family:var(--font-b);font-size:13px;padding:9px 11px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);margin-bottom:8px}
+.tool textarea{min-height:80px;font-family:var(--font-b);resize:vertical}
+.tool label{display:block;font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px}
+.tool .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.tool .row{grid-template-columns:1fr}}
+.tool .save{font-family:var(--font-d);font-size:14px;letter-spacing:1.5px;background:var(--signal);color:var(--bg);border:0;padding:10px 22px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);cursor:pointer;transition:all .15s}
+.tool .save:hover{box-shadow:0 0 14px oklch(0.82 0.20 195/.4)}
+.tool .save:disabled{opacity:.5;cursor:default}
+.tool .lock-msg{font-family:var(--font-m);font-size:12px;color:var(--ink-faint);letter-spacing:1px;line-height:1.5;text-align:center;padding:16px}
+.char-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.char-item{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);font-size:13px;align-items:center}
+.char-item .name{font-family:var(--font-d);font-size:18px;letter-spacing:1px;color:var(--fg)}
+.char-item .meta{font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1.5px;margin-top:2px;text-transform:uppercase}
+.char-item .status{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;border:1px solid var(--border)}
+.char-item .status.active{color:var(--green);border-color:var(--green)}
+.char-item .status.retired{color:var(--ink-faint)}
+.char-item .status.dead{color:var(--red);border-color:var(--red)}
+.tag-form{display:none;flex-direction:column;gap:6px;margin-top:10px;padding:10px;background:var(--bg);border:1px solid var(--signal-cyan)}
+.tag-form.open{display:flex}
+.tag-form input{margin-bottom:0}
+.tag-form .btns{display:flex;gap:6px}
+.tag-form .btns button{flex:1;font-family:var(--font-m);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:8px;background:var(--card);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer}
+.tag-form .btns .submit{background:var(--signal-cyan);color:var(--bg);border-color:var(--signal-cyan)}
 
 /* Contributions */
 .contrib-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -250,14 +277,196 @@ function render(d) {
   const host = document.getElementById('dashboard-host');
   host.innerHTML = renderWelcome(d) + renderScene(d.scene) + renderCreators(d.creators) + renderContributions(d.contributions);
 
-  // Hook clip-tag buttons (item 4 ships the actual endpoint; for now they show a "coming soon" toast).
+  attachToolHandlers(d.mod);
+  attachClipTagHandlers(d.mod);
+}
+
+// ---------- Tool handlers (item 4) ----------
+const PERM_BY_LEVEL = {
+  rookie:  ['tag_clip', 'flag_moment', 'stream_notes'],
+  regular: ['tag_clip', 'flag_moment', 'stream_notes', 'add_character'],
+  trusted: ['tag_clip', 'flag_moment', 'stream_notes', 'add_character', 'edit_socials'],
+  senior:  ['tag_clip', 'flag_moment', 'stream_notes', 'add_character', 'edit_socials', 'edit_bio'],
+  head:    ['tag_clip', 'flag_moment', 'stream_notes', 'add_character', 'edit_socials', 'edit_bio'],
+};
+function modHasPerm(mod, perm) { return (PERM_BY_LEVEL[mod.level] || []).includes(perm); }
+
+async function modFetch(path, opts = {}) {
+  return fetch(path, {
+    ...opts,
+    headers: {
+      ...(opts.headers || {}),
+      Authorization: 'Bearer ' + getToken(),
+      'content-type': 'application/json',
+    },
+  });
+}
+
+function attachToolHandlers(mod) {
+  // Socials editor
+  document.querySelectorAll('form[data-tool="socials"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const handle = form.dataset.creator;
+      const fd = new FormData(form);
+      const socials = {
+        tiktok: fd.get('tiktok') || '',
+        youtube: fd.get('youtube') || '',
+        x: fd.get('x') || '',
+        instagram: fd.get('instagram') || '',
+        discord: fd.get('discord') || '',
+      };
+      const btn = form.querySelector('.save');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const res = await modFetch('/api/mod/update-socials', {
+          method: 'PUT',
+          body: JSON.stringify({ creator_handle: handle, socials }),
+        });
+        const j = await res.json();
+        if (!j.ok) showToast(j.error || 'Update failed', true);
+        else {
+          showToast(j.no_changes ? 'No changes detected' : `+${j.xp_awarded} XP · socials updated`);
+          if (!j.no_changes) loadDashboard();
+        }
+      } catch { showToast('Network error', true); }
+      btn.disabled = false; btn.textContent = 'Save socials';
+    });
+  });
+
+  // Bio editor
+  document.querySelectorAll('form[data-tool="bio"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const handle = form.dataset.creator;
+      const bio = form.querySelector('textarea[name=bio]').value;
+      const btn = form.querySelector('.save');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const res = await modFetch('/api/mod/update-bio', {
+          method: 'PUT',
+          body: JSON.stringify({ creator_handle: handle, bio }),
+        });
+        const j = await res.json();
+        if (!j.ok) showToast(j.error || 'Update failed', true);
+        else { showToast(`+${j.xp_awarded} XP · bio saved`); loadDashboard(); }
+      } catch { showToast('Network error', true); }
+      btn.disabled = false; btn.textContent = 'Save bio';
+    });
+  });
+
+  // Character add
+  document.querySelectorAll('form[data-tool="character-add"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const handle = form.dataset.creator;
+      const fd = new FormData(form);
+      const btn = form.querySelector('.save');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const res = await modFetch('/api/mod/character', {
+          method: 'POST',
+          body: JSON.stringify({
+            played_by_handle: handle,
+            character_name: fd.get('character_name'),
+            server: fd.get('server'),
+            faction: fd.get('faction'),
+            description: fd.get('description'),
+            status: fd.get('status') || 'active',
+          }),
+        });
+        const j = await res.json();
+        if (!j.ok) showToast(j.error || 'Add failed', true);
+        else {
+          showToast(`+${j.xp_awarded} XP · character added`);
+          form.reset();
+          loadCharsForCreator(handle);
+          loadDashboard();
+        }
+      } catch { showToast('Network error', true); }
+      btn.disabled = false; btn.textContent = 'Add character';
+    });
+  });
+
+  // Initial load of character list for each creator's tool panel.
+  document.querySelectorAll('.char-list[data-creator]').forEach(list => {
+    loadCharsForCreator(list.dataset.creator);
+  });
+}
+
+async function loadCharsForCreator(handle) {
+  const list = document.querySelector(`.char-list[data-creator="${CSS.escape(handle)}"]`);
+  if (!list) return;
+  list.innerHTML = '<div class="empty" style="font-size:11px;padding:14px">Loading…</div>';
+  try {
+    const res = await fetch('/api/characters?creator=' + encodeURIComponent(handle));
+    const j = await res.json();
+    if (!j.ok || !j.characters || !j.characters.length) {
+      list.innerHTML = '<div class="empty" style="font-size:11px;padding:14px">No characters yet — add the first one below.</div>';
+      return;
+    }
+    list.innerHTML = j.characters.map(c => `
+      <div class="char-item">
+        <div>
+          <div class="name">${esc(c.character_name)}</div>
+          <div class="meta">${[c.server, c.faction].filter(Boolean).map(esc).join(' · ') || '—'}</div>
+        </div>
+        <span class="status ${esc(c.status)}">${esc(c.status)}</span>
+      </div>
+    `).join('');
+  } catch {
+    list.innerHTML = '<div class="empty" style="font-size:11px;padding:14px;color:oklch(0.85 0.20 25)">Failed to load characters.</div>';
+  }
+}
+
+function attachClipTagHandlers(mod) {
   document.querySelectorAll('.tag-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const tools = btn.closest('.creator')?.querySelector('.tools-anchor');
-      if (tools) tools.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      showToast('Open the contribution tools below to tag this clip');
+      if (!modHasPerm(mod, 'tag_clip')) {
+        showToast('Need Rookie+ to tag clips (you should already have this — check status)', true);
+        return;
+      }
+      const card = btn.closest('.clip-mini');
+      const clipId = card.dataset.clipId;
+      // Toggle inline form below the actions.
+      let form = card.querySelector('.tag-form');
+      if (!form) {
+        form = document.createElement('div');
+        form.className = 'tag-form open';
+        form.innerHTML = `
+          <input type="text" placeholder="tag (e.g. funny, gang war)" maxlength="40" data-tag>
+          <input type="text" placeholder="optional context" maxlength="500" data-ctx>
+          <div class="btns"><button type="button" data-action="cancel">Cancel</button><button type="button" class="submit" data-action="submit">Tag +10 XP</button></div>
+        `;
+        card.querySelector('.body').appendChild(form);
+        form.querySelector('[data-action="cancel"]').addEventListener('click', () => form.remove());
+        form.querySelector('[data-action="submit"]').addEventListener('click', async () => {
+          const tag = form.querySelector('[data-tag]').value.trim();
+          const ctx = form.querySelector('[data-ctx]').value.trim();
+          if (!tag) { showToast('Enter a tag', true); return; }
+          const submit = form.querySelector('[data-action="submit"]');
+          submit.disabled = true; submit.textContent = 'Saving…';
+          try {
+            const res = await modFetch('/api/mod/clip-tag', {
+              method: 'POST',
+              body: JSON.stringify({ clip_id: clipId, tag, context_description: ctx || null }),
+            });
+            const j = await res.json();
+            if (!j.ok) showToast(j.error || 'Tag failed', true);
+            else {
+              showToast(`+${j.xp_awarded} XP · #${tag}`);
+              form.remove();
+              loadDashboard();
+            }
+          } catch { showToast('Network error', true); }
+          submit.disabled = false; submit.textContent = 'Tag +10 XP';
+        });
+        form.querySelector('[data-tag]').focus();
+      } else {
+        form.classList.toggle('open');
+      }
     });
   });
 }
@@ -383,10 +592,101 @@ function renderCreator(c) {
         </div>
         ${peersHtml}
         ${clipsHtml}
-        <div class="tools-anchor"></div>
+        ${renderTools(c)}
       </div>
     </div>
   `;
+}
+
+function renderTools(c) {
+  // Pull current values from the API response — socials are now part of the
+  // creator card payload via getCuratedEntry on the dashboard endpoint.
+  // The tools always render, but locked sections show a permission message
+  // instead of the form when the mod doesn't have the level for it.
+  const profile = getCachedProfile();
+  const mod = profile || { level: 'rookie' };
+
+  const sec = (key, headLabel, perm, body, openByDefault = false) => {
+    const locked = perm && !modHasPermInline(mod.level, perm);
+    const head = `<summary>${headLabel}${perm ? ` <span class="perm ${locked ? 'locked' : ''}">${perm.replace('_', ' ')}</span>` : ''}</summary>`;
+    const inner = locked
+      ? `<div class="lock-msg">Locked — requires ${permLabel(perm)} level. Earn XP by tagging clips, writing notes, or adding characters.</div>`
+      : body;
+    return `<details class="tool" ${openByDefault ? 'open' : ''}>${head}<div class="body">${inner}</div></details>`;
+  };
+
+  // Read current bio + socials from the per-creator data (we passed them
+  // via the dashboard endpoint in getCuratedEntry).
+  const charBody = `
+    <div class="char-list" data-creator="${esc(c.handle)}"><div class="empty" style="font-size:11px;padding:14px">Loading…</div></div>
+    <form data-tool="character-add" data-creator="${esc(c.handle)}">
+      <label>Character name</label>
+      <input type="text" name="character_name" required maxlength="80" placeholder="e.g. Big Tony Marlow">
+      <div class="row">
+        <div><label>Server</label><input type="text" name="server" maxlength="100" placeholder="e.g. Orbit RP"></div>
+        <div><label>Faction / job</label><input type="text" name="faction" maxlength="100" placeholder="e.g. PD, Triads"></div>
+      </div>
+      <label>Description</label>
+      <textarea name="description" maxlength="600" placeholder="One paragraph backstory or current arc"></textarea>
+      <label>Status</label>
+      <select name="status">
+        <option value="active">Active</option>
+        <option value="retired">Retired</option>
+        <option value="dead">Dead</option>
+      </select>
+      <button type="submit" class="save">Add character</button>
+    </form>
+  `;
+
+  const socialsBody = `
+    <form data-tool="socials" data-creator="${esc(c.handle)}">
+      <label>TikTok username</label>
+      <input type="text" name="tiktok" maxlength="64" placeholder="username (no @)">
+      <label>YouTube channel</label>
+      <input type="text" name="youtube" maxlength="64" placeholder="channel handle">
+      <label>X / Twitter username</label>
+      <input type="text" name="x" maxlength="64" placeholder="username (no @)">
+      <label>Instagram username</label>
+      <input type="text" name="instagram" maxlength="64" placeholder="username (no @)">
+      <label>Discord invite URL</label>
+      <input type="url" name="discord" maxlength="200" placeholder="https://discord.gg/...">
+      <p style="font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px;margin:0 0 10px">Empty fields are kept as-is. Twitch + Kick handles can only be changed by an admin.</p>
+      <button type="submit" class="save">Save socials</button>
+    </form>
+  `;
+
+  const bioBody = `
+    <form data-tool="bio" data-creator="${esc(c.handle)}">
+      <label>Bio (markdown not rendered — keep it plain)</label>
+      <textarea name="bio" maxlength="1200" placeholder="Who is ${esc(c.display_name)}? What's their thing? Recent storylines?"></textarea>
+      <button type="submit" class="save">Save bio</button>
+    </form>
+  `;
+
+  return `
+    <div class="tools">
+      <div class="tools-h">Mod Tools — ${esc(c.display_name)}</div>
+      ${sec('character', '🎭 Characters', 'add_character', charBody, true)}
+      ${sec('socials', '🔗 Socials editor', 'edit_socials', socialsBody)}
+      ${sec('bio', '📝 Bio editor', 'edit_bio', bioBody)}
+    </div>
+  `;
+}
+
+// Inline-permission check — used at render-time when we don't have the
+// full mod object handy. Mirrors PERM_BY_LEVEL above.
+function modHasPermInline(level, perm) {
+  return (PERM_BY_LEVEL[level] || []).includes(perm);
+}
+function permLabel(perm) {
+  if (perm === 'add_character') return 'Regular (100 XP)';
+  if (perm === 'edit_socials')  return 'Trusted (300 XP)';
+  if (perm === 'edit_bio')      return 'Senior (700 XP)';
+  return 'higher';
+}
+function getCachedProfile() {
+  try { return JSON.parse(localStorage.getItem('cl:mod:profile') || 'null'); }
+  catch { return null; }
 }
 
 function renderContributions(c) {

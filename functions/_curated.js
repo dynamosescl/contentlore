@@ -75,7 +75,7 @@ export async function getCuratedList(env, { force = false } = {}) {
   let rows = [];
   try {
     const res = await env.DB.prepare(`
-      SELECT handle, display_name, primary_platform, socials, added_at, active
+      SELECT handle, display_name, primary_platform, socials, bio, added_at, active
       FROM curated_creators
       WHERE active = 1
       ORDER BY added_at ASC, handle ASC
@@ -103,7 +103,7 @@ export async function getCuratedList(env, { force = false } = {}) {
  */
 export async function getCuratedListAll(env) {
   const res = await env.DB.prepare(`
-    SELECT handle, display_name, primary_platform, socials, added_at, active
+    SELECT handle, display_name, primary_platform, socials, bio, added_at, active
     FROM curated_creators
     ORDER BY added_at ASC, handle ASC
   `).all();
@@ -149,6 +149,7 @@ function normaliseRow(r) {
     primary_platform: r.primary_platform,
     platform: r.primary_platform,
     socials: parseSocials(r.socials),
+    bio: r.bio || null,
     added_at: r.added_at || null,
     active: r.active === 1 || r.active === true,
   };
@@ -162,6 +163,7 @@ function normaliseFallback(entry) {
     primary_platform: entry.platform,
     platform: entry.platform,
     socials: mergeSocials(emptySocials(), entry.socials || {}),
+    bio: null,
     added_at: null,
     active: true,
   };
