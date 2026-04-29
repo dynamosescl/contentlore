@@ -57,12 +57,13 @@ export async function onRequestGet({ params, env, request }) {
   if (!entry) return notFoundPage(rawHandle);
 
   // Pull the live state, clips cache, and D1 history in parallel.
-  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks] = await Promise.all([
+  const [liveCache, clipsCache, dbProfile, sessionRows, monthRanks, weekRanks] = await Promise.all([
     getLiveCache(env, request),
     getClipsCache(env, request),
     lookupDbCreator(env, entry.handle),
     querySessions(env, entry.handle).catch(() => null),
     queryMonthRanks(env).catch(() => []),
+    queryWeekRanks(env).catch(() => []),
   ]);
 
   const liveEntry = (liveCache?.live || []).find(c => c.handle === entry.handle) || null;
@@ -70,6 +71,7 @@ export async function onRequestGet({ params, env, request }) {
   const stats = aggregateStats(sessionRows || []);
   const affinity = aggregateServerAffinity(sessionRows || []);
   const reportCard = buildReportCard(entry.handle, sessionRows || [], monthRanks);
+  const dashboard = buildWeeklyDashboard(entry.handle, sessionRows || [], weekRanks);
 
   const display = liveEntry?.display_name || dbProfile?.display_name || entry.name;
   const avatar = liveEntry?.avatar_url || dbProfile?.avatar_url || null;
@@ -80,7 +82,7 @@ export async function onRequestGet({ params, env, request }) {
 
   return new Response(renderProfile({
     handle: entry.handle, name: display, platform: entry.platform,
-    avatar, liveEntry, clips, stats, affinity, socials, reportCard,
+    avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard,
   }), {
     headers: {
       'content-type': 'text/html; charset=utf-8',
@@ -185,6 +187,94 @@ async function queryMonthRanks(env) {
     handle: String(r.handle).toLowerCase(),
     mins: Number(r.mins || 0),
   })).sort((a, b) => b.mins - a.mins);
+}
+
+// Hours-per-creator across the curated allowlist for the last 7 days.
+// Used to compute the weekly dashboard rank.
+async function queryWeekRanks(env) {
+  const start = Math.floor(Date.now() / 1000) - 7 * 86400;
+  const res = await env.DB.prepare(`
+    SELECT cp.handle,
+           SUM(ss.duration_mins) AS mins
+    FROM stream_sessions ss
+    INNER JOIN creator_platforms cp ON cp.creator_id = ss.creator_id AND cp.is_primary = 1
+    WHERE ss.started_at >= ?
+    GROUP BY ss.creator_id
+  `).bind(start).all();
+  return (res.results || []).map(r => ({
+    handle: String(r.handle).toLowerCase(),
+    mins: Number(r.mins || 0),
+  })).sort((a, b) => b.mins - a.mins);
+}
+
+// Build the weekly dashboard payload. Pulls last-7d metrics from the
+// existing sessions array (so no extra D1 query needed for the
+// per-creator slice — only the rank query above is global).
+function buildWeeklyDashboard(handle, sessions, weekRanks) {
+  const now = Math.floor(Date.now() / 1000);
+  const weekAgo = now - 7 * 86400;
+  const week = sessions.filter(s => Number(s.started_at || 0) >= weekAgo);
+  if (!week.length) {
+    return { hasData: false };
+  }
+
+  const totalMins = week.reduce((s, r) => s + (r.duration_mins || 0), 0);
+  const peak      = week.reduce((m, r) => Math.max(m, r.peak_viewers || 0), 0);
+  const weighted  = week.reduce((s, r) => s + (r.avg_viewers || 0) * (r.duration_mins || 0), 0);
+  const avg       = totalMins > 0 ? Math.round(weighted / totalMins) : 0;
+
+  // Server split — minutes per server (top 5).
+  const serverMins = new Map();
+  for (const s of week) {
+    const sv = detectServer(s.final_title);
+    if (!sv) continue;
+    serverMins.set(sv.id, { name: sv.name, mins: (serverMins.get(sv.id)?.mins || 0) + (s.duration_mins || 0) });
+  }
+  const serverSplit = [...serverMins.values()].sort((a, b) => b.mins - a.mins).slice(0, 5);
+  const serverTotal = serverSplit.reduce((s, x) => s + x.mins, 0) || 1;
+
+  // Schedule heatmap — 7 days × 24 hours, in UK time. Counts minutes
+  // bucketed into the hour the session started in (cheap and good
+  // enough to show a "they stream at" pattern). Use the full sessions
+  // array (90 days), not just this week, so the pattern is meaningful
+  // even for streamers who took the week off.
+  const schedule = Array.from({ length: 7 }, () => new Array(24).fill(0));
+  for (const s of sessions) {
+    const t = Number(s.started_at || 0);
+    if (!t) continue;
+    const d = new Date(t * 1000);
+    // Convert UTC to a UK-local hour-of-day. Approximation: BST adds
+    // 1h between Mar–Oct. Computing the exact zone offset on every
+    // call is overkill; UK time is UTC+0/UTC+1.
+    const m = d.getUTCMonth();
+    const offset = (m >= 2 && m <= 9) ? 1 : 0; // March–October ≈ BST
+    const ukDate = new Date(t * 1000 + offset * 3600_000);
+    const dow = (ukDate.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+    const hod = ukDate.getUTCHours();
+    schedule[dow][hod] += (s.duration_mins || 0);
+  }
+  const scheduleMax = Math.max(1, ...schedule.flat());
+
+  // Rank in the last-7d hours leaderboard.
+  let rank = null;
+  if (Array.isArray(weekRanks) && weekRanks.length) {
+    const idx = weekRanks.findIndex(r => r.handle === handle);
+    if (idx !== -1) rank = idx + 1;
+  }
+
+  return {
+    hasData: true,
+    sessions: week.length,
+    hours: Math.round(totalMins / 60 * 10) / 10,
+    avgViewers: avg,
+    peakViewers: peak,
+    serverSplit,        // [{name, mins}, ...]
+    serverTotalMins: serverTotal,
+    schedule,           // 7×24 minutes
+    scheduleMax,
+    rank,
+    rankOf: weekRanks?.length || 0,
+  };
 }
 
 // Slice the session list down to the current calendar month and roll up
@@ -336,7 +426,7 @@ function buildPlatformLinks(socials) {
   return out;
 }
 
-function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard }) {
+function renderProfile({ handle, name, platform, avatar, liveEntry, clips, stats, affinity, socials, reportCard, dashboard }) {
   const platUrl = platform === 'kick' ? `https://kick.com/${handle}` : `https://twitch.tv/${handle}`;
   const platLabel = platform === 'kick' ? 'Kick' : 'Twitch';
   const isLive = !!liveEntry?.is_live;
@@ -520,6 +610,52 @@ body>*{position:relative;z-index:3}
 
 .footer{border-top:1px solid var(--border);padding:24px;margin-top:40px;text-align:center;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint)}
 
+/* THIS WEEK DASHBOARD */
+.dashboard{margin-top:32px}
+.dh-grid{display:grid;grid-template-columns:1.4fr 1fr;grid-template-rows:auto auto;gap:14px}
+.dh-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media(max-width:900px){.dh-grid{grid-template-columns:1fr}.dh-stats{grid-template-columns:repeat(2,1fr)}}
+.dh-stat{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:16px 18px}
+.dh-stat .v{font-family:var(--font-d);font-size:30px;letter-spacing:1px;line-height:1;color:var(--signal)}
+.dh-stat .l{font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:6px}
+.dh-rank{background:var(--card);border:1px solid var(--signal);clip-path:var(--cut);padding:16px 18px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;color:var(--signal-cyan)}
+.dh-rank{font-family:var(--font-d);font-size:36px;line-height:1}
+.dh-rank-of{font-size:16px;color:var(--ink-faint);margin-left:4px}
+.dh-rank-l{font-family:var(--font-m);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-top:4px}
+
+.dh-clip,.dh-srv,.dh-heat{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:16px}
+.dh-card-h{font-family:var(--font-d);font-size:18px;letter-spacing:1.5px;color:var(--signal-cyan);margin-bottom:12px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.dh-card-sub{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;color:var(--ink-faint);text-transform:uppercase}
+
+.dh-clip-body{position:relative}
+.dh-clip-iframe{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
+.dh-clip-iframe iframe{width:100%;height:100%;border:0;display:block}
+.dh-clip-meta{display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-family:var(--font-m);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint)}
+.dh-clip-meta a{color:var(--signal-cyan);text-decoration:none;flex:1;min-width:0;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+.dh-clip-meta a:hover{color:var(--signal)}
+.dh-clip-skel,.dh-empty{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-family:var(--font-m);font-size:12px;letter-spacing:2px;text-transform:uppercase;background:var(--card2)}
+
+.dh-srv-body{display:flex;flex-direction:column;gap:8px}
+.dh-srv-row{display:grid;grid-template-columns:130px 1fr 40px;gap:10px;align-items:center;font-family:var(--font-m);font-size:12px}
+.dh-srv-label{color:var(--fg);font-size:13px;font-weight:500}
+.dh-srv-mins{color:var(--ink-faint);font-weight:400;margin-left:4px}
+.dh-srv-bar{height:8px;background:var(--card2);overflow:hidden;border-radius:1px}
+.dh-srv-fill{height:100%;background:linear-gradient(90deg,var(--signal-cyan),var(--signal));transition:width .3s}
+.dh-srv-pct{color:var(--signal);font-weight:600;text-align:right}
+@media(max-width:520px){.dh-srv-row{grid-template-columns:100px 1fr 36px}}
+
+.dh-heat-grid{display:flex;flex-direction:column;gap:2px;font-family:var(--font-m)}
+.dh-heat-row,.dh-heat-headerrow{display:grid;grid-template-columns:30px repeat(24,1fr);gap:2px;align-items:center}
+.dh-heat-dow{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;text-align:right;padding-right:4px}
+.dh-heat-h{font-size:9px;color:var(--ink-faint);text-align:center}
+.dh-heat-cell{aspect-ratio:1/1;background:oklch(0.18 0.06 295/.4);border-radius:2px}
+.dh-heat-cell.l1{background:oklch(0.30 0.10 195/.55)}
+.dh-heat-cell.l2{background:oklch(0.45 0.16 195/.65)}
+.dh-heat-cell.l3{background:oklch(0.60 0.20 195/.80)}
+.dh-heat-cell.l4{background:var(--signal);box-shadow:0 0 4px oklch(0.82 0.20 195/.5)}
+.dh-heat-legend{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:10px;font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px;text-transform:uppercase}
+.dh-heat-legend .dh-heat-cell{width:14px;height:14px;aspect-ratio:auto}
+
 ::selection{background:var(--signal);color:var(--bg)}
 </style>
 </head>
@@ -575,6 +711,8 @@ body>*{position:relative;z-index:3}
         </a>`).join('')}
     </div>
   </div>
+
+  ${renderDashboard(handle, name, dashboard)}
 
   ${renderReportCard(handle, name, reportCard)}
 
@@ -741,6 +879,132 @@ function renderReportCard(handle, name, rc) {
       })();
     </script>
   `;
+}
+
+// ----------------------------------------------------------------
+// "This Week" dashboard — the most prominent section on the profile.
+// Shows weekly metrics, server split bars, schedule heatmap, and a
+// slot for the best clip of the week (filled client-side).
+// ----------------------------------------------------------------
+function renderDashboard(handle, name, dash) {
+  if (!dash || !dash.hasData) {
+    return `
+      <div class="section dashboard">
+        <div class="sec-h"><h2>This Week</h2><span class="sub">Last 7 days</span></div>
+        <div class="empty-block">No streams in the last seven days. The dashboard will fill in once ${esc(name)} next goes live.</div>
+      </div>`;
+  }
+
+  // Server split bars.
+  const splitHtml = dash.serverSplit.map(s => {
+    const pct = Math.round((s.mins / dash.serverTotalMins) * 100);
+    return `<div class="dh-srv-row">
+      <div class="dh-srv-label">${esc(s.name)} <span class="dh-srv-mins">${formatHm(s.mins)}</span></div>
+      <div class="dh-srv-bar"><div class="dh-srv-fill" style="width:${pct}%"></div></div>
+      <div class="dh-srv-pct">${pct}%</div>
+    </div>`;
+  }).join('') || '<div class="empty-block">No tracked-server activity this week.</div>';
+
+  // Schedule heatmap — 7 rows × 24 cells. Five intensity tiers based
+  // on minutes streamed in that hour-bucket relative to the creator's
+  // own week-of-data max.
+  const dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const hod = ['00','','','','04','','','','08','','','','12','','','','16','','','','20','','',''];
+  const heatRows = dash.schedule.map((row, i) => {
+    return `<div class="dh-heat-row">
+      <div class="dh-heat-dow">${dows[i]}</div>
+      ${row.map((mins, h) => {
+        const t = mins / dash.scheduleMax;
+        const cls = mins === 0 ? '' : t > 0.75 ? 'l4' : t > 0.5 ? 'l3' : t > 0.25 ? 'l2' : 'l1';
+        return `<div class="dh-heat-cell ${cls}" title="${dows[i]} ${String(h).padStart(2,'0')}:00 — ${formatHm(mins)}"></div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+  const hodLabels = hod.map(h => `<div class="dh-heat-h">${h}</div>`).join('');
+
+  const rankBlock = dash.rank
+    ? `<div class="dh-rank">#${dash.rank}<span class="dh-rank-of">/ ${dash.rankOf}</span><div class="dh-rank-l">Weekly rank</div></div>`
+    : '';
+
+  return `
+    <div class="section dashboard" id="weekly-dashboard">
+      <div class="sec-h">
+        <h2>This Week</h2>
+        <a class="sub" href="/api/shoutout-card/${esc(handle)}" target="_blank" style="color:var(--signal);text-decoration:none">Share your stats →</a>
+      </div>
+
+      <div class="dh-grid">
+        <div class="dh-stats">
+          <div class="dh-stat"><div class="v">${dash.hours}</div><div class="l">Hours</div></div>
+          <div class="dh-stat"><div class="v">${formatBig(dash.avgViewers)}</div><div class="l">Avg viewers</div></div>
+          <div class="dh-stat"><div class="v">${formatBig(dash.peakViewers)}</div><div class="l">Peak</div></div>
+          <div class="dh-stat"><div class="v">${dash.sessions}</div><div class="l">Sessions</div></div>
+          ${rankBlock}
+        </div>
+
+        <div class="dh-clip" id="dh-best-clip" data-handle="${esc(handle)}">
+          <div class="dh-card-h">Best Clip · Last 7 Days</div>
+          <div class="dh-clip-body"><div class="dh-clip-skel">Loading…</div></div>
+        </div>
+
+        <div class="dh-srv">
+          <div class="dh-card-h">Server Split</div>
+          <div class="dh-srv-body">${splitHtml}</div>
+        </div>
+
+        <div class="dh-heat">
+          <div class="dh-card-h">Schedule Pattern <span class="dh-card-sub">UK time · last 90 days</span></div>
+          <div class="dh-heat-grid">
+            <div class="dh-heat-headerrow">
+              <div class="dh-heat-dow"></div>
+              ${hodLabels}
+            </div>
+            ${heatRows}
+          </div>
+          <div class="dh-heat-legend">
+            <span>Quieter</span>
+            <span class="dh-heat-cell l1"></span>
+            <span class="dh-heat-cell l2"></span>
+            <span class="dh-heat-cell l3"></span>
+            <span class="dh-heat-cell l4"></span>
+            <span>Busier</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function(){
+        var host = document.getElementById('dh-best-clip');
+        if (!host) return;
+        var handle = host.getAttribute('data-handle');
+        fetch('/api/clips?range=7d').then(function(r){ return r.json(); }).then(function(d){
+          if (!d || !d.ok) throw new Error('no clips');
+          var mine = (d.clips || []).filter(function(c){ return c.creator_handle === handle; });
+          mine.sort(function(a,b){ return (b.view_count||0) - (a.view_count||0); });
+          var top = mine[0];
+          var body = host.querySelector('.dh-clip-body');
+          if (!top || !top.embed_url) {
+            body.innerHTML = '<div class="dh-empty">No clips this week — they\\'ll show as Twitch indexes new ones.</div>';
+            return;
+          }
+          var safeTitle = (top.title || '').replace(/[<>]/g, '');
+          body.innerHTML = '<div class="dh-clip-iframe"><iframe src="' + top.embed_url + '" allow="autoplay; fullscreen" allowfullscreen></iframe></div>' +
+            '<div class="dh-clip-meta"><a href="' + top.url + '" target="_blank" rel="noopener">' + safeTitle + ' ↗</a><span>' + (top.view_count || 0) + ' views</span></div>';
+        }).catch(function(){
+          host.querySelector('.dh-clip-body').innerHTML = '<div class="dh-empty">Could not load clips.</div>';
+        });
+      })();
+    </script>
+  `;
+}
+
+function formatHm(mins) {
+  mins = Math.round(mins || 0);
+  if (mins === 0) return '0m';
+  const h = Math.floor(mins / 60);
+  const r = mins % 60;
+  return h > 0 ? (r > 0 ? `${h}h ${r}m` : `${h}h`) : `${r}m`;
 }
 
 function renderStats(s) {
