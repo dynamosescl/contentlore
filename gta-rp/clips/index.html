@@ -98,6 +98,50 @@ body>*{position:relative;z-index:3}
 .cod-empty{padding:24px;text-align:center;color:var(--ink-faint);font-family:var(--font-m);font-size:13px;letter-spacing:2px;text-transform:uppercase;grid-column:1/-1}
 @media(max-width:780px){.cod{grid-template-columns:1fr}.cod-title{font-size:26px}}
 
+/* TIKTOK-STYLE VERTICAL FEED OVERLAY */
+.feed-overlay{position:fixed;inset:0;z-index:9999;background:#000;display:none;flex-direction:column}
+.feed-overlay.open{display:flex}
+.feed-overlay-head{position:absolute;top:0;left:0;right:0;z-index:5;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(0,0,0,.65),transparent);pointer-events:none}
+.feed-overlay-head > *{pointer-events:auto}
+.feed-overlay-title{font-family:var(--font-d);font-size:22px;letter-spacing:2px;color:#fff}
+.feed-overlay-title .accent{color:var(--signal)}
+.feed-close{font-family:var(--font-m);font-size:14px;background:rgba(0,0,0,.5);color:#fff;border:1px solid rgba(255,255,255,.2);padding:8px 14px;cursor:pointer;letter-spacing:1px;text-transform:uppercase}
+.feed-close:hover{background:rgba(0,0,0,.85);border-color:var(--signal)}
+.feed-track{flex:1;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.feed-track::-webkit-scrollbar{display:none}
+.feed-slide{height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;align-items:center;justify-content:center;background:#000}
+.feed-slide-inner{position:relative;width:min(560px,100vw);max-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding:0 0 80px;background:#000}
+.feed-embed-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden}
+.feed-embed-wrap iframe{width:100%;height:100%;border:0;display:block}
+.feed-embed-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background-size:cover;background-position:center}
+.feed-embed-placeholder::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.feed-embed-placeholder .ply{position:relative;width:80px;height:80px;background:var(--signal);clip-path:polygon(0 0,100% 50%,0 100%);transform:translateX(6px);box-shadow:0 0 30px oklch(0.82 0.20 195/.6)}
+.feed-info{position:absolute;left:0;right:0;bottom:0;padding:18px 20px 28px;background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.55) 60%,transparent);pointer-events:none;display:flex;flex-direction:column;gap:8px;z-index:3}
+.feed-info > *{pointer-events:auto}
+.feed-creator-row{display:flex;align-items:center;gap:10px}
+.feed-avatar{width:42px;height:42px;border-radius:50%;background:var(--card2);border:2px solid var(--signal);object-fit:cover;flex-shrink:0}
+.feed-avatar-ph{width:42px;height:42px;border-radius:50%;background:var(--card2);border:2px solid var(--signal);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:18px;color:var(--signal);flex-shrink:0}
+.feed-creator-name{font-family:var(--font-d);font-size:20px;letter-spacing:1px;color:#fff;line-height:1}
+.feed-creator-handle{font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-top:3px}
+.feed-clip-title{font-size:15px;color:#fff;line-height:1.4;margin-top:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.feed-meta-row{display:flex;align-items:center;gap:12px;font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.7);text-transform:uppercase;margin-top:6px}
+.feed-meta-row .v{color:var(--signal-cyan);font-weight:600}
+.feed-actions{position:absolute;right:14px;bottom:120px;display:flex;flex-direction:column;gap:14px;z-index:4}
+.feed-action{width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:all .15s}
+.feed-action:hover{background:var(--signal);color:var(--bg);border-color:var(--signal)}
+.feed-action-label{font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-align:center;color:rgba(255,255,255,.7);text-transform:uppercase;margin-top:2px}
+.feed-progress{position:absolute;top:62px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:5;pointer-events:none}
+.feed-progress span{width:24px;height:3px;background:rgba(255,255,255,.3);border-radius:2px}
+.feed-progress span.on{background:var(--signal);box-shadow:0 0 6px var(--signal)}
+.feed-empty{flex:1;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-family:var(--font-m);font-size:14px;letter-spacing:2px;text-transform:uppercase}
+.feed-hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.55);background:rgba(0,0,0,.55);padding:6px 12px;z-index:6;pointer-events:none;animation:cl-feed-hint 5s ease forwards}
+@keyframes cl-feed-hint{0%,60%{opacity:1}100%{opacity:0;visibility:hidden}}
+@media(max-width:760px){
+  .feed-slide-inner{width:100vw;padding-bottom:60px}
+  .feed-actions{bottom:140px}
+}
+body.feed-open{overflow:hidden}
+
 /* HIGHLIGHTS REEL */
 .reel-wrap{margin-bottom:28px;background:var(--card);border:1px solid var(--border);clip-path:var(--cut);padding:18px}
 .reel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
@@ -268,6 +312,7 @@ body>*{position:relative;z-index:3}
       <button class="filter-btn" data-platform="twitch">Twitch</button>
       <button class="filter-btn" data-platform="kick">Kick</button>
     </div>
+    <button class="filter-btn" id="feed-mode-btn" type="button" style="background:var(--signal);color:var(--bg);font-weight:600;border-color:var(--signal)">📱 Feed Mode</button>
     <div class="filter-stats" id="filter-stats">— clips</div>
   </div>
 
@@ -281,6 +326,16 @@ body>*{position:relative;z-index:3}
       <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div><div class="skel-text short"></div></div>
     </div>
   </div>
+</div>
+
+<!-- TIKTOK-STYLE FEED OVERLAY -->
+<div class="feed-overlay" id="feed-overlay" role="dialog" aria-modal="true" aria-label="Vertical clip feed">
+  <div class="feed-overlay-head">
+    <div class="feed-overlay-title">CLIP <span class="accent">FEED</span></div>
+    <button class="feed-close" id="feed-close" type="button">✕ Close</button>
+  </div>
+  <div class="feed-track" id="feed-track"></div>
+  <div class="feed-hint" id="feed-hint">Swipe up for next · ↑ ↓ on desktop</div>
 </div>
 
 <!-- MODAL -->
@@ -744,6 +799,194 @@ async function loadClipOfDay() {
   }
 }
 loadClipOfDay();
+
+// ----- Vertical "Feed Mode" -----
+let feedSlides = [];          // current ordered list of clip objects
+let feedActiveIdx = -1;       // which slide is mounted with iframe
+let feedAvatarMap = {};       // handle → avatar_url, fetched lazily
+
+function feedClips() {
+  // Use the page state's loaded clip list. Filters (range/creator/
+  // platform) already narrowed state.clips, so the feed mirrors what
+  // the user sees on the wall.
+  const src = (state && state.clips && state.clips.length) ? state.clips : [];
+  return src.slice(0, 80);    // cap to keep DOM light
+}
+
+async function ensureFeedAvatars() {
+  if (Object.keys(feedAvatarMap).length) return;
+  try {
+    const r = await fetch('/api/uk-rp-live');
+    const d = await r.json();
+    if (d.ok && d.live) {
+      for (const c of d.live) feedAvatarMap[(c.handle || '').toLowerCase()] = c.avatar_url || '';
+    }
+  } catch { /* silent */ }
+}
+
+function buildFeedSlide(clip, idx) {
+  const handle = (clip.creator_handle || '').toLowerCase();
+  const av = feedAvatarMap[handle];
+  const avHtml = av
+    ? `<img class="feed-avatar" src="${escapeAttr(av)}" alt="${escapeAttr(clip.creator_name || handle)}" loading="lazy">`
+    : `<div class="feed-avatar-ph">${escapeHtml((clip.creator_name || handle || '?').charAt(0).toUpperCase())}</div>`;
+  const thumb = (clip.thumbnail_url || '').replace('%{width}', '720').replace('%{height}', '405');
+  const views = clip.view_count != null ? `<span class="v">${formatCount(clip.view_count)} views</span>` : '';
+  return `<div class="feed-slide" data-idx="${idx}" data-clip-id="${escapeAttr(clip.id || '')}">
+    <div class="feed-slide-inner">
+      <div class="feed-embed-wrap">
+        <div class="feed-embed-placeholder" data-action="play" style="${thumb ? `background-image:url('${escapeAttr(thumb)}')` : ''}">
+          <div class="ply"></div>
+        </div>
+      </div>
+      <div class="feed-info">
+        <div class="feed-creator-row">
+          ${avHtml}
+          <div>
+            <div class="feed-creator-name">${escapeHtml(clip.creator_name || handle)}</div>
+            <div class="feed-creator-handle">@${escapeHtml(handle)}</div>
+          </div>
+        </div>
+        <div class="feed-clip-title">${escapeHtml(clip.title || '(untitled)')}</div>
+        <div class="feed-meta-row">
+          ${views}
+          ${clip.duration ? `<span>${formatDuration(clip.duration)}</span>` : ''}
+          ${clip.created_at ? `<span>${timeAgo(clip.created_at)}</span>` : ''}
+        </div>
+      </div>
+      <div class="feed-actions">
+        <button class="feed-action" data-action="open" title="Open on Twitch" type="button">↗</button>
+        <button class="feed-action" data-action="share" title="Copy link" type="button">🔗</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function openFeedMode() {
+  const clips = feedClips();
+  if (!clips.length) {
+    alert('No clips loaded yet.');
+    return;
+  }
+  await ensureFeedAvatars();
+  feedSlides = clips;
+  feedActiveIdx = -1;
+  const track = document.getElementById('feed-track');
+  track.innerHTML = clips.map((c, i) => buildFeedSlide(c, i)).join('');
+  const overlay = document.getElementById('feed-overlay');
+  overlay.classList.add('open');
+  document.body.classList.add('feed-open');
+
+  // Mount the first iframe immediately so the user lands on a playing clip.
+  setTimeout(() => mountFeedSlide(0), 60);
+
+  // Observe slide visibility to swap iframes as the user scrolls.
+  const io = new IntersectionObserver(entries => {
+    let best = null;
+    for (const e of entries) {
+      if (e.isIntersecting && (!best || e.intersectionRatio > best.intersectionRatio)) best = e;
+    }
+    if (best) {
+      const idx = Number(best.target.dataset.idx);
+      if (idx !== feedActiveIdx) mountFeedSlide(idx);
+    }
+  }, { root: track, threshold: [0.55, 0.85] });
+  track.querySelectorAll('.feed-slide').forEach(s => io.observe(s));
+  track._io = io;
+
+  // Action handlers (event delegation).
+  track.addEventListener('click', onFeedClick);
+  // Keyboard: arrow keys / space / Esc.
+  document.addEventListener('keydown', onFeedKey);
+}
+
+function closeFeedMode() {
+  const track = document.getElementById('feed-track');
+  if (track._io) try { track._io.disconnect(); } catch {}
+  // Stop any playing iframe.
+  track.querySelectorAll('iframe').forEach(f => f.remove());
+  document.removeEventListener('keydown', onFeedKey);
+  track.removeEventListener('click', onFeedClick);
+  document.getElementById('feed-overlay').classList.remove('open');
+  document.body.classList.remove('feed-open');
+  feedActiveIdx = -1;
+}
+
+function mountFeedSlide(idx) {
+  if (idx < 0 || idx >= feedSlides.length) return;
+  feedActiveIdx = idx;
+  const track = document.getElementById('feed-track');
+  // Remove iframes from non-adjacent slides to keep DOM light.
+  track.querySelectorAll('.feed-slide').forEach(slide => {
+    const sIdx = Number(slide.dataset.idx);
+    const wrap = slide.querySelector('.feed-embed-wrap');
+    const placeholder = wrap.querySelector('.feed-embed-placeholder');
+    if (Math.abs(sIdx - idx) > 1) {
+      const f = wrap.querySelector('iframe');
+      if (f) f.remove();
+      if (placeholder) placeholder.style.display = 'flex';
+    }
+  });
+  // Mount iframe on the active slide.
+  const slide = track.querySelector(`.feed-slide[data-idx="${idx}"]`);
+  if (!slide) return;
+  const wrap = slide.querySelector('.feed-embed-wrap');
+  const placeholder = wrap.querySelector('.feed-embed-placeholder');
+  let iframe = wrap.querySelector('iframe');
+  if (!iframe) {
+    const clip = feedSlides[idx];
+    const src = clip.embed_url || (clip.id ? `https://clips.twitch.tv/embed?clip=${encodeURIComponent(clip.id)}&parent=contentlore.com&parent=localhost&autoplay=true&muted=false` : '');
+    if (!src) return;
+    iframe = document.createElement('iframe');
+    iframe.src = src;
+    iframe.allow = 'autoplay; fullscreen';
+    iframe.allowFullscreen = true;
+    wrap.appendChild(iframe);
+  }
+  if (placeholder) placeholder.style.display = 'none';
+}
+
+function scrollToFeedSlide(idx) {
+  const track = document.getElementById('feed-track');
+  const slide = track.querySelector(`.feed-slide[data-idx="${idx}"]`);
+  if (slide) slide.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function onFeedClick(e) {
+  const action = e.target.closest('[data-action]');
+  if (!action) return;
+  const slide = e.target.closest('.feed-slide');
+  if (!slide) return;
+  const idx = Number(slide.dataset.idx);
+  const clip = feedSlides[idx];
+  if (!clip) return;
+  const which = action.dataset.action;
+  if (which === 'play') {
+    mountFeedSlide(idx);
+  } else if (which === 'open') {
+    if (clip.url) window.open(clip.url, '_blank', 'noopener');
+  } else if (which === 'share') {
+    if (clip.url) {
+      navigator.clipboard?.writeText(clip.url).then(() => showToast('Clip link copied'));
+    }
+  }
+}
+
+function onFeedKey(e) {
+  if (!document.getElementById('feed-overlay').classList.contains('open')) return;
+  if (e.key === 'Escape') { closeFeedMode(); e.preventDefault(); return; }
+  if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault();
+    if (feedActiveIdx + 1 < feedSlides.length) scrollToFeedSlide(feedActiveIdx + 1);
+  }
+  if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+    e.preventDefault();
+    if (feedActiveIdx - 1 >= 0) scrollToFeedSlide(feedActiveIdx - 1);
+  }
+}
+
+document.getElementById('feed-mode-btn')?.addEventListener('click', openFeedMode);
+document.getElementById('feed-close')?.addEventListener('click', closeFeedMode);
 </script>
 <div style="border-top:1px solid var(--border);padding:24px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:24px">
   ContentLore · UK GTA RP · Clip Wall · <a href="/submit/" style="color:inherit;text-decoration:underline">Submit your channel →</a>
