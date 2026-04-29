@@ -200,7 +200,7 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
     </div>
 
     <div class="tab-content" id="tab-submissions">
-      <div class="sh">Public Submissions</div>
+      <div class="sh">Public Channel Submissions</div>
       <div class="panel" style="padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-family:var(--font-m);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint)">Filter</span>
         <button class="btn" id="sub-filter-pending" onclick="loadSubmissions('pending')">Pending</button>
@@ -208,6 +208,15 @@ td:first-child{font-family:var(--font-d);font-size:16px;color:var(--fg)}
         <button class="btn" id="sub-filter-rejected" onclick="loadSubmissions('rejected')">Rejected</button>
       </div>
       <div class="panel" id="submissions-panel"><div class="log">Loading...</div></div>
+
+      <div class="sh" style="margin-top:24px">Clip Submissions</div>
+      <div class="panel" style="padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-family:var(--font-m);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint)">Filter</span>
+        <button class="btn" id="csub-filter-pending"  onclick="loadClipSubs('pending')">Pending</button>
+        <button class="btn" id="csub-filter-approved" onclick="loadClipSubs('approved')">Approved</button>
+        <button class="btn" id="csub-filter-rejected" onclick="loadClipSubs('rejected')">Rejected</button>
+      </div>
+      <div class="panel" id="clip-subs-panel"><div class="log">Loading...</div></div>
     </div>
   </div>
 </div>
@@ -267,7 +276,7 @@ function switchTab(name) {
   if (name === 'creators') loadCreators();
   if (name === 'curated') loadCurated();
   if (name === 'discovery') loadDiscovery();
-  if (name === 'submissions') loadSubmissions('pending');
+  if (name === 'submissions') { loadSubmissions('pending'); loadClipSubs('pending'); }
 }
 
 function fmtBig(n) {
@@ -823,6 +832,76 @@ async function toggleCurated(handle, active) {
     alert('Error: ' + e.message);
   }
 }
+
+// ----- Clip submissions panel -----
+async function loadClipSubs(status) {
+  const panel = document.getElementById('clip-subs-panel');
+  if (!panel) return;
+  ['pending','approved','rejected'].forEach(s => {
+    const b = document.getElementById('csub-filter-'+s);
+    if (b) b.style.color = (s === status) ? 'var(--signal)' : '';
+  });
+  panel.innerHTML = '<div class="log">Loading...</div>';
+  try {
+    const r = await fetch('/api/admin/clip-submissions?status=' + encodeURIComponent(status) + '&limit=100', {
+      headers: { Authorization: 'Bearer ' + TOKEN },
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'failed');
+    if (!d.submissions.length) {
+      panel.innerHTML = '<div class="log">No ' + status + ' clip submissions.</div>';
+      return;
+    }
+    panel.innerHTML = d.submissions.map(s => clipSubHtml(s, status)).join('');
+  } catch (e) {
+    panel.innerHTML = '<div class="log" style="color:var(--red)">Error: ' + (e.message || 'failed') + '</div>';
+  }
+}
+
+function clipSubHtml(s, currentStatus) {
+  const when = new Date(s.submitted_at * 1000).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  const decided = s.decided_at ? new Date(s.decided_at * 1000).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : null;
+  const isKick = s.platform === 'kick';
+  const platBadge = `<span style="font-family:var(--font-m);font-size:10px;padding:2px 6px;background:${isKick ? 'oklch(0.82 0.22 145/.15)' : 'oklch(0.65 0.25 295/.15)'};border:1px solid ${isKick ? 'oklch(0.82 0.22 145/.4)' : 'oklch(0.65 0.25 295/.4)'};color:${isKick ? 'oklch(0.82 0.22 145)' : 'oklch(0.78 0.20 295)'};letter-spacing:1px;text-transform:uppercase">${escapeHtmlMod(s.platform || '?')}</span>`;
+  const actions = currentStatus === 'pending' ? `
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn" style="background:oklch(0.82 0.22 145/.15);border-color:oklch(0.82 0.22 145);color:oklch(0.82 0.22 145)" onclick="decideClipSub(${s.id},'approve')">✓ Approve</button>
+      <button class="btn" style="background:oklch(0.65 0.27 25/.15);border-color:oklch(0.65 0.27 25);color:oklch(0.78 0.27 25)" onclick="decideClipSub(${s.id},'reject')">✗ Reject</button>
+    </div>` : '';
+  return `<div style="border-bottom:1px solid var(--border);padding:14px 16px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      ${platBadge}
+      <strong style="font-size:14px">${escapeHtmlMod(s.creator_handle)}</strong>
+      <span style="font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px">#${s.id} · ${when}${decided ? ' · decided ' + decided : ''}</span>
+    </div>
+    <div style="margin-top:6px"><a href="${escapeAttrMod(s.url)}" target="_blank" rel="noopener" style="font-family:var(--font-m);font-size:12px;color:var(--signal-cyan);word-break:break-all">${escapeHtmlMod(s.url)} ↗</a></div>
+    ${s.description ? `<div style="margin-top:6px;font-size:13px;color:var(--ink-dim);line-height:1.5">${escapeHtmlMod(s.description)}</div>` : ''}
+    <div style="margin-top:6px;font-family:var(--font-m);font-size:10px;color:var(--ink-faint);letter-spacing:1px">IP ${escapeHtmlMod(s.submitted_by_ip || '?')}${s.decided_note ? ' · note: ' + escapeHtmlMod(s.decided_note) : ''}</div>
+    ${actions}
+  </div>`;
+}
+
+async function decideClipSub(id, action) {
+  const verb = action === 'approve' ? 'Approve' : 'Reject';
+  if (!confirm(verb + ' clip submission #' + id + '?')) return;
+  try {
+    const r = await fetch('/api/admin/clip-submissions', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'failed');
+    loadClipSubs('pending');
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+function escapeHtmlMod(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function escapeAttrMod(s) { return escapeHtmlMod(s); }
 </script>
 </body>
 </html>

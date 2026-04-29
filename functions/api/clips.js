@@ -71,6 +71,40 @@ export async function onRequestGet({ request, env, waitUntil }) {
     for (const c of allClips) c.game_name = gameNames[c._game_id] || null;
     for (const c of allClips) delete c._game_id;
 
+    // Fold in approved community-submitted clips (deduped against
+    // anything already in the helix-pulled set by clip id). They get
+    // a community_pick:true flag so the wall can badge them.
+    try {
+      const cutoff = Math.floor(Date.now() / 1000) - RANGES[range];
+      const subRes = await env.DB.prepare(
+        `SELECT id, url, platform, clip_id, creator_handle, description, decided_at, submitted_at
+           FROM clip_submissions
+          WHERE status = 'approved' AND COALESCE(decided_at, submitted_at) >= ?
+          ORDER BY decided_at DESC`
+      ).bind(cutoff).all();
+      const existingIds = new Set(allClips.map(c => c.id).filter(Boolean));
+      for (const r of (subRes.results || [])) {
+        if (r.clip_id && existingIds.has(r.clip_id)) continue;
+        const handle = String(r.creator_handle).toLowerCase();
+        const display = HANDLE_TO_NAME[handle] || curated.find(c => c.handle === handle)?.display_name || handle;
+        const tsIso = new Date((r.decided_at || r.submitted_at) * 1000).toISOString();
+        allClips.push({
+          id: r.clip_id || ('community-' + r.id),
+          creator_handle: handle,
+          creator_name: display,
+          platform: r.platform || 'twitch',
+          title: r.description || '',
+          url: r.url,
+          embed_url: r.platform === 'twitch' && r.clip_id ? buildEmbedUrl(r.clip_id) : null,
+          thumbnail_url: null,
+          view_count: 0,
+          duration: 0,
+          created_at: tsIso,
+          community_pick: true,
+        });
+      }
+    } catch { /* community-pick fold-in is best-effort */ }
+
     allClips.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
 
     const payload = {

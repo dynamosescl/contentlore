@@ -193,6 +193,28 @@ body.feed-open{overflow:hidden}
 .clip-platform{position:absolute;top:8px;left:8px;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;background:oklch(0.10 0.04 190/.85);color:var(--fg);border:1px solid oklch(0.82 0.20 195/.4)}
 .clip-platform.twitch{border-color:oklch(0.65 0.25 295/.5);color:oklch(0.82 0.18 295)}
 .clip-platform.kick{border-color:oklch(0.82 0.22 145/.5);color:var(--kick)}
+.clip-community{position:absolute;top:8px;right:8px;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;background:oklch(0.78 0.20 60/.18);color:oklch(0.85 0.18 60);border:1px solid oklch(0.78 0.20 60/.55);font-weight:600}
+
+/* Submit-clip modal */
+.submit-clip-btn{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:1px;padding:7px 13px;background:transparent;border:1px solid var(--signal-cyan);color:var(--signal-cyan);cursor:pointer;transition:all .15s}
+.submit-clip-btn:hover{background:var(--signal-cyan);color:var(--bg)}
+.scm-back{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1500;display:none;align-items:center;justify-content:center;padding:20px}
+.scm-back.open{display:flex}
+.scm{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);width:min(480px,100%);padding:24px}
+.scm h3{font-family:var(--font-d);font-size:26px;letter-spacing:1px;margin-bottom:6px}
+.scm .lead{font-size:13px;color:var(--ink-dim);margin-bottom:18px;line-height:1.5}
+.scm label{display:block;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-bottom:6px;margin-top:14px}
+.scm input,.scm select,.scm textarea{width:100%;padding:10px 12px;background:var(--card2);border:1px solid var(--border);color:var(--fg);font-family:var(--font-b);font-size:14px;outline:none;transition:border-color .15s}
+.scm input:focus,.scm select:focus,.scm textarea:focus{border-color:var(--signal)}
+.scm textarea{resize:vertical;min-height:60px;font-family:var(--font-b)}
+.scm-row{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
+.scm-btn{font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:2px;padding:10px 18px;border:1px solid var(--border);background:var(--card2);color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.scm-btn:hover{border-color:var(--signal);color:var(--fg)}
+.scm-btn.primary{background:var(--signal);border-color:var(--signal);color:var(--bg);font-weight:600}
+.scm-btn.primary:hover{box-shadow:0 0 16px oklch(0.82 0.20 195/.5)}
+.scm-msg{margin-top:14px;padding:10px 12px;font-family:var(--font-m);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.scm-msg.ok{background:oklch(0.82 0.22 145/.10);border:1px solid oklch(0.82 0.22 145/.5);color:oklch(0.82 0.22 145)}
+.scm-msg.err{background:oklch(0.65 0.27 25/.10);border:1px solid oklch(0.65 0.27 25/.5);color:oklch(0.78 0.27 25)}
 .clip-views{position:absolute;top:8px;right:8px;font-family:var(--font-m);font-size:12px;font-weight:600;padding:3px 8px;background:oklch(0.10 0.04 190/.85);color:var(--signal);border:1px solid oklch(0.82 0.20 195/.4)}
 .clip-duration{position:absolute;bottom:8px;right:8px;font-family:var(--font-m);font-size:11px;padding:2px 7px;background:oklch(0.10 0.04 190/.85);color:var(--fg)}
 
@@ -313,6 +335,7 @@ body.feed-open{overflow:hidden}
       <button class="filter-btn" data-platform="kick">Kick</button>
     </div>
     <button class="filter-btn" id="feed-mode-btn" type="button" style="background:var(--signal);color:var(--bg);font-weight:600;border-color:var(--signal)">📱 Feed Mode</button>
+    <button class="submit-clip-btn" id="submit-clip-btn" type="button">+ Submit a Clip</button>
     <div class="filter-stats" id="filter-stats">— clips</div>
   </div>
 
@@ -325,6 +348,27 @@ body.feed-open{overflow:hidden}
       <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div><div class="skel-text short"></div></div>
       <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div><div class="skel-text short"></div></div>
     </div>
+  </div>
+</div>
+
+<!-- SUBMIT-CLIP MODAL -->
+<div class="scm-back" id="scm-back" role="dialog" aria-modal="true" aria-label="Submit a clip">
+  <div class="scm">
+    <h3>Submit a Clip</h3>
+    <div class="lead">Found a great UK GTA RP moment? Drop the link and a moderator will review it. Approved clips show on the wall with a Community Pick badge.</div>
+    <form id="scm-form">
+      <label for="scm-url">Twitch or Kick clip URL</label>
+      <input id="scm-url" type="url" name="url" required placeholder="https://www.twitch.tv/.../clip/..." maxlength="500">
+      <label for="scm-creator">Streamer</label>
+      <select id="scm-creator" name="creator_handle" required></select>
+      <label for="scm-desc">Description (optional)</label>
+      <textarea id="scm-desc" name="description" maxlength="280" placeholder="What's happening in the clip?"></textarea>
+      <div class="scm-msg" id="scm-msg" style="display:none"></div>
+      <div class="scm-row">
+        <button type="button" class="scm-btn" id="scm-cancel">Cancel</button>
+        <button type="submit" class="scm-btn primary" id="scm-send">Submit clip</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -443,11 +487,13 @@ function cardHtml(c) {
   const views = formatCount(c.view_count);
   const when = timeAgo(c.created_at);
   const dur = formatDuration(c.duration);
+  const community = c.community_pick ? '<span class="clip-community">★ Community Pick</span>' : '';
   return `
     <a class="clip" href="${escapeAttr(c.url)}" target="_blank" rel="noopener">
       <div class="clip-thumb">
         ${thumb ? `<img src="${escapeAttr(thumb)}" alt="" loading="lazy">` : ''}
         <span class="clip-platform ${platformClass}">${c.platform}</span>
+        ${community}
         <span class="clip-views">${views}</span>
         ${dur ? `<span class="clip-duration">${dur}</span>` : ''}
         <div class="play"><div class="play-icon"></div></div>
@@ -987,6 +1033,73 @@ function onFeedKey(e) {
 
 document.getElementById('feed-mode-btn')?.addEventListener('click', openFeedMode);
 document.getElementById('feed-close')?.addEventListener('click', closeFeedMode);
+
+// ----- Submit-a-clip modal -----
+async function openSubmitClip() {
+  const back = document.getElementById('scm-back');
+  const sel = document.getElementById('scm-creator');
+  if (!sel.options.length) {
+    // Populate the streamer dropdown from the curated allowlist.
+    try {
+      const r = await fetch('/api/curated-list');
+      const d = await r.json();
+      const list = (d.creators || []).map(c => ({ handle: c.handle, name: c.display_name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      sel.innerHTML = '<option value="">Pick a streamer…</option>' +
+        list.map(c => `<option value="${escapeAttr(c.handle)}">${escapeHtml(c.name)}</option>`).join('');
+    } catch {
+      sel.innerHTML = '<option value="">Pick a streamer…</option>';
+    }
+  }
+  document.getElementById('scm-msg').style.display = 'none';
+  back.classList.add('open');
+  setTimeout(() => document.getElementById('scm-url').focus(), 50);
+}
+function closeSubmitClip() {
+  document.getElementById('scm-back').classList.remove('open');
+  document.getElementById('scm-form').reset();
+  document.getElementById('scm-msg').style.display = 'none';
+}
+document.getElementById('submit-clip-btn')?.addEventListener('click', openSubmitClip);
+document.getElementById('scm-cancel')?.addEventListener('click', closeSubmitClip);
+document.getElementById('scm-back')?.addEventListener('click', e => { if (e.target.id === 'scm-back') closeSubmitClip(); });
+
+document.getElementById('scm-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('scm-msg');
+  const sendBtn = document.getElementById('scm-send');
+  msg.style.display = 'none';
+  sendBtn.disabled = true;
+  const body = {
+    url: document.getElementById('scm-url').value.trim(),
+    creator_handle: document.getElementById('scm-creator').value,
+    description: document.getElementById('scm-desc').value.trim(),
+  };
+  try {
+    const r = await fetch('/api/submit-clip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      msg.className = 'scm-msg ok';
+      msg.textContent = '✓ ' + (d.message || 'Submission received.');
+      msg.style.display = 'block';
+      setTimeout(closeSubmitClip, 1800);
+    } else {
+      msg.className = 'scm-msg err';
+      msg.textContent = '✗ ' + (d.hint || d.error || 'Submission failed.');
+      msg.style.display = 'block';
+    }
+  } catch (err) {
+    msg.className = 'scm-msg err';
+    msg.textContent = "✗ Couldn't reach the server.";
+    msg.style.display = 'block';
+  } finally {
+    sendBtn.disabled = false;
+  }
+});
 </script>
 <div style="border-top:1px solid var(--border);padding:24px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:24px">
   ContentLore · UK GTA RP · Clip Wall · <a href="/submit/" style="color:inherit;text-decoration:underline">Submit your channel →</a>
