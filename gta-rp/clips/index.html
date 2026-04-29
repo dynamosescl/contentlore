@@ -126,6 +126,10 @@ body>*{position:relative;z-index:3}
 .feed-clip-title{font-size:15px;color:#fff;line-height:1.4;margin-top:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .feed-meta-row{display:flex;align-items:center;gap:12px;font-family:var(--font-m);font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.7);text-transform:uppercase;margin-top:6px}
 .feed-meta-row .v{color:var(--signal-cyan);font-weight:600}
+.feed-info .clip-reacts{margin-top:8px;flex-wrap:wrap}
+.feed-info .react-btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:rgba(255,255,255,.92);backdrop-filter:blur(4px)}
+.feed-info .react-btn:hover{background:rgba(255,255,255,.15);border-color:var(--signal-cyan)}
+.feed-info .react-btn.picked{background:oklch(0.82 0.20 195/.32);border-color:var(--signal);color:#fff}
 .feed-actions{position:absolute;right:14px;bottom:120px;display:flex;flex-direction:column;gap:14px;z-index:4}
 .feed-action{width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:all .15s}
 .feed-action:hover{background:var(--signal);color:var(--bg);border-color:var(--signal)}
@@ -227,6 +231,17 @@ body.feed-open{overflow:hidden}
 .clip-btn{flex:1;font-family:var(--font-m);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:7px;background:var(--card2);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;transition:all .15s;text-decoration:none;text-align:center}
 .clip-btn:hover{border-color:var(--signal);color:var(--signal)}
 .clip-btn.share.copied{border-color:var(--signal);color:var(--signal);background:oklch(0.82 0.20 195/.1)}
+
+/* REACTIONS */
+.clip-reacts{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.react-btn{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-m);font-size:12px;letter-spacing:.5px;padding:4px 9px;background:var(--card2);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;transition:all .15s;line-height:1;-webkit-tap-highlight-color:transparent}
+.react-btn:hover{border-color:var(--signal-cyan);color:var(--fg);transform:translateY(-1px)}
+.react-btn.picked{border-color:var(--signal);background:oklch(0.82 0.20 195/.18);color:var(--fg)}
+.react-btn .em{font-size:14px;line-height:1}
+.react-btn .ct{font-family:var(--font-m);font-size:11px;color:inherit;min-width:8px;text-align:left}
+.react-btn:disabled{opacity:.4;cursor:default;transform:none}
+.react-btn.bump{animation:reactbump .35s ease}
+@keyframes reactbump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
 
 /* STATES */
 .state{padding:60px 24px;text-align:center;font-family:var(--font-m);font-size:14px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:2px}
@@ -423,7 +438,118 @@ const state = {
   loading: false,
   reelClips: [],     // always last-7d top 5, independent of filters
   reelQueue: null,   // { items: [...], index: number, timer: number, tickTimer: number }
+  reactions: {},     // { clip_id: { '🔥': 12, '😂': 3, ... } }
 };
+
+// ---------- Reactions ----------
+const REACT_EMOJI = ['🔥', '😂', '😱', '❤️'];
+const REACT_LS_KEY = 'cl:react:v1';
+function loadReactedMap() {
+  try { return JSON.parse(localStorage.getItem(REACT_LS_KEY) || '{}'); } catch { return {}; }
+}
+function saveReactedMap(m) {
+  try { localStorage.setItem(REACT_LS_KEY, JSON.stringify(m)); } catch { /* ignore */ }
+}
+async function fetchReactions(ids) {
+  if (!ids.length) { state.reactions = {}; return; }
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += 180) chunks.push(ids.slice(i, i + 180));
+  const all = {};
+  await Promise.all(chunks.map(async chunk => {
+    try {
+      const r = await fetch('/api/clip-reactions?ids=' + chunk.map(encodeURIComponent).join(','));
+      const d = await r.json();
+      if (d.ok && d.reactions) Object.assign(all, d.reactions);
+    } catch { /* ignore */ }
+  }));
+  state.reactions = all;
+}
+async function postReact(clipId, emoji, undo) {
+  try {
+    const r = await fetch('/api/clip-react', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ clip_id: clipId, emoji, undo: !!undo }),
+    });
+    const d = await r.json();
+    if (!d.ok) return null;
+    return d.count;
+  } catch { return null; }
+}
+function reactsHtml(clip) {
+  const reacted = loadReactedMap();
+  const counts = state.reactions[clip.id] || {};
+  const myEmoji = reacted[clip.id] || null;
+  return `<div class="clip-reacts" data-clip="${escapeAttr(clip.id)}">${
+    REACT_EMOJI.map(e => {
+      const c = counts[e] || 0;
+      const cls = (myEmoji === e) ? ' picked' : '';
+      return `<button type="button" class="react-btn${cls}" data-emoji="${escapeAttr(e)}" aria-label="React ${e}"><span class="em">${e}</span><span class="ct">${c || ''}</span></button>`;
+    }).join('')
+  }</div>`;
+}
+function attachReactHandlers(scope) {
+  scope.querySelectorAll('.clip-reacts').forEach(wrap => {
+    const clipId = wrap.dataset.clip;
+    if (!clipId) return;
+    wrap.querySelectorAll('.react-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (btn.disabled) return;
+        const emoji = btn.dataset.emoji;
+        const reacted = loadReactedMap();
+        const previous = reacted[clipId] || null;
+
+        // Optimistic UI: lock the row briefly so users can't double-tap.
+        wrap.querySelectorAll('.react-btn').forEach(b => b.disabled = true);
+
+        // Same emoji as before -> undo. Different emoji -> swap.
+        let promise;
+        if (previous === emoji) {
+          delete reacted[clipId];
+          saveReactedMap(reacted);
+          const counts = state.reactions[clipId] || (state.reactions[clipId] = {});
+          counts[emoji] = Math.max((counts[emoji] || 1) - 1, 0);
+          promise = postReact(clipId, emoji, true);
+        } else {
+          if (previous) {
+            const counts = state.reactions[clipId] || (state.reactions[clipId] = {});
+            counts[previous] = Math.max((counts[previous] || 1) - 1, 0);
+            postReact(clipId, previous, true);
+          }
+          reacted[clipId] = emoji;
+          saveReactedMap(reacted);
+          const counts = state.reactions[clipId] || (state.reactions[clipId] = {});
+          counts[emoji] = (counts[emoji] || 0) + 1;
+          btn.classList.add('bump');
+          setTimeout(() => btn.classList.remove('bump'), 380);
+          promise = postReact(clipId, emoji, false);
+        }
+        // Re-render the reaction strip in place. Capture the parent before
+        // mutating outerHTML — once the assignment runs, `wrap` is detached
+        // and `wrap.parentElement` becomes null.
+        const parent = wrap.parentElement;
+        wrap.outerHTML = reactsHtml({ id: clipId });
+        if (parent) attachReactHandlers(parent);
+
+        // Server says yes/no — accept its count if returned.
+        const finalCount = await promise;
+        if (typeof finalCount === 'number') {
+          const counts = state.reactions[clipId] || (state.reactions[clipId] = {});
+          counts[emoji] = finalCount;
+          // Re-render every visible row for this clip in case more than one
+          // is on the page (grid + feed-mode share the same data).
+          document.querySelectorAll(`.clip-reacts[data-clip="${CSS.escape(clipId)}"]`).forEach(live => {
+            const liveParent = live.parentElement;
+            live.outerHTML = reactsHtml({ id: clipId });
+            if (liveParent) attachReactHandlers(liveParent);
+          });
+        }
+      });
+    });
+  });
+}
 
 // ---------- Fetch ----------
 async function loadClips() {
@@ -434,6 +560,9 @@ async function loadClips() {
     const d = await r.json();
     if (!d.ok) throw new Error(d.error || 'Failed to load clips');
     state.clips = d.clips || [];
+    // Fire-and-await reactions in parallel. Don't block the grid render — we
+    // just refresh the reaction counts after the first paint.
+    fetchReactions(state.clips.map(c => c.id).filter(Boolean)).then(() => render());
     populateCreatorDropdown();
     render();
   } catch (e) {
@@ -465,7 +594,7 @@ function render() {
   // Attach click handlers
   wrap.querySelectorAll('.clip').forEach((el, i) => {
     el.addEventListener('click', (e) => {
-      if (e.target.closest('.clip-actions')) return;
+      if (e.target.closest('.clip-actions') || e.target.closest('.clip-reacts')) return;
       e.preventDefault();
       openModal(list[i]);
     });
@@ -478,6 +607,7 @@ function render() {
       });
     }
   });
+  attachReactHandlers(wrap);
 }
 
 function cardHtml(c) {
@@ -503,6 +633,7 @@ function cardHtml(c) {
           <span class="clip-creator">${escapeHtml(c.creator_name)}</span>
           <span class="clip-when">${when}</span>
         </div>
+        ${c.id ? reactsHtml(c) : ''}
         <div class="clip-actions">
           <a class="clip-btn" href="${escapeAttr(c.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open ↗</a>
           <button class="clip-btn share" type="button">Share</button>
@@ -898,6 +1029,7 @@ function buildFeedSlide(clip, idx) {
           ${clip.duration ? `<span>${formatDuration(clip.duration)}</span>` : ''}
           ${clip.created_at ? `<span>${timeAgo(clip.created_at)}</span>` : ''}
         </div>
+        ${clip.id ? reactsHtml(clip) : ''}
       </div>
       <div class="feed-actions">
         <button class="feed-action" data-action="open" title="Open on Twitch" type="button">↗</button>
@@ -941,6 +1073,7 @@ async function openFeedMode() {
 
   // Action handlers (event delegation).
   track.addEventListener('click', onFeedClick);
+  attachReactHandlers(track);
   // Keyboard: arrow keys / space / Esc.
   document.addEventListener('keydown', onFeedKey);
 }
