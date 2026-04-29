@@ -146,18 +146,18 @@ body>*{position:relative;z-index:3}
 
   <div class="stat-grid" id="stat-grid">
     <div class="stat"><div class="stat-label">Viewer-hours</div><div class="stat-val" id="s-vh">—</div><div class="stat-delta flat" id="s-vh-d">—</div><div class="stat-sub">this week vs last</div></div>
-    <div class="stat"><div class="stat-label">Active streamers</div><div class="stat-val" id="s-ac">—</div><div class="stat-delta flat" id="s-ac-d">—</div><div class="stat-sub">of 26 tracked</div></div>
-    <div class="stat"><div class="stat-label">Stream sessions</div><div class="stat-val" id="s-ss">—</div><div class="stat-delta flat" id="s-ss-d">—</div><div class="stat-sub">7-day window</div></div>
+    <div class="stat"><div class="stat-label">Active streamers</div><div class="stat-val" id="s-ac">—</div><div class="stat-delta flat" id="s-ac-d">—</div><div class="stat-sub">tracked UK streamers</div></div>
+    <div class="stat"><div class="stat-label">Stream sessions</div><div class="stat-val" id="s-ss">—</div><div class="stat-delta flat" id="s-ss-d">—</div><div class="stat-sub">last 7 days</div></div>
     <div class="stat"><div class="stat-label">Peak hour (UK time)</div><div class="stat-val" id="s-ph">—</div><div class="stat-sub" id="s-ph-sub">when most go live</div></div>
   </div>
 
   <div class="sh">Server activity <span class="sh-meta">Viewer-hours · this week</span></div>
   <div class="bars" id="bars"><div class="empty">Loading server distribution…</div></div>
 
-  <div class="sh">Week-over-week <span class="sh-meta">This 7d vs prior 7d</span></div>
+  <div class="sh">Week-over-week <span class="sh-meta">This week vs last week</span></div>
   <div class="cmp"><table><thead><tr><th>Metric</th><th>This week</th><th>Last week</th><th>Δ</th></tr></thead><tbody id="cmp-body"><tr><td colspan="4" style="color:var(--ink-faint);text-align:center;padding:18px">Loading…</td></tr></tbody></table></div>
 
-  <div class="sh">New creators discovered <span class="sh-meta">pending_creators · last 7d</span></div>
+  <div class="sh">New streamers discovered <span class="sh-meta">Last 7 days</span></div>
   <div id="new-wrap"><div class="empty">Loading…</div></div>
 </div>
 
@@ -182,7 +182,7 @@ function renderTrend(d) {
   document.getElementById('trend-label').textContent = d.trend.label;
   const dvh = d.delta.viewer_hours_pct;
   document.getElementById('trend-delta').innerHTML = dvh == null
-    ? '<strong>Building data</strong> — last week had no comparable activity'
+    ? '<strong>Just getting started</strong> — last week had no comparable activity'
     : `Viewer-hours <strong>${dvh > 0 ? '+' : ''}${dvh}%</strong> ${dvh > 0 ? 'up' : dvh < 0 ? 'down' : 'flat'} this week`;
 }
 

@@ -10,16 +10,16 @@
 <script src="/pwa.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scene Analytics — UK GTA RP · ContentLore</title>
-<meta name="description" content="Viewer trends, scene heatmap and server popularity across the 26 tracked UK GTA RP streamers.">
+<meta name="description" content="Viewer trends, scene heatmap and server popularity across tracked UK GTA RP streamers.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ContentLore">
 <meta property="og:title" content="Scene Analytics — UK GTA RP · ContentLore">
-<meta property="og:description" content="Viewer trends, scene heatmap and server popularity across the 26 tracked UK GTA RP streamers.">
+<meta property="og:description" content="Viewer trends, scene heatmap and server popularity across tracked UK GTA RP streamers.">
 <meta property="og:image" content="https://contentlore.com/logo.png">
 <meta property="og:url" content="https://contentlore.com/gta-rp/analytics/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Scene Analytics — UK GTA RP · ContentLore">
-<meta name="twitter:description" content="Viewer trends, scene heatmap and server popularity across the 26 tracked UK GTA RP streamers.">
+<meta name="twitter:description" content="Viewer trends, scene heatmap and server popularity across tracked UK GTA RP streamers.">
 <meta name="twitter:image" content="https://contentlore.com/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -126,20 +126,20 @@ table.heatmap td.lvl-5{background:oklch(0.82 0.20 195/.85);color:var(--bg);font-
 <div class="hero"><div class="hero-inner">
   <div class="hero-kicker">Scene Intelligence · 7-day Window</div>
   <h1>Scene <span class="neon">Analytics</span></h1>
-  <p class="hero-sub">Viewer trends, scene heatmap and server popularity across the 26 tracked streamers. Updates every 15 minutes — charts fill in as more data is captured.</p>
+  <p class="hero-sub">Viewer trends, scene heatmap and server popularity across tracked UK streamers. Updates every 15 minutes — charts fill in as more streams happen.</p>
 </div></div>
 
 <div class="mx">
   <div class="stats" id="stats">
     <div class="stat"><div class="v" id="k-hours" style="color:var(--signal-cyan)">—</div><div class="l">total hours streamed</div><div class="sub">last 7 days</div></div>
-    <div class="stat"><div class="v" id="k-creators" style="color:var(--green)">—</div><div class="l">unique streamers live</div><div class="sub">of 26 tracked</div></div>
+    <div class="stat"><div class="v" id="k-creators" style="color:var(--green)">—</div><div class="l">unique streamers live</div><div class="sub">tracked UK streamers</div></div>
     <div class="stat"><div class="v" id="k-peak" style="color:var(--amber)">—</div><div class="l">peak concurrent viewers</div><div class="sub" id="k-peak-when">—</div></div>
     <div class="stat"><div class="v" id="k-server" style="color:var(--signal)">—</div><div class="l">most active server</div><div class="sub">by viewer-hours</div></div>
   </div>
 
   <div id="data-notice" class="notice" style="display:none">Data builds up over time — charts will fill in over the coming days.</div>
 
-  <div class="sh">Viewers Over Time <span class="sh-meta">7 days · hourly buckets</span></div>
+  <div class="sh">Viewers Over Time <span class="sh-meta">Last 7 days · by hour</span></div>
   <div class="panel">
     <div class="panel-h">
       <div>
@@ -170,7 +170,7 @@ table.heatmap td.lvl-5{background:oklch(0.82 0.20 195/.85);color:var(--bg);font-
     </div>
   </div>
 
-  <div class="sh">Server Popularity <span class="sh-meta">7d viewer-hours</span></div>
+  <div class="sh">Server Popularity <span class="sh-meta">Last 7 days · viewer-hours</span></div>
   <div class="panel">
     <div class="panel-h">
       <div>
@@ -186,7 +186,7 @@ table.heatmap td.lvl-5{background:oklch(0.82 0.20 195/.85);color:var(--bg);font-
     <div class="panel-h">
       <div>
         <div class="panel-t">Fastest Growing This Week</div>
-        <div class="panel-d">Creators with the largest jump in average viewers vs. the prior week. Comparison needs at least one snapshot in each window.</div>
+        <div class="panel-d">Streamers with the largest jump in average viewers vs. the previous week. Needs activity in both weeks to compare.</div>
       </div>
     </div>
     <div id="growth-wrap"><div class="empty">Loading…</div></div>
@@ -364,7 +364,7 @@ function renderGrowth(growth) {
         <div><h4>${g.display_name || g.handle}</h4><div class="sub">@${g.handle} · new this week</div></div>
         <div class="delta">+NEW <span class="pct">avg ${fmt(g.recent_avg)}</span></div>
       </div>`).join('');
-      wrap.innerHTML = `<div class="growth-grid">${html}</div><div class="legend">Growth tracking starts now — week-over-week deltas appear once each creator has snapshots in two consecutive weeks.</div>`;
+      wrap.innerHTML = `<div class="growth-grid">${html}</div><div class="legend">We just started tracking — week-over-week numbers appear once each streamer has activity in two consecutive weeks.</div>`;
       return;
     }
     wrap.innerHTML = '<div class="empty">Growth tracking starts now — check back next week once we have two weeks of data per creator.</div>';
@@ -415,7 +415,7 @@ function renderFollowers(list) {
         <path d="${d}" fill="none" stroke="${colour}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
       </svg>`;
     } else {
-      spark = `<div style="height:36px;display:flex;align-items:center;justify-content:center;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px">${isKick ? 'No follower data on Kick' : 'Need more samples'}</div>`;
+      spark = `<div style="height:36px;display:flex;align-items:center;justify-content:center;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px">${isKick ? 'No follower data on Kick' : 'Need more activity'}</div>`;
     }
     const deltaStr = s.delta_pct == null ? '—' : (s.delta_pct >= 0 ? '+' : '') + s.delta_pct + '%';
     const deltaClass = (s.delta || 0) < 0 ? 'neg' : '';
@@ -425,7 +425,7 @@ function renderFollowers(list) {
       <div class="nums">
         ${points.length > 1
           ? `<span>${fmt(s.first_followers)} → ${fmt(s.last_followers)}</span><span class="delta ${deltaClass}">${deltaStr}</span>`
-          : `<span class="nodata">${isKick ? 'API limitation' : 'Awaiting samples'}</span><span class="nodata">—</span>`
+          : `<span class="nodata">${isKick ? 'Kick: not available' : 'Need more activity'}</span><span class="nodata">—</span>`
         }
       </div>
     </div>`;

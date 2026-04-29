@@ -140,11 +140,11 @@ export async function onRequestGet({ params, env, request }) {
 
   const rankBadge =
     rank == null ? { e: '📊', label: 'Unranked' } :
-    rank === 1   ? { e: '🥇', label: '#1 of 26' } :
-    rank === 2   ? { e: '🥈', label: '#2 of 26' } :
-    rank === 3   ? { e: '🥉', label: '#3 of 26' } :
-    rank <= 10   ? { e: '⭐', label: `#${rank} of 26` } :
-                   { e: '📈', label: `#${rank} of 26` };
+    rank === 1   ? { e: '🥇', label: '#1 this month' } :
+    rank === 2   ? { e: '🥈', label: '#2 this month' } :
+    rank === 3   ? { e: '🥉', label: '#3 this month' } :
+    rank <= 10   ? { e: '⭐', label: `#${rank} this month` } :
+                   { e: '📈', label: `#${rank} this month` };
 
   const html = renderCard({
     handle, name: entry.name, platform: entry.platform, platformLabel, platformColor,

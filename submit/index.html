@@ -269,7 +269,7 @@ form.addEventListener('submit', async (ev) => {
       showFeedback('ok', `Thanks — submission received. A moderator will review it shortly. Reference: ${data.id || '—'}.`);
       form.reset();
     } else if (r.status === 429) {
-      showFeedback('err', 'Rate limit reached — try again tomorrow.');
+      showFeedback('err', 'Daily submission limit reached — try again tomorrow.');
     } else {
       showFeedback('err', data.error || 'Submission failed. Try again in a moment.');
     }

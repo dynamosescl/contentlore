@@ -179,7 +179,7 @@ body>*{position:relative;z-index:3}
     <div>
       <div class="hero-kicker">Status Board · auto-refresh 60s</div>
       <h1>RP <span class="neon">Servers</span></h1>
-      <div class="hero-sub">Live status of every RP server we track — UK-founded and American servers UK streamers play on. Detected from the 26 tracked streamers' stream titles.</div>
+      <div class="hero-sub">Live status of every RP server we track — UK-founded and American servers UK streamers play on. Detected from tracked streamers' titles.</div>
     </div>
     <div class="hero-stats">
       <div class="hs"><div class="v" style="color:var(--signal)" id="s-active">—</div><div class="l">live now</div></div>
@@ -207,7 +207,7 @@ body>*{position:relative;z-index:3}
         <div class="cell sname-head">Server</div>
         <div class="cell">Status</div>
         <div class="cell players-head">Players</div>
-        <div class="cell avg-head" title="Average concurrent streamers per scene snapshot, last 7 days">Avg</div>
+        <div class="cell avg-head" title="Average concurrent streamers per server, last 7 days">Avg</div>
         <div class="cell streamers-head">Streamers</div>
         <div class="cell viewers-head">Viewers</div>
         <div class="cell">Top Streamer</div>
@@ -333,14 +333,14 @@ async function load() {
         ? `<span>${srv.pop.clients}<span class="max"> / ${srv.pop.max_clients}</span></span>`
         : srv.cfx_id
           ? '<span title="Server unreachable right now">—</span>'
-          : '<span title="Player count unavailable — CFX ID not configured">—</span>';
+          : '<span title="Player count not available for this server">—</span>';
       const playersClass = srv.pop ? '' : 'unknown';
       const avgValue = (srv.avg && Number.isFinite(srv.avg.avg_streamers) && srv.avg.sample_size >= 3)
         ? srv.avg.avg_streamers.toFixed(1)
         : null;
       const avgCell = avgValue
-        ? `<span title="${srv.avg.sample_size} snapshots in last 7d">${avgValue}</span>`
-        : '<span title="Building data — need more snapshots">—</span>';
+        ? `<span title="${srv.avg.sample_size} samples in last 7 days">${avgValue}</span>`
+        : '<span title="Need a few more days of activity">—</span>';
       const avgClass = avgValue ? '' : 'unknown';
       return `
         <div class="board-row ${isLive ? 'live' : 'idle'}">

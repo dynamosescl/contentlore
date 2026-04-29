@@ -139,7 +139,7 @@ body>*{position:relative;z-index:3}
 <div class="hero"><div class="hero-inner">
   <div class="hero-kicker">Weekly Report · Auto-generated</div>
   <h1>This Week in <span class="neon">UK GTA RP</span></h1>
-  <p class="hero-sub">A rolling 7-day summary of the 26 tracked streamers: hours streamed, peak viewership moment, the busiest server, freshly discovered streamers, and the top clips of the week.</p>
+  <p class="hero-sub">A rolling 7-day summary of tracked UK streamers: hours streamed, peak viewership moment, the busiest server, freshly discovered streamers, and the top clips of the week.</p>
   <div class="window" id="window">—</div>
 </div></div>
 
@@ -162,8 +162,8 @@ body>*{position:relative;z-index:3}
         <div class="title" id="peak-title">—</div>
       </div>
       <div class="summary-grid">
-        <div class="skv"><div class="v" id="k-hours" style="color:var(--signal-cyan)">—</div><div class="l">total hours streamed</div><div class="sub">across the 26 streamers</div></div>
-        <div class="skv"><div class="v" id="k-creators" style="color:var(--green)">—</div><div class="l">streamers went live</div><div class="sub">of 26 tracked</div></div>
+        <div class="skv"><div class="v" id="k-hours" style="color:var(--signal-cyan)">—</div><div class="l">total hours streamed</div><div class="sub">across tracked streamers</div></div>
+        <div class="skv"><div class="v" id="k-creators" style="color:var(--green)">—</div><div class="l">streamers went live</div><div class="sub">tracked UK streamers</div></div>
         <div class="skv"><div class="v" id="k-server" style="color:var(--amber)">—</div><div class="l">most active server</div><div class="sub" id="k-server-sub">—</div></div>
         <div class="skv"><div class="v" id="k-sessions" style="color:var(--signal)">—</div><div class="l">stream sessions</div><div class="sub">7-day window</div></div>
       </div>
@@ -202,10 +202,10 @@ body>*{position:relative;z-index:3}
     </div>
   </div>
 
-  <div class="sh">Top Clips of the Week <span class="sh-meta">Twitch · range=7d</span></div>
+  <div class="sh">Top Clips of the Week <span class="sh-meta">Twitch · last 7 days</span></div>
   <div id="clips-wrap"><div class="empty">Loading…</div></div>
 
-  <div class="sh">New Creators Discovered <span class="sh-meta">pending_creators · 7d window</span></div>
+  <div class="sh">New Streamers Discovered <span class="sh-meta">Last 7 days</span></div>
   <div id="new-wrap"><div class="empty">Loading…</div></div>
 
   <p style="font-family:var(--font-m);font-size:13px;color:var(--ink-faint);letter-spacing:1px;line-height:1.6;background:var(--card2);border:1px dashed var(--border);padding:14px 16px;margin-bottom:18px">Refreshes every 10 minutes. The 7-day window rolls forward each day — tomorrow's digest covers the most recent week from that point.</p>
@@ -371,7 +371,7 @@ async function loadDailyRecap() {
     const meta = document.getElementById('daily-meta');
     if (!d.ok || !d.recap) {
       prose.classList.remove('skel');
-      prose.textContent = 'No daily recap available yet — the scheduler generates one shortly after midnight UTC.';
+      prose.textContent = "No daily recap available yet — we write a fresh one each morning.";
       meta.textContent = 'pending';
       return;
     }

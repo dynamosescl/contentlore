@@ -580,7 +580,7 @@ body>*{position:relative;z-index:3}
 
   <div class="section">
     <div class="sec-h"><h2>Stats</h2><span class="sub">Last 90 days</span></div>
-    ${stats.hasData ? renderStats(stats) : `<div class="empty-block">No session history recorded yet for this creator. Stats will populate as the scheduler observes streams over time.</div>`}
+    ${stats.hasData ? renderStats(stats) : `<div class="empty-block">No stream history yet for this streamer. Stats fill in as they go live.</div>`}
   </div>
 
   ${affinity.length ? `
@@ -703,7 +703,7 @@ function renderReportCard(handle, name, rc) {
         <div class="rc-rank">
           <div class="rc-rank-badge">${rc.rank != null ? `#${rc.rank}` : '—'}<span class="of"> / ${rc.rankOf}</span></div>
           <div class="rc-rank-text">
-            <strong>${esc(name)}</strong> sits at <strong>${rc.rank != null ? `rank ${rc.rank}` : '—'}</strong> on the 26-streamer hours leaderboard for ${esc(rc.monthLabel)}.
+            <strong>${esc(name)}</strong> sits at <strong>${rc.rank != null ? `rank ${rc.rank}` : '—'}</strong> on the monthly hours leaderboard for ${esc(rc.monthLabel)}.
           </div>
         </div>
 

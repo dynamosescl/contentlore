@@ -373,7 +373,7 @@ function renderHype(d) {
   const pct = d.ratio_pct;
   const pctEl = document.getElementById('hype-pct');
   if (pct == null) {
-    pctEl.innerHTML = '<strong>—</strong>  building data';
+    pctEl.innerHTML = '<strong>—</strong>  measuring';
   } else {
     const arrow = pct >= 100 ? '▲' : '▼';
     pctEl.innerHTML = `${arrow} <strong>${pct}%</strong> of normal`;
