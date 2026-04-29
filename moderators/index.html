@@ -83,6 +83,16 @@ body>*{position:relative;z-index:3}
 .lvl .xp{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;color:var(--ink-faint);text-transform:uppercase;margin-top:4px}
 .lvl .perms{font-size:13px;color:var(--ink-dim);margin-top:10px;line-height:1.5}
 
+/* Mod of the Month */
+.motm{margin:36px 0 14px;padding:24px 28px;background:linear-gradient(135deg,oklch(0.16 0.06 80) 0%,oklch(0.13 0.06 50) 100%);border:1px solid oklch(0.78 0.20 60);clip-path:var(--cut);position:relative;overflow:hidden;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.motm::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at top right,oklch(0.85 0.20 60/.15),transparent 60%);pointer-events:none}
+.motm .crown{font-size:60px;line-height:1;flex-shrink:0;position:relative}
+.motm .info{flex:1;min-width:200px;position:relative}
+.motm .tag{font-family:var(--font-m);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:oklch(0.85 0.20 60);margin-bottom:6px}
+.motm .name{font-family:var(--font-d);font-size:42px;letter-spacing:1.5px;line-height:1;margin-bottom:8px}
+.motm .meta{font-family:var(--font-m);font-size:12px;letter-spacing:1px;color:var(--ink-dim);text-transform:uppercase}
+.motm .meta strong{color:oklch(0.85 0.18 200)}
+
 /* Leaderboard */
 .lb{background:var(--card);border:1px solid var(--border);clip-path:var(--cut);overflow:hidden}
 .lb-row{display:grid;grid-template-columns:60px 1fr auto auto;gap:14px;padding:14px 18px;align-items:center;border-bottom:1px solid oklch(0.28 0.06 190/.4);font-family:var(--font-m);font-size:13px}
@@ -161,6 +171,8 @@ body>*{position:relative;z-index:3}
     <div class="lvl"><span class="badge senior">Senior</span><div class="name">Senior</div><div class="xp">700 — 1499 XP</div><div class="perms">+ Edit your creator's bio</div></div>
     <div class="lvl"><span class="badge head">Head Mod</span><div class="name">Head Mod</div><div class="xp">1500+ XP</div><div class="perms">All permissions · Eligible for Mod of the Month</div></div>
   </div>
+
+  <div id="motm-host"></div>
 
   <h2 class="section-h">Top mods this month</h2>
   <div class="lb" id="leaderboard"><div class="empty">Loading…</div></div>
@@ -252,6 +264,40 @@ async function loadCreators() {
   }
 }
 
+async function loadMotm() {
+  try {
+    const r = await fetch('/api/mod/of-the-month');
+    const d = await r.json();
+    const host = document.getElementById('motm-host');
+    if (!host) return;
+    // Prefer the locked last_winner. Fall back to current leader if no
+    // history yet so the card isn't dead on a fresh deploy.
+    const w = d.last_winner || d.current?.leader;
+    if (!w) { host.innerHTML = ''; return; }
+    const monthLabel = (() => {
+      const ym = w.mod_of_month || d.current?.month;
+      if (!ym) return 'This month';
+      const [y, m] = ym.split('-').map(Number);
+      return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    })();
+    const isLocked = !!w.mod_of_month;
+    host.innerHTML = `
+      <div class="motm">
+        <div class="crown">👑</div>
+        <div class="info">
+          <div class="tag">${isLocked ? 'Mod of the Month · ' + monthLabel : 'Leading this month · ' + monthLabel}</div>
+          <div class="name">${esc(w.display_name)}</div>
+          <div class="meta">
+            Mods for <strong>${(w.creators_modded || []).map(esc).join(' · ')}</strong>
+            · ${fmtN(w.xp || 0)} lifetime XP
+            ${w.month_xp != null ? ` · ${w.month_xp} XP this month` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  } catch { /* silent */ }
+}
+
 async function loadLeaderboard() {
   try {
     const r = await fetch('/api/mod/leaderboard?limit=10');
@@ -317,6 +363,7 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
 });
 
 loadCreators();
+loadMotm();
 loadLeaderboard();
 </script>
 </body>
