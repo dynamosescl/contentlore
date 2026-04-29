@@ -209,6 +209,7 @@ body>*{position:relative;z-index:3}
   <span class="nav-mod" id="welcome-strip">Loading…</span>
   <span class="nav-spacer"></span>
   <a class="nav-link" href="/moderators/">About</a>
+  <button class="nav-link" id="alerts-btn" type="button" data-state="off">🔕 Alerts</button>
   <button class="nav-link" id="logout" type="button">Sign out</button>
 </nav>
 
@@ -239,6 +240,89 @@ if (!getToken()) {
 document.getElementById('logout').addEventListener('click', () => {
   clearToken();
   location.assign('/moderators/login/');
+});
+
+// ---------- Mod alerts (item 6) ----------
+const ALERTS_KEY = 'cl:mod:alerts:endpoint';
+function urlBase64ToUint8(b64) {
+  const padding = '='.repeat((4 - b64.length % 4) % 4);
+  const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+async function refreshAlertsBtn() {
+  const btn = document.getElementById('alerts-btn');
+  if (!btn) return;
+  const stored = (() => { try { return localStorage.getItem(ALERTS_KEY); } catch { return null; } })();
+  if (stored && Notification.permission === 'granted') {
+    btn.dataset.state = 'on';
+    btn.textContent = '🔔 Alerts on';
+  } else {
+    btn.dataset.state = 'off';
+    btn.textContent = '🔕 Alerts';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', refreshAlertsBtn);
+setTimeout(refreshAlertsBtn, 100);
+
+document.getElementById('alerts-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('alerts-btn');
+  if (btn.dataset.state === 'on') {
+    // Disable: unsubscribe + clear local state.
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration();
+      const sub = await reg?.pushManager?.getSubscription();
+      if (sub) await sub.unsubscribe();
+    } catch {}
+    try { localStorage.removeItem(ALERTS_KEY); } catch {}
+    btn.dataset.state = 'off';
+    btn.textContent = '🔕 Alerts';
+    showToast('Mod alerts off');
+    return;
+  }
+  // Enable.
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    showToast('Push notifications unsupported on this browser', true);
+    return;
+  }
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      showToast('Permission denied', true);
+      return;
+    }
+    const reg = await navigator.serviceWorker.ready;
+    const keyRes = await fetch('/api/push/vapid-public-key');
+    const keyJson = await keyRes.json();
+    if (!keyJson?.ok || !keyJson.key) {
+      showToast('Push not configured server-side', true);
+      return;
+    }
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8(keyJson.key),
+    });
+    const res = await modFetch('/api/mod/push-subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ subscription: sub.toJSON() }),
+    });
+    const j = await res.json();
+    if (!j.ok) {
+      await sub.unsubscribe().catch(() => {});
+      showToast(j.error || 'Subscription failed', true);
+      return;
+    }
+    try { localStorage.setItem(ALERTS_KEY, sub.endpoint); } catch {}
+    btn.dataset.state = 'on';
+    btn.textContent = '🔔 Alerts on';
+    showToast("Mod alerts on — you'll get a heads-up before the public feed");
+  } catch (e) {
+    showToast('Subscribe failed: ' + (e.message || e), true);
+  }
 });
 
 const esc = s => (s ?? '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
