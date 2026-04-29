@@ -1,7 +1,7 @@
 // ================================================================
-// pwa.js — service-worker registration + install-prompt banner
+// pwa.js — site-wide visual layer + service-worker + install banner
 //
-// Loaded with `defer` from every hub page. Two responsibilities:
+// Loaded with `defer` from every hub page. Responsibilities:
 //
 // 1. Register /sw.js. Quiet failures — SW is progressive
 //    enhancement; the site works without it.
@@ -13,6 +13,27 @@
 // iOS doesn't fire beforeinstallprompt; for Safari users we show
 // the banner with manual instructions instead.
 // ================================================================
+
+// ----------------------------------------------------------------
+// Background FX layer — noise + vignette, injected as a fixed
+// wrapper at z-index:2 so it sits above the per-page scanline
+// (z:1) and below page content (z:3+). Mesh gradient itself is
+// CSS-only on <html> in cl-theme.css. Inserted ASAP (head-script
+// timing if available, else first DOMContentLoaded).
+// ----------------------------------------------------------------
+(function injectBgFx() {
+  function mount() {
+    if (document.getElementById('cl-bg-fx')) return;
+    if (!document.body) return;
+    const fx = document.createElement('div');
+    fx.id = 'cl-bg-fx';
+    fx.setAttribute('aria-hidden', 'true');
+    fx.innerHTML = '<div class="cl-noise"></div><div class="cl-vignette"></div>';
+    document.body.insertBefore(fx, document.body.firstChild);
+  }
+  if (document.body) mount();
+  else document.addEventListener('DOMContentLoaded', mount);
+})();
 
 // ----------------------------------------------------------------
 // Mobile nav drawer — inject a hamburger + slide-out menu on every

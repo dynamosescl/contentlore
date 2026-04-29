@@ -1,0 +1,183 @@
+/* ================================================================
+   cl-theme.css — site-wide visual layer.
+
+   Loaded from every hub page <head>. Provides:
+     §1  Animated gradient-mesh background (drifting blobs)
+     §2  Film-grain noise overlay (SVG feTurbulence, base64)
+     §3  Vignette (dark corners, glow center)
+     §4  Card depth + glassmorphism + lift-on-hover
+     §5  Subtle scoped helpers reused by the site
+
+   Stacking order in body's stacking context:
+     html background-color           — flat bedrock (paints first)
+     html background-image (mesh)    — animated radial blobs, fixed
+     body::before (scanline)         z-index:1  (existing per-page CSS)
+     #cl-bg-noise / #cl-bg-vignette  z-index:2  (injected by pwa.js)
+     body > * (page content)         z-index:3+
+================================================================ */
+
+:root {
+  --cl-bg-deep: oklch(0.05 0.025 200);
+  --cl-mesh-1: oklch(0.55 0.18 195 / .42);
+  --cl-mesh-2: oklch(0.48 0.20 245 / .36);
+  --cl-mesh-3: oklch(0.50 0.18 310 / .26);
+  --cl-edge: oklch(0.95 0.02 195 / .06);
+  --cl-glass-bg: oklch(0.13 0.045 195 / .62);
+  --cl-glass-bg-hov: oklch(0.16 0.05 195 / .72);
+  --cl-glass-shadow: 0 4px 24px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.02) inset;
+  --cl-glass-shadow-hov: 0 10px 36px rgba(0,0,0,0.42), 0 0 24px oklch(0.82 0.20 195 / .18), 0 1px 0 rgba(255,255,255,0.04) inset;
+}
+
+/* ----------------------------------------------------------------
+   §1 + §2  Animated gradient mesh on <html>.
+   Three radial blobs that drift via background-position. Static at
+   reduced motion. ~26s cycle so it never feels jittery.
+---------------------------------------------------------------- */
+html {
+  background-color: var(--cl-bg-deep);
+  background-image:
+    radial-gradient(circle at center, var(--cl-mesh-1) 0%, transparent 55%),
+    radial-gradient(circle at center, var(--cl-mesh-2) 0%, transparent 55%),
+    radial-gradient(circle at center, var(--cl-mesh-3) 0%, transparent 60%);
+  background-size: 90vw 90vh, 80vw 80vh, 70vw 70vh;
+  background-position: 12% 18%, 82% 78%, 60% 8%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  animation: cl-mesh-drift 26s ease-in-out infinite alternate;
+  will-change: background-position;
+}
+
+@keyframes cl-mesh-drift {
+  0%   { background-position: 12% 18%, 82% 78%, 60% 8%; }
+  50%  { background-position: 38% 52%, 58% 62%, 28% 32%; }
+  100% { background-position:  6% 72%, 92% 28%, 72% 56%; }
+}
+
+/* Page-level body background gets overridden so html can show through.
+   Each per-page <style> sets body{background:var(--bg)}; we override
+   to transparent so the mesh + bedrock paint first. */
+body {
+  background: transparent !important;
+}
+
+/* ----------------------------------------------------------------
+   §3  Noise + vignette injected as a single fixed wrapper by pwa.js.
+   Lives at z-index:2 so it sits ABOVE the per-page scanline (z:1)
+   but BELOW page content (z:3+). pointer-events:none throughout.
+---------------------------------------------------------------- */
+#cl-bg-fx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+#cl-bg-fx .cl-noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85  0 0 0 0 0.95  0 0 0 0 0.95  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+  background-repeat: repeat;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+}
+#cl-bg-fx .cl-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 38%, rgba(0,0,0,.42) 92%, rgba(0,0,0,.62) 100%);
+}
+
+/* Reduced-motion: kill the drift, keep the mesh static. */
+@media (prefers-reduced-motion: reduce) {
+  html { animation: none !important; }
+  #cl-bg-fx .cl-noise { opacity: 0.03; }
+}
+
+/* ----------------------------------------------------------------
+   §4  Card depth + glassmorphism.
+   Targets the common card classes used across the site. Each rule
+   is intentionally specific enough to override per-page styles via
+   class match; we avoid !important except where per-page inline
+   styles or layout-critical rules would otherwise win.
+---------------------------------------------------------------- */
+.card,
+.scard,
+.rcard,
+.featured,
+.spotlight,
+.ed-main,
+.ed-card,
+.kpi,
+.stat-box,
+.stat-card,
+.panel,
+.glass {
+  background: var(--cl-glass-bg);
+  backdrop-filter: blur(12px) saturate(1.05);
+  -webkit-backdrop-filter: blur(12px) saturate(1.05);
+  border: 1px solid var(--cl-edge);
+  box-shadow: var(--cl-glass-shadow);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+.card:hover,
+.scard:hover,
+.rcard:hover,
+.featured:hover,
+.spotlight:hover,
+.ed-main:hover,
+.ed-card:hover,
+.kpi:hover,
+.stat-box:hover,
+.stat-card:hover,
+.panel:hover,
+.glass:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cl-glass-shadow-hov);
+  background: var(--cl-glass-bg-hov);
+  border-color: oklch(0.82 0.20 195 / .35);
+  /* Disable the noisy infinite glow-pulse animation on hover that
+     some pages declare; transform+shadow do the lift cleanly. */
+  animation: none !important;
+}
+
+/* Sticky nav and pulse strip: keep them readable, give them their
+   own glass treatment. The per-page rules use background:var(--card)
+   which is now visually flat once we made body transparent. */
+.nav,
+.pulse {
+  background: oklch(0.10 0.04 195 / .78) !important;
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  border-bottom: 1px solid var(--cl-edge) !important;
+}
+
+/* Hero blocks: punch through the glass — let the mesh be more visible
+   behind the headline. Each page's hero uses .hero or .hero-inner. */
+.hero {
+  background: linear-gradient(
+    180deg,
+    oklch(0.10 0.04 195 / .35) 0%,
+    oklch(0.10 0.04 195 / .15) 100%
+  ) !important;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border-bottom: 1px solid var(--cl-edge) !important;
+}
+
+/* Footer: subtle glass too. */
+.footer {
+  background: oklch(0.08 0.03 195 / .55) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--cl-edge) !important;
+}
+
+/* ----------------------------------------------------------------
+   §5  Drop the project-wide infinite glow-pulse hover animation
+   (declared inline on /, /gta-rp/, etc.) — the lift-on-hover is
+   the new interaction. Without this override, hover would still
+   trigger a 1.5s infinite box-shadow pulse on top of our transition.
+---------------------------------------------------------------- */
+.card:hover, .sc:hover, .scard:hover, .rcard:hover, .featured:hover {
+  animation: none !important;
+}
