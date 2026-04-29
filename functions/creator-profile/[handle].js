@@ -318,6 +318,58 @@ function buildWeeklyDashboard(handle, sessions, weekRanks) {
     if (idx !== -1) rank = idx + 1;
   }
 
+  // ----- Schedule pattern insights -----
+  // Top-3 days of the week by total minutes streamed (90-day window, same as
+  // the heatmap data above). Top hour-of-day across all sessions.
+  const dowTotals = schedule.map(row => row.reduce((s, m) => s + m, 0));
+  const dowRanked = dowTotals
+    .map((mins, i) => ({ i, mins }))
+    .filter(d => d.mins > 0)
+    .sort((a, b) => b.mins - a.mins);
+  const dowNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const topDays = dowRanked.slice(0, 3).map(d => dowNames[d.i]);
+
+  const hodTotals = new Array(24).fill(0);
+  for (let d = 0; d < 7; d++) for (let h = 0; h < 24; h++) hodTotals[h] += schedule[d][h];
+  const peakHour = hodTotals.reduce((best, v, i, arr) => v > arr[best] ? i : best, 0);
+
+  // "Likely live now / soon" — bucket the current UK day-of-week and the
+  // next 3 hour-of-day cells, return total historical minutes there. If
+  // the bucket is in the top quartile of all 168 (7×24) cells, surface
+  // a prediction badge.
+  const now = Date.now();
+  const m = new Date(now).getUTCMonth();
+  const offset = (m >= 2 && m <= 9) ? 1 : 0;
+  const ukNow = new Date(now + offset * 3600_000);
+  const todayDow = (ukNow.getUTCDay() + 6) % 7;
+  const ukHour = ukNow.getUTCHours();
+  const cellsAhead = [0, 1, 2].map(off => schedule[todayDow][(ukHour + off) % 24]);
+  const aheadMins = cellsAhead.reduce((s, x) => s + x, 0);
+  const allCells = schedule.flat().filter(v => v > 0).sort((a, b) => b - a);
+  const topQuartileCutoff = allCells.length ? allCells[Math.floor(allCells.length * 0.25)] || 0 : 0;
+  const likelyLiveSoon = aheadMins > 0 && cellsAhead.some(v => v >= topQuartileCutoff);
+
+  // Next predicted slot — the future cell (within the next 24h) with the
+  // most historical minutes. Returned as a label like "Tomorrow 8pm" or
+  // "Tonight 10pm".
+  let nextSlot = null;
+  let nextSlotMins = 0;
+  for (let off = 0; off < 24; off++) {
+    const dow = (todayDow + Math.floor((ukHour + off) / 24)) % 7;
+    const h = (ukHour + off) % 24;
+    const mins = schedule[dow][h];
+    if (mins > nextSlotMins) {
+      nextSlotMins = mins;
+      const isToday = off === 0 || (ukHour + off < 24);
+      const ampm = h >= 12 ? 'pm' : 'am';
+      const hr = h % 12 === 0 ? 12 : h % 12;
+      nextSlot = {
+        label: `${isToday ? 'Today' : 'Tomorrow'} ${hr}${ampm}`,
+        mins,
+      };
+    }
+  }
+
   return {
     hasData: true,
     sessions: week.length,
@@ -330,6 +382,13 @@ function buildWeeklyDashboard(handle, sessions, weekRanks) {
     scheduleMax,
     rank,
     rankOf: weekRanks?.length || 0,
+    todayDow,
+    pattern: {
+      topDays,
+      peakHour,
+      likelyLiveSoon,
+      nextSlot,
+    },
   };
 }
 
@@ -712,14 +771,25 @@ body>*{position:relative;z-index:3}
 @media(max-width:520px){.dh-srv-row{grid-template-columns:100px 1fr 36px}}
 
 .dh-heat-grid{display:flex;flex-direction:column;gap:2px;font-family:var(--font-m)}
-.dh-heat-row,.dh-heat-headerrow{display:grid;grid-template-columns:30px repeat(24,1fr);gap:2px;align-items:center}
-.dh-heat-dow{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;text-align:right;padding-right:4px}
+.dh-heat-row,.dh-heat-headerrow{display:grid;grid-template-columns:50px repeat(24,1fr);gap:2px;align-items:center}
+.dh-heat-row.is-today{background:oklch(0.82 0.20 195/.07);border-radius:3px}
+.dh-heat-row.is-today .dh-heat-dow{color:var(--signal);font-weight:600}
+.dh-heat-dow{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;text-align:right;padding-right:6px;display:flex;justify-content:flex-end;align-items:baseline;gap:4px}
+.dh-today-tag{font-size:9px;letter-spacing:1px;color:var(--signal);font-weight:600}
 .dh-heat-h{font-size:11px;color:var(--ink-faint);text-align:center}
 .dh-heat-cell{aspect-ratio:1/1;background:oklch(0.18 0.06 295/.4);border-radius:2px}
 .dh-heat-cell.l1{background:oklch(0.30 0.10 195/.55)}
 .dh-heat-cell.l2{background:oklch(0.45 0.16 195/.65)}
 .dh-heat-cell.l3{background:oklch(0.60 0.20 195/.80)}
 .dh-heat-cell.l4{background:var(--signal);box-shadow:0 0 4px oklch(0.82 0.20 195/.5)}
+
+/* Schedule pattern strip */
+.dh-pattern{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;font-family:var(--font-m)}
+.dh-pat-pill{display:inline-flex;align-items:center;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:6px 12px;border:1px solid var(--border);color:var(--ink-faint);background:var(--card2);border-radius:2px}
+.dh-pat-pill.on{border-color:var(--signal);color:var(--signal);background:oklch(0.82 0.20 195/.12);box-shadow:0 0 14px oklch(0.82 0.20 195/.18)}
+.dh-pat-cell{display:inline-flex;flex-direction:column;font-family:var(--font-m);padding:6px 12px;background:var(--card2);border:1px solid var(--border);border-radius:2px;line-height:1.2}
+.dh-pat-cell .lbl{font-size:9px;letter-spacing:1.5px;color:var(--ink-faint);text-transform:uppercase}
+.dh-pat-cell .val{font-size:13px;color:var(--fg);margin-top:2px;font-weight:500}
 .dh-heat-legend{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:10px;font-family:var(--font-m);font-size:11px;color:var(--ink-faint);letter-spacing:1px;text-transform:uppercase}
 .dh-heat-legend .dh-heat-cell{width:14px;height:14px;aspect-ratio:auto}
 .dh-link-btn{font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:7px 12px;background:transparent;border:1px solid var(--signal-cyan);color:var(--signal-cyan);cursor:pointer;transition:all .15s}
@@ -1053,12 +1123,14 @@ function renderDashboard(handle, name, dash) {
 
   // Schedule heatmap — 7 rows × 24 cells. Five intensity tiers based
   // on minutes streamed in that hour-bucket relative to the creator's
-  // own week-of-data max.
+  // own week-of-data max. Today's row gets a `today` class so the
+  // viewer can compare current hour against the streamer's pattern.
   const dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const hod = ['00','','','','04','','','','08','','','','12','','','','16','','','','20','','',''];
   const heatRows = dash.schedule.map((row, i) => {
-    return `<div class="dh-heat-row">
-      <div class="dh-heat-dow">${dows[i]}</div>
+    const todayCls = (dash.todayDow === i) ? ' is-today' : '';
+    return `<div class="dh-heat-row${todayCls}">
+      <div class="dh-heat-dow">${dows[i]}${todayCls ? ' <span class="dh-today-tag">today</span>' : ''}</div>
       ${row.map((mins, h) => {
         const t = mins / dash.scheduleMax;
         const cls = mins === 0 ? '' : t > 0.75 ? 'l4' : t > 0.5 ? 'l3' : t > 0.25 ? 'l2' : 'l1';
@@ -1067,6 +1139,19 @@ function renderDashboard(handle, name, dash) {
     </div>`;
   }).join('');
   const hodLabels = hod.map(h => `<div class="dh-heat-h">${h}</div>`).join('');
+
+  // Schedule pattern strip — sits above the heatmap. Surfaces the
+  // "what's normal for this streamer" signal in plain English so a
+  // viewer can predict whether tonight is likely to be a stream night.
+  const p = dash.pattern || {};
+  const peakAmpm = p.peakHour != null ? (p.peakHour >= 12 ? 'pm' : 'am') : '';
+  const peakHr = p.peakHour != null ? (p.peakHour % 12 === 0 ? 12 : p.peakHour % 12) : '';
+  const patternStrip = `<div class="dh-pattern">
+    ${p.likelyLiveSoon ? `<span class="dh-pat-pill on">✦ Likely streaming next 3h</span>` : `<span class="dh-pat-pill">Outside usual window</span>`}
+    ${p.topDays?.length ? `<span class="dh-pat-cell"><span class="lbl">Most active days</span><span class="val">${esc(p.topDays.join(' · '))}</span></span>` : ''}
+    ${p.peakHour != null ? `<span class="dh-pat-cell"><span class="lbl">Typical start</span><span class="val">${peakHr}${peakAmpm} UK</span></span>` : ''}
+    ${p.nextSlot ? `<span class="dh-pat-cell"><span class="lbl">Next likely slot</span><span class="val">${esc(p.nextSlot.label)}</span></span>` : ''}
+  </div>`;
 
   const rankBlock = dash.rank
     ? `<div class="dh-rank">#${dash.rank}<span class="dh-rank-of">/ ${dash.rankOf}</span><div class="dh-rank-l">Weekly rank</div></div>`
@@ -1103,6 +1188,7 @@ function renderDashboard(handle, name, dash) {
 
         <div class="dh-heat">
           <div class="dh-card-h">Schedule Pattern <span class="dh-card-sub">UK time · last 90 days</span></div>
+          ${patternStrip}
           <div class="dh-heat-grid">
             <div class="dh-heat-headerrow">
               <div class="dh-heat-dow"></div>
