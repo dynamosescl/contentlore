@@ -83,7 +83,7 @@ svg.graph .node:hover circle{stroke-width:3px;cursor:pointer}
 .de-tag.host{color:var(--edge-host);border-color:oklch(0.82 0.22 145/.3)}
 .de-tag.shoutout{color:var(--edge-shoutout);border-color:oklch(0.78 0.20 60/.3)}
 .de-tag.mention{color:var(--edge-mention);border-color:oklch(0.65 0.18 295/.3)}
-.de-tag.co_stream{color:var(--edge-cstream);border-color:var(--border)}
+.de-tag.co_stream,.de-tag.co-stream{color:var(--edge-cstream);border-color:var(--border)}
 .de-name{color:var(--ink-dim)}
 .de-when{color:var(--ink-faint);text-align:right}
 .footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-family:var(--font-m);font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-top:24px}
@@ -110,9 +110,9 @@ svg.graph .node:hover circle{stroke-width:3px;cursor:pointer}
 </nav>
 
 <div class="hero"><div class="hero-inner">
-  <div class="hero-kicker">Creator Graph · Force-Directed</div>
+  <div class="hero-kicker">Creator Graph</div>
   <h1>Creator <span class="neon">Network</span></h1>
-  <p class="hero-sub">Shows who raids, hosts, and shouts out who across tracked UK streamers. Larger circles mean more average viewers (last 30 days). Lines are colour-coded by the type of interaction. Click a streamer to highlight their connections.</p>
+  <p class="hero-sub">Shows who plays together, raids, hosts, and shouts out who across tracked UK streamers. Larger circles mean more average viewers (last 30 days). Lines are colour-coded by how the two creators are connected. Click a streamer to highlight their connections.</p>
 </div></div>
 
 <div class="mx">
@@ -136,7 +136,7 @@ svg.graph .node:hover circle{stroke-width:3px;cursor:pointer}
     <svg class="graph" id="graph" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="empty-state" id="empty-state" style="display:none">
       <div class="em-h">Network data is building</div>
-      <div class="em-d">Not enough raids, hosts or shoutouts have been spotted yet to draw a meaningful map. This graph grows as more connections are detected — check back later.</div>
+      <div class="em-d">No connections have been detected yet across tracked UK streamers. The map will fill in as creators play on the same servers, raid each other, or call each other out on stream — check back later.</div>
     </div>
   </div>
 
@@ -152,10 +152,10 @@ svg.graph .node:hover circle{stroke-width:3px;cursor:pointer}
     <div class="detail-edges" id="d-edges"></div>
   </div>
 
-  <p class="note">Connections are detected automatically from stream titles and on-stream activity. The map grows as more interactions are spotted across the scene.</p>
+  <p class="note">Connections are detected automatically — co-stream lines come from shared time on the same RP server, raid / host / shoutout / mention lines from stream titles. The map grows as more interactions happen across the scene.</p>
 </div>
 
-<div class="footer">ContentLore · Creator Network · Force-directed simulation, no external libraries · <a href="/submit/" style="color:inherit;text-decoration:underline">Submit your channel →</a></div>
+<div class="footer">ContentLore · Creator Network · <a href="/submit/" style="color:inherit;text-decoration:underline">Submit your channel →</a></div>
 
 <script>
 const fmt = (n) => {
@@ -176,6 +176,7 @@ const EDGE_COLORS = {
   shoutout: 'var(--edge-shoutout)',
   mention: 'var(--edge-mention)',
   co_stream: 'var(--edge-cstream)',
+  'co-stream': 'var(--edge-cstream)',
 };
 
 let GRAPH_DATA = null;

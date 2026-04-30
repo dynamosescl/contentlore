@@ -57,24 +57,79 @@ export async function onRequestGet({ env, waitUntil }) {
       live_samples: Number(n.live_samples || 0),
     }));
 
-    // Edges — only the ones connecting two curated creators.
-    const edgeRes = await env.DB.prepare(`
+    // Edges — explicit raids/hosts from creator_edges, plus
+    // co-stream edges derived from session overlap. Raids and hosts
+    // are rare in our scene (creators don't usually put it in the
+    // title), so we always derive co-stream as well to give the graph
+    // visible structure. The two sources merge by (from,to) — explicit
+    // edges win on type/weight, co-stream is added only when no row
+    // exists for that pair.
+    const explicitRes = await env.DB.prepare(`
       SELECT from_creator_id, to_creator_id, edge_type, weight,
              first_seen_at, last_seen_at
       FROM creator_edges
       ORDER BY last_seen_at DESC
     `).all();
 
-    const edges = (edgeRes.results || [])
-      .filter(e => nodeIds.has(e.from_creator_id) && nodeIds.has(e.to_creator_id))
-      .map(e => ({
+    const seen = new Set();
+    const edges = [];
+    for (const e of (explicitRes.results || [])) {
+      if (!nodeIds.has(e.from_creator_id) || !nodeIds.has(e.to_creator_id)) continue;
+      const key = `${e.from_creator_id}-${e.to_creator_id}`;
+      const rev = `${e.to_creator_id}-${e.from_creator_id}`;
+      if (seen.has(key) || seen.has(rev)) continue;
+      seen.add(key);
+      edges.push({
         from: e.from_creator_id,
         to: e.to_creator_id,
         type: e.edge_type,
         weight: Number(e.weight || 1),
         first_seen_at: e.first_seen_at,
         last_seen_at: e.last_seen_at,
-      }));
+      });
+    }
+
+    // Co-stream edges: pairwise session-overlap minutes across the
+    // last 30 days. Pair is included only when overlap >= 60 minutes
+    // (filters one-off coincidences). Each session row contributes
+    // MAX(0, MIN(end_a,end_b) - MAX(start_a,start_b)) seconds of
+    // overlap with every other session — bounded set since we only
+    // self-join curated × curated.
+    try {
+      const sinceSec = thirtyDaysAgo;
+      const overlapRes = await env.DB.prepare(`
+        SELECT s1.creator_id AS a_id, s2.creator_id AS b_id,
+               SUM(MAX(0, MIN(s1.ended_at, s2.ended_at) - MAX(s1.started_at, s2.started_at))) AS overlap_sec,
+               MAX(MIN(s1.ended_at, s2.ended_at)) AS last_overlap_sec
+        FROM stream_sessions s1
+        INNER JOIN stream_sessions s2
+          ON s2.creator_id != s1.creator_id
+         AND s2.started_at < s1.ended_at
+         AND s2.ended_at > s1.started_at
+         AND s1.creator_id < s2.creator_id
+        WHERE s1.started_at >= ? AND s2.started_at >= ?
+          AND s1.ended_at IS NOT NULL AND s2.ended_at IS NOT NULL
+        GROUP BY s1.creator_id, s2.creator_id
+        HAVING overlap_sec >= 3600
+      `).bind(sinceSec, sinceSec).all();
+
+      for (const row of (overlapRes.results || [])) {
+        if (!nodeIds.has(row.a_id) || !nodeIds.has(row.b_id)) continue;
+        const key = `${row.a_id}-${row.b_id}`;
+        const rev = `${row.b_id}-${row.a_id}`;
+        if (seen.has(key) || seen.has(rev)) continue;
+        seen.add(key);
+        const minutes = Math.round(Number(row.overlap_sec || 0) / 60);
+        edges.push({
+          from: row.a_id,
+          to: row.b_id,
+          type: 'co-stream',
+          weight: minutes,
+          overlap_minutes: minutes,
+          last_seen_at: row.last_overlap_sec ? new Date(Number(row.last_overlap_sec) * 1000).toISOString() : null,
+        });
+      }
+    } catch { /* ignore — graph still renders with whatever explicit edges we found */ }
 
     const payload = {
       ok: true,
