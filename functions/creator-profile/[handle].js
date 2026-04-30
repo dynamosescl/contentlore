@@ -428,10 +428,10 @@ function buildWeeklyDashboard(handle, sessions, weekRanks) {
   // next 3 hour-of-day cells, return total historical minutes there. If
   // the bucket is in the top quartile of all 168 (7×24) cells, surface
   // a prediction badge.
-  const now = Date.now();
-  const m = new Date(now).getUTCMonth();
+  const nowMs = Date.now();
+  const m = new Date(nowMs).getUTCMonth();
   const offset = (m >= 2 && m <= 9) ? 1 : 0;
-  const ukNow = new Date(now + offset * 3600_000);
+  const ukNow = new Date(nowMs + offset * 3600_000);
   const todayDow = (ukNow.getUTCDay() + 6) % 7;
   const ukHour = ukNow.getUTCHours();
   const cellsAhead = [0, 1, 2].map(off => schedule[todayDow][(ukHour + off) % 24]);
